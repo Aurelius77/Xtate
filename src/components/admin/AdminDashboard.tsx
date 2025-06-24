@@ -1,336 +1,303 @@
 
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React from 'react';
 import { 
+  LayoutDashboard, 
   Users, 
-  CreditCard, 
-  Calendar, 
-  MessageSquare, 
-  TrendingUp, 
-  AlertCircle,
+  DollarSign, 
+  Calendar,
+  MessageSquare,
+  FileText,
   Plus,
-  Eye,
-  Filter
-} from "lucide-react";
-import { useAuth } from "@/contexts/AuthContext";
+  Bell,
+  HelpCircle,
+  Menu,
+  TrendingUp,
+  UserCheck,
+  Clock,
+  AlertCircle
+} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { useAuth } from '@/contexts/AuthContext';
 
 const AdminDashboard = () => {
-  const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("overview");
+  const { user, logout } = useAuth();
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
-  // Mock data - in real app, this would come from API
-  const stats = {
-    total_residents: 150,
-    total_active_residents: 142,
-    total_dues_amount: 2500000,
-    paid_dues_amount: 1800000,
-    pending_dues_amount: 500000,
-    overdue_dues_amount: 200000,
-    total_meetings: 12,
-    upcoming_meetings: 2,
-    total_complaints: 25,
-    open_complaints: 8,
-    recent_payments: 15,
-  };
-
-  const recentActivities = [
+  const stats = [
     {
-      id: 1,
-      type: "payment",
-      message: "John Doe paid ₦25,000 for Security Levy",
-      time: "2 hours ago",
-      status: "success"
+      title: 'Total Residents',
+      value: '247',
+      icon: Users,
+      color: 'blue',
+      change: '+12.5%'
     },
     {
-      id: 2,
-      type: "complaint",
-      message: "New complaint submitted by Jane Smith - Street Light Issue",
-      time: "4 hours ago",
-      status: "pending"
+      title: 'Monthly Revenue',
+      value: '₦2.4M',
+      icon: DollarSign,
+      color: 'green',
+      change: '+8.2%'
     },
     {
-      id: 3,
-      type: "meeting",
-      message: "Monthly General Meeting scheduled for Dec 30, 2024",
-      time: "1 day ago",
-      status: "info"
+      title: 'Pending Dues',
+      value: '₦450K',
+      icon: Clock,
+      color: 'orange',
+      change: '-5.1%'
     },
     {
-      id: 4,
-      type: "resident",
-      message: "New resident registration: Mike Johnson (Block C, Flat 5)",
-      time: "2 days ago",
-      status: "success"
+      title: 'Active Issues',
+      value: '12',
+      icon: AlertCircle,
+      color: 'red',
+      change: '+2'
     }
   ];
 
-  const upcomingDues = [
-    {
-      id: 1,
-      title: "Security Levy",
-      amount: 25000,
-      due_date: "2024-12-31",
-      assigned_residents: 142,
-      collected: 89
-    },
-    {
-      id: 2,
-      title: "Maintenance Fee",
-      amount: 15000,
-      due_date: "2025-01-15",
-      assigned_residents: 142,
-      collected: 45
-    }
+  const menuItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', active: true },
+    { icon: Users, label: 'Residents' },
+    { icon: DollarSign, label: 'Dues & Payments' },
+    { icon: Calendar, label: 'Meetings' },
+    { icon: MessageSquare, label: 'Complaints' },
+    { icon: FileText, label: 'Documents' }
   ];
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'success': return 'bg-green-100 text-green-700';
-      case 'pending': return 'bg-yellow-100 text-yellow-700';
-      case 'info': return 'bg-blue-100 text-blue-700';
-      default: return 'bg-gray-100 text-gray-700';
-    }
-  };
+  const recentPayments = [
+    { name: 'Sarah Johnson', unit: 'A-101', amount: '₦50,000', status: 'paid', time: '2 hours ago' },
+    { name: 'Michael Chen', unit: 'B-205', amount: '₦75,000', status: 'pending', time: '4 hours ago' },
+    { name: 'Emily Rodriguez', unit: 'C-301', amount: '₦50,000', status: 'paid', time: '6 hours ago' },
+    { name: 'David Thompson', unit: 'A-205', amount: '₦100,000', status: 'overdue', time: '1 day ago' }
+  ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-            <p className="text-gray-600">Welcome back, {user?.full_name}</p>
+    <div className="flex h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setSidebarOpen(!sidebarOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 glass rounded-lg"
+      >
+        <Menu className="h-5 w-5" />
+      </button>
+
+      {/* Sidebar */}
+      <aside className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col gap-6 sidebar-glass p-6`}>
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
+            <LayoutDashboard className="h-5 w-5" />
           </div>
-          <div className="flex space-x-3">
-            <Button variant="outline" size="sm">
-              <Filter className="h-4 w-4 mr-2" />
-              Filters
-            </Button>
-            <Button size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Quick Actions
+          <span className="text-lg font-semibold tracking-tight">EstateConnect</span>
+        </div>
+
+        <Button className="flex items-center justify-between gap-3 text-sm font-medium bg-blue-600/20 hover:bg-blue-600/30 transition p-3 rounded-lg w-full">
+          <span className="flex items-center gap-3">
+            <Plus className="h-4 w-4" />
+            Quick Action
+          </span>
+        </Button>
+
+        <nav className="flex flex-col gap-1 text-sm">
+          {menuItems.map((item, index) => (
+            <a
+              key={index}
+              href="#"
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
+                item.active 
+                  ? 'bg-white/10 text-white' 
+                  : 'hover:bg-white/10 text-white/70 hover:text-white'
+              }`}
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </a>
+          ))}
+        </nav>
+
+        <div className="mt-auto glass-card p-4">
+          <p className="text-sm leading-snug text-white/80">
+            Upgrade to Estate Pro for advanced analytics and unlimited residents!
+          </p>
+          <div className="flex items-center justify-between mt-4 text-sm">
+            <button className="hover:underline text-white/70" onClick={logout}>
+              Sign Out
+            </button>
+            <Button size="sm" className="bg-white/10 hover:bg-white/20 transition">
+              Upgrade
             </Button>
           </div>
         </div>
-      </div>
+      </aside>
 
-      <div className="p-6">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="residents">Residents</TabsTrigger>
-            <TabsTrigger value="dues">Dues</TabsTrigger>
-            <TabsTrigger value="meetings">Meetings</TabsTrigger>
-            <TabsTrigger value="complaints">Complaints</TabsTrigger>
-          </TabsList>
+      {/* Overlay for mobile */}
+      {sidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
-          <TabsContent value="overview" className="space-y-6">
-            {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Residents</CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.total_residents}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.total_active_residents} active
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Collections</CardTitle>
-                  <CreditCard className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{formatCurrency(stats.paid_dues_amount)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    +12% from last month
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Pending Dues</CardTitle>
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold text-yellow-600">{formatCurrency(stats.pending_dues_amount)}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.recent_payments} recent payments
-                  </p>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Open Complaints</CardTitle>
-                  <MessageSquare className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.open_complaints}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.total_complaints} total complaints
-                  </p>
-                </CardContent>
-              </Card>
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 glass">
+          <div className="flex items-center gap-4">
+            <div className="lg:hidden w-8"></div>
+            <div>
+              <h1 className="text-base lg:text-lg font-medium">Estate Management Dashboard</h1>
+              <p className="text-xs lg:text-sm text-white/60">
+                Welcome back, {user?.full_name} • Admin Dashboard
+              </p>
             </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <button className="relative hidden sm:block">
+              <Bell className="h-5 w-5" />
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-cyan-500"></span>
+            </button>
+            <HelpCircle className="h-5 w-5 hidden sm:block" />
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 grid place-content-center text-sm font-medium">
+              {user?.full_name?.charAt(0) || 'A'}
+            </div>
+          </div>
+        </header>
 
-            {/* Recent Activities and Upcoming Dues */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activities</CardTitle>
-                  <CardDescription>Latest activities in your estate</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-start space-x-3">
-                      <Badge variant="secondary" className={getStatusColor(activity.status)}>
-                        {activity.type}
-                      </Badge>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm text-gray-900">{activity.message}</p>
-                        <p className="text-xs text-gray-500">{activity.time}</p>
+        {/* Main Content */}
+        <section className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {stats.map((stat, index) => (
+              <Card key={index} className="glass-card border-white/10">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-white/60">{stat.title}</p>
+                      <p className="text-2xl font-semibold">{stat.value}</p>
+                      <div className="flex items-center gap-1 mt-1">
+                        <TrendingUp className="h-3 w-3 text-emerald-400" />
+                        <span className="text-xs text-emerald-400">{stat.change}</span>
                       </div>
                     </div>
-                  ))}
-                  <Button variant="outline" className="w-full">
-                    View All Activities
-                  </Button>
+                    <div className={`h-10 w-10 bg-${stat.color}-600/20 rounded-lg flex items-center justify-center`}>
+                      <stat.icon className={`h-5 w-5 text-${stat.color}-400`} />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
+            ))}
+          </div>
 
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Dues</CardTitle>
-                  <CardDescription>Dues collection status</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {upcomingDues.map((due) => (
-                    <div key={due.id} className="space-y-2">
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <h4 className="font-medium">{due.title}</h4>
-                          <p className="text-sm text-gray-600">
-                            Due: {new Date(due.due_date).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <Badge variant="outline">
-                          {formatCurrency(due.amount)}
-                        </Badge>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Collection Progress</span>
-                        <span>{due.collected}/{due.assigned_residents}</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-600 h-2 rounded-full" 
-                          style={{ width: `${(due.collected / due.assigned_residents) * 100}%` }}
-                        ></div>
-                      </div>
+          <div className="grid lg:grid-cols-3 gap-6">
+            {/* Payment Analytics */}
+            <Card className="lg:col-span-2 glass-card border-white/10">
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="font-medium">Monthly Payment Trends</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-emerald-400 flex items-center gap-1">
+                      <TrendingUp className="h-3 w-3" />
+                      +12.5%
+                    </span>
+                    <select className="text-xs glass border border-white/10 rounded px-2 py-1">
+                      <option>2024</option>
+                      <option>2023</option>
+                    </select>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48 flex items-end justify-between gap-2">
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <div key={i} className="flex flex-col items-center gap-2">
+                      <div 
+                        className="w-6 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t"
+                        style={{ height: `${Math.random() * 120 + 20}px` }}
+                      />
+                      <span className="text-xs text-white/60">
+                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}
+                      </span>
                     </div>
                   ))}
-                  <Button variant="outline" className="w-full">
-                    <Eye className="h-4 w-4 mr-2" />
-                    View All Dues
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="residents">
-            <Card>
-              <CardHeader>
-                <CardTitle>Resident Management</CardTitle>
-                <CardDescription>Manage estate residents and their information</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Resident management features coming soon</p>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Add New Resident
-                  </Button>
                 </div>
               </CardContent>
             </Card>
-          </TabsContent>
 
-          <TabsContent value="dues">
-            <Card>
+            {/* Quick Actions */}
+            <Card className="glass-card border-white/10">
               <CardHeader>
-                <CardTitle>Dues Management</CardTitle>
-                <CardDescription>Create and manage estate dues and payments</CardDescription>
+                <CardTitle className="font-medium">Quick Actions</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Dues management features coming soon</p>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Create New Due
-                  </Button>
-                </div>
+              <CardContent className="space-y-3">
+                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
+                  <Plus className="h-4 w-4" />
+                  Add New Resident
+                </Button>
+                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
+                  <DollarSign className="h-4 w-4" />
+                  Create Due
+                </Button>
+                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
+                  <Calendar className="h-4 w-4" />
+                  Schedule Meeting
+                </Button>
+                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
+                  <FileText className="h-4 w-4" />
+                  Send Announcement
+                </Button>
               </CardContent>
             </Card>
-          </TabsContent>
+          </div>
 
-          <TabsContent value="meetings">
-            <Card>
-              <CardHeader>
-                <CardTitle>Meeting Management</CardTitle>
-                <CardDescription>Schedule meetings and track attendance</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Meeting management features coming soon</p>
-                  <Button>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Schedule Meeting
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="complaints">
-            <Card>
-              <CardHeader>
-                <CardTitle>Complaint Management</CardTitle>
-                <CardDescription>Review and manage resident complaints</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="text-center py-12">
-                  <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <p className="text-gray-500 mb-4">Complaint management features coming soon</p>
-                  <Button variant="outline">
-                    View All Complaints
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+          {/* Recent Activity */}
+          <Card className="glass-card border-white/10">
+            <CardHeader>
+              <CardTitle className="font-medium">Recent Payments</CardTitle>
+              <CardDescription className="text-white/60">Latest payment activities</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead className="text-left text-white/60 border-b border-white/10">
+                    <tr>
+                      <th className="py-3 px-3">Resident</th>
+                      <th className="py-3 px-3 hidden sm:table-cell">Unit</th>
+                      <th className="py-3 px-3">Amount</th>
+                      <th className="py-3 px-3 hidden md:table-cell">Status</th>
+                      <th className="py-3 px-3 hidden lg:table-cell">Time</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentPayments.map((payment, index) => (
+                      <tr key={index} className="hover:bg-white/5 transition border-b border-white/5">
+                        <td className="py-3 px-3 flex items-center gap-3">
+                          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 grid place-content-center text-xs font-medium">
+                            {payment.name.charAt(0)}
+                          </div>
+                          <span className="truncate">{payment.name}</span>
+                        </td>
+                        <td className="py-3 px-3 hidden sm:table-cell text-white/70">{payment.unit}</td>
+                        <td className="py-3 px-3 font-medium">{payment.amount}</td>
+                        <td className="py-3 px-3 hidden md:table-cell">
+                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                            payment.status === 'paid' 
+                              ? 'bg-green-500/20 text-green-300'
+                              : payment.status === 'pending'
+                              ? 'bg-yellow-500/20 text-yellow-300'
+                              : 'bg-red-500/20 text-red-300'
+                          }`}>
+                            <div className="h-2 w-2 rounded-full bg-current" />
+                            {payment.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 hidden lg:table-cell text-white/60">{payment.time}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );
