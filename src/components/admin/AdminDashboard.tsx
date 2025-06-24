@@ -20,9 +20,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
+// Import page components
+import ResidentsPage from './pages/ResidentsPage';
+import DuesPaymentsPage from './pages/DuesPaymentsPage';
+import MeetingsPage from './pages/MeetingsPage';
+import ComplaintsPage from './pages/ComplaintsPage';
+import DocumentsPage from './pages/DocumentsPage';
+
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [currentPage, setCurrentPage] = React.useState('dashboard');
 
   const stats = [
     {
@@ -56,12 +64,12 @@ const AdminDashboard = () => {
   ];
 
   const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', active: true },
-    { icon: Users, label: 'Residents' },
-    { icon: DollarSign, label: 'Dues & Payments' },
-    { icon: Calendar, label: 'Meetings' },
-    { icon: MessageSquare, label: 'Complaints' },
-    { icon: FileText, label: 'Documents' }
+    { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard' },
+    { icon: Users, label: 'Residents', page: 'residents' },
+    { icon: DollarSign, label: 'Dues & Payments', page: 'dues' },
+    { icon: Calendar, label: 'Meetings', page: 'meetings' },
+    { icon: MessageSquare, label: 'Complaints', page: 'complaints' },
+    { icon: FileText, label: 'Documents', page: 'documents' }
   ];
 
   const recentPayments = [
@@ -70,6 +78,167 @@ const AdminDashboard = () => {
     { name: 'Emily Rodriguez', unit: 'C-301', amount: '₦50,000', status: 'paid', time: '6 hours ago' },
     { name: 'David Thompson', unit: 'A-205', amount: '₦100,000', status: 'overdue', time: '1 day ago' }
   ];
+
+  const renderCurrentPage = () => {
+    switch (currentPage) {
+      case 'residents': return <ResidentsPage />;
+      case 'dues': return <DuesPaymentsPage />;
+      case 'meetings': return <MeetingsPage />;
+      case 'complaints': return <ComplaintsPage />;
+      case 'documents': return <DocumentsPage />;
+      default: return renderDashboard();
+    }
+  };
+
+  const renderDashboard = () => (
+    <>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {stats.map((stat, index) => (
+          <Card key={index} className="glass-card border-white/10">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-white/60">{stat.title}</p>
+                  <p className="text-2xl font-semibold">{stat.value}</p>
+                  <div className="flex items-center gap-1 mt-1">
+                    <TrendingUp className="h-3 w-3 text-emerald-400" />
+                    <span className="text-xs text-emerald-400">{stat.change}</span>
+                  </div>
+                </div>
+                <div className={`h-10 w-10 bg-${stat.color}-600/20 rounded-lg flex items-center justify-center`}>
+                  <stat.icon className={`h-5 w-5 text-${stat.color}-400`} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid lg:grid-cols-3 gap-6">
+        {/* Payment Analytics */}
+        <Card className="lg:col-span-2 glass-card border-white/10">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="font-medium">Monthly Payment Trends</CardTitle>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-emerald-400 flex items-center gap-1">
+                  <TrendingUp className="h-3 w-3" />
+                  +12.5%
+                </span>
+                <select className="text-xs glass border border-white/10 rounded px-2 py-1">
+                  <option>2024</option>
+                  <option>2023</option>
+                </select>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="h-48 flex items-end justify-between gap-2">
+              {Array.from({ length: 12 }, (_, i) => (
+                <div key={i} className="flex flex-col items-center gap-2">
+                  <div 
+                    className="w-6 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t"
+                    style={{ height: `${Math.random() * 120 + 20}px` }}
+                  />
+                  <span className="text-xs text-white/60">
+                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quick Actions */}
+        <Card className="glass-card border-white/10">
+          <CardHeader>
+            <CardTitle className="font-medium">Quick Actions</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <Button 
+              className="w-full glass hover:bg-white/20 justify-start gap-3"
+              onClick={() => setCurrentPage('residents')}
+            >
+              <Plus className="h-4 w-4" />
+              Add New Resident
+            </Button>
+            <Button 
+              className="w-full glass hover:bg-white/20 justify-start gap-3"
+              onClick={() => setCurrentPage('dues')}
+            >
+              <DollarSign className="h-4 w-4" />
+              Create Due
+            </Button>
+            <Button 
+              className="w-full glass hover:bg-white/20 justify-start gap-3"
+              onClick={() => setCurrentPage('meetings')}
+            >
+              <Calendar className="h-4 w-4" />
+              Schedule Meeting
+            </Button>
+            <Button 
+              className="w-full glass hover:bg-white/20 justify-start gap-3"
+              onClick={() => setCurrentPage('documents')}
+            >
+              <FileText className="h-4 w-4" />
+              Send Announcement
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Recent Activity */}
+      <Card className="glass-card border-white/10">
+        <CardHeader>
+          <CardTitle className="font-medium">Recent Payments</CardTitle>
+          <CardDescription className="text-white/60">Latest payment activities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="text-left text-white/60 border-b border-white/10">
+                <tr>
+                  <th className="py-3 px-3">Resident</th>
+                  <th className="py-3 px-3 hidden sm:table-cell">Unit</th>
+                  <th className="py-3 px-3">Amount</th>
+                  <th className="py-3 px-3 hidden md:table-cell">Status</th>
+                  <th className="py-3 px-3 hidden lg:table-cell">Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentPayments.map((payment, index) => (
+                  <tr key={index} className="hover:bg-white/5 transition border-b border-white/5">
+                    <td className="py-3 px-3 flex items-center gap-3">
+                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 grid place-content-center text-xs font-medium">
+                        {payment.name.charAt(0)}
+                      </div>
+                      <span className="truncate">{payment.name}</span>
+                    </td>
+                    <td className="py-3 px-3 hidden sm:table-cell text-white/70">{payment.unit}</td>
+                    <td className="py-3 px-3 font-medium">{payment.amount}</td>
+                    <td className="py-3 px-3 hidden md:table-cell">
+                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                        payment.status === 'paid' 
+                          ? 'bg-green-500/20 text-green-300'
+                          : payment.status === 'pending'
+                          ? 'bg-yellow-500/20 text-yellow-300'
+                          : 'bg-red-500/20 text-red-300'
+                      }`}>
+                        <div className="h-2 w-2 rounded-full bg-current" />
+                        {payment.status}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 hidden lg:table-cell text-white/60">{payment.time}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+    </>
+  );
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
@@ -99,18 +268,18 @@ const AdminDashboard = () => {
 
         <nav className="flex flex-col gap-1 text-sm">
           {menuItems.map((item, index) => (
-            <a
+            <button
               key={index}
-              href="#"
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition ${
-                item.active 
+              onClick={() => setCurrentPage(item.page)}
+              className={`flex items-center gap-3 px-3 py-2 rounded-lg transition text-left ${
+                currentPage === item.page
                   ? 'bg-white/10 text-white' 
                   : 'hover:bg-white/10 text-white/70 hover:text-white'
               }`}
             >
               <item.icon className="h-4 w-4" />
               {item.label}
-            </a>
+            </button>
           ))}
         </nav>
 
@@ -164,139 +333,7 @@ const AdminDashboard = () => {
 
         {/* Main Content */}
         <section className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {stats.map((stat, index) => (
-              <Card key={index} className="glass-card border-white/10">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-xs text-white/60">{stat.title}</p>
-                      <p className="text-2xl font-semibold">{stat.value}</p>
-                      <div className="flex items-center gap-1 mt-1">
-                        <TrendingUp className="h-3 w-3 text-emerald-400" />
-                        <span className="text-xs text-emerald-400">{stat.change}</span>
-                      </div>
-                    </div>
-                    <div className={`h-10 w-10 bg-${stat.color}-600/20 rounded-lg flex items-center justify-center`}>
-                      <stat.icon className={`h-5 w-5 text-${stat.color}-400`} />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <div className="grid lg:grid-cols-3 gap-6">
-            {/* Payment Analytics */}
-            <Card className="lg:col-span-2 glass-card border-white/10">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-medium">Monthly Payment Trends</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-emerald-400 flex items-center gap-1">
-                      <TrendingUp className="h-3 w-3" />
-                      +12.5%
-                    </span>
-                    <select className="text-xs glass border border-white/10 rounded px-2 py-1">
-                      <option>2024</option>
-                      <option>2023</option>
-                    </select>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="h-48 flex items-end justify-between gap-2">
-                  {Array.from({ length: 12 }, (_, i) => (
-                    <div key={i} className="flex flex-col items-center gap-2">
-                      <div 
-                        className="w-6 bg-gradient-to-t from-blue-600 to-cyan-400 rounded-t"
-                        style={{ height: `${Math.random() * 120 + 20}px` }}
-                      />
-                      <span className="text-xs text-white/60">
-                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][i]}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Quick Actions */}
-            <Card className="glass-card border-white/10">
-              <CardHeader>
-                <CardTitle className="font-medium">Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
-                  <Plus className="h-4 w-4" />
-                  Add New Resident
-                </Button>
-                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
-                  <DollarSign className="h-4 w-4" />
-                  Create Due
-                </Button>
-                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
-                  <Calendar className="h-4 w-4" />
-                  Schedule Meeting
-                </Button>
-                <Button className="w-full glass hover:bg-white/20 justify-start gap-3">
-                  <FileText className="h-4 w-4" />
-                  Send Announcement
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <Card className="glass-card border-white/10">
-            <CardHeader>
-              <CardTitle className="font-medium">Recent Payments</CardTitle>
-              <CardDescription className="text-white/60">Latest payment activities</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="text-left text-white/60 border-b border-white/10">
-                    <tr>
-                      <th className="py-3 px-3">Resident</th>
-                      <th className="py-3 px-3 hidden sm:table-cell">Unit</th>
-                      <th className="py-3 px-3">Amount</th>
-                      <th className="py-3 px-3 hidden md:table-cell">Status</th>
-                      <th className="py-3 px-3 hidden lg:table-cell">Time</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentPayments.map((payment, index) => (
-                      <tr key={index} className="hover:bg-white/5 transition border-b border-white/5">
-                        <td className="py-3 px-3 flex items-center gap-3">
-                          <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 grid place-content-center text-xs font-medium">
-                            {payment.name.charAt(0)}
-                          </div>
-                          <span className="truncate">{payment.name}</span>
-                        </td>
-                        <td className="py-3 px-3 hidden sm:table-cell text-white/70">{payment.unit}</td>
-                        <td className="py-3 px-3 font-medium">{payment.amount}</td>
-                        <td className="py-3 px-3 hidden md:table-cell">
-                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                            payment.status === 'paid' 
-                              ? 'bg-green-500/20 text-green-300'
-                              : payment.status === 'pending'
-                              ? 'bg-yellow-500/20 text-yellow-300'
-                              : 'bg-red-500/20 text-red-300'
-                          }`}>
-                            <div className="h-2 w-2 rounded-full bg-current" />
-                            {payment.status}
-                          </span>
-                        </td>
-                        <td className="py-3 px-3 hidden lg:table-cell text-white/60">{payment.time}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+          {renderCurrentPage()}
         </section>
       </div>
     </div>
