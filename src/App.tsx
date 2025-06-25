@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +14,7 @@ import SecurityDashboard from "./components/security/SecurityDashboard";
 const queryClient = new QueryClient();
 
 // Protected Route Component
-const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 'admin' | 'resident' }) => {
+const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 'admin' | 'resident' | 'security' }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -29,7 +30,10 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 
   }
   
   if (role && user?.role !== role) {
-    return <Navigate to={user?.role === 'admin' ? '/admin' : '/resident'} replace />;
+    // Redirect based on user role
+    if (user?.role === 'admin') return <Navigate to="/admin" replace />;
+    if (user?.role === 'security') return <Navigate to="/security" replace />;
+    return <Navigate to="/resident" replace />;
   }
   
   return <>{children}</>;
@@ -51,7 +55,9 @@ const DashboardRouter = () => {
     return <Navigate to="/" replace />;
   }
   
-  return user.role === 'admin' ? <AdminDashboard /> : <ResidentDashboard />;
+  if (user.role === 'admin') return <AdminDashboard />;
+  if (user.role === 'security') return <SecurityDashboard />;
+  return <ResidentDashboard />;
 };
 
 const App = () => (
