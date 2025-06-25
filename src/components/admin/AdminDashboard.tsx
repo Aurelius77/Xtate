@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -18,6 +17,9 @@ import DuesPaymentsPage from './pages/DuesPaymentsPage';
 import MeetingsPage from './pages/MeetingsPage';
 import ComplaintsPage from './pages/ComplaintsPage';
 import DocumentsPage from './pages/DocumentsPage';
+import ExpensesPage from './pages/ExpensesPage';
+import BroadcastPage from './pages/BroadcastPage';
+import AccessCodeManagementPage from './pages/AccessCodeManagementPage';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -31,6 +33,9 @@ const AdminDashboard = () => {
       case 'meetings': return <MeetingsPage />;
       case 'complaints': return <ComplaintsPage />;
       case 'documents': return <DocumentsPage />;
+      case 'expenses': return <ExpensesPage />;
+      case 'broadcast': return <BroadcastPage />;
+      case 'access-codes': return <AccessCodeManagementPage />;
       default: return renderDashboard();
     }
   };

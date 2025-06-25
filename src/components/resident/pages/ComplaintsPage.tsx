@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MessageSquare, Plus, AlertCircle, CheckCircle, Clock, Camera, Send } from 'lucide-react';
+import { MessageSquare, Plus, AlertCircle, CheckCircle, Clock, Camera, Send, Upload, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,9 @@ const ComplaintsPage = () => {
       status: 'open', 
       priority: 'high',
       submittedDate: '2 hours ago',
-      response: null
+      response: null,
+      media: null,
+      adminComments: []
     },
     { 
       id: 2, 
@@ -23,7 +25,11 @@ const ComplaintsPage = () => {
       status: 'in_progress', 
       priority: 'medium',
       submittedDate: '1 day ago',
-      response: 'Maintenance team has been notified and will inspect tomorrow.'
+      response: 'Maintenance team has been notified and will inspect tomorrow.',
+      media: null,
+      adminComments: [
+        { id: 1, comment: 'Maintenance team has been notified', timestamp: '1 day ago', admin: 'John Admin' }
+      ]
     },
     { 
       id: 3, 
@@ -32,7 +38,12 @@ const ComplaintsPage = () => {
       status: 'resolved', 
       priority: 'low',
       submittedDate: '3 days ago',
-      response: 'Security has resolved the issue. Vehicle has been removed.'
+      response: 'Security has resolved the issue. Vehicle has been removed.',
+      media: null,
+      adminComments: [
+        { id: 1, comment: 'Security team notified', timestamp: '3 days ago', admin: 'Jane Admin' },
+        { id: 2, comment: 'Issue resolved, vehicle removed', timestamp: '2 days ago', admin: 'Security Team' }
+      ]
     },
   ]);
 
@@ -40,8 +51,20 @@ const ComplaintsPage = () => {
   const [newComplaint, setNewComplaint] = useState({
     title: '',
     description: '',
-    priority: 'medium'
+    priority: 'medium',
+    media: null
   });
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setNewComplaint(prev => ({ ...prev, media: file }));
+    }
+  };
+
+  const removeMedia = () => {
+    setNewComplaint(prev => ({ ...prev, media: null }));
+  };
 
   const handleSubmitComplaint = () => {
     if (newComplaint.title && newComplaint.description) {
@@ -50,10 +73,11 @@ const ComplaintsPage = () => {
         ...newComplaint,
         status: 'open',
         submittedDate: 'Just now',
-        response: null
+        response: null,
+        adminComments: []
       };
       setComplaints(prev => [complaint, ...prev]);
-      setNewComplaint({ title: '', description: '', priority: 'medium' });
+      setNewComplaint({ title: '', description: '', priority: 'medium', media: null });
       setShowNewComplaint(false);
     }
   };
@@ -129,6 +153,33 @@ const ComplaintsPage = () => {
                 <option value="high">High</option>
               </select>
             </div>
+            <div>
+              <label className="block text-sm font-medium text-cyan-200 mb-2">Attach Image/Video (Optional)</label>
+              <div className="space-y-2">
+                <input
+                  type="file"
+                  accept="image/*,video/*"
+                  onChange={handleFileUpload}
+                  className="hidden"
+                  id="media-upload"
+                />
+                <label
+                  htmlFor="media-upload"
+                  className="flex items-center gap-2 p-3 glass border-cyan-400/30 rounded-md cursor-pointer hover:bg-cyan-500/10 transition-colors"
+                >
+                  <Upload className="h-4 w-4 text-cyan-300" />
+                  <span className="text-cyan-200">Upload Image or Video</span>
+                </label>
+                {newComplaint.media && (
+                  <div className="flex items-center justify-between p-2 bg-cyan-500/10 rounded-md">
+                    <span className="text-sm text-cyan-200">{newComplaint.media.name}</span>
+                    <Button size="sm" variant="ghost" onClick={removeMedia}>
+                      <X className="h-4 w-4 text-red-400" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </div>
             <div className="flex gap-2">
               <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={handleSubmitComplaint}>
                 <Send className="h-4 w-4 mr-2" />
@@ -142,6 +193,7 @@ const ComplaintsPage = () => {
         </Card>
       )}
 
+      
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="glass-card border-cyan-400/20">
           <CardContent className="p-4">
@@ -176,7 +228,7 @@ const ComplaintsPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs text-cyan-300">Resolved</p>
-                <p className="text-2xl font-semibold text-green-400">{complaints.filter(c => c.status === 'resolved').length}</p>
+                <p className="text-2xl font-semibrent text-green-400">{complaints.filter(c => c.status === 'resolved').length}</p>
               </div>
               <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-400" />
@@ -226,10 +278,15 @@ const ComplaintsPage = () => {
                   </Badge>
                 </div>
                 
-                {complaint.response && (
-                  <div className="mt-3 p-3 bg-slate-800/50 rounded-lg border-l-2 border-cyan-500">
-                    <p className="text-xs text-cyan-300 mb-1">Response from Management:</p>
-                    <p className="text-sm text-cyan-100">{complaint.response}</p>
+                {complaint.adminComments && complaint.adminComments.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    <p className="text-xs text-cyan-300 font-medium">Admin Comments:</p>
+                    {complaint.adminComments.map((comment) => (
+                      <div key={comment.id} className="p-3 bg-slate-800/50 rounded-lg border-l-2 border-cyan-500">
+                        <p className="text-sm text-cyan-100">{comment.comment}</p>
+                        <p className="text-xs text-cyan-300 mt-1">{comment.admin} • {comment.timestamp}</p>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
