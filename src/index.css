@@ -54,7 +54,7 @@
   }
 
   body {
-    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white font-inter antialiased;
+    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-cyan-100 font-inter antialiased;
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   }
 
@@ -70,14 +70,30 @@
 /* Custom glassmorphism utilities */
 @layer utilities {
   .glass {
-    @apply bg-slate-900/40 backdrop-blur-lg border border-white/10;
+    @apply bg-slate-900/40 backdrop-blur-lg border border-cyan-400/20;
   }
 
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-lg border border-white/10 rounded-xl;
+    @apply bg-slate-900/40 backdrop-blur-lg border border-cyan-400/20 rounded-xl;
   }
 
   .sidebar-glass {
-    @apply bg-slate-900/50 backdrop-blur-lg border-r border-white/10;
+    @apply bg-slate-900/50 backdrop-blur-lg border-r border-cyan-400/20;
+  }
+
+  .text-bright {
+    @apply text-cyan-100;
+  }
+
+  .text-bright-secondary {
+    @apply text-cyan-200;
+  }
+
+  .text-bright-muted {
+    @apply text-cyan-300;
+  }
+
+  .hover-bright {
+    @apply hover:text-cyan-50 transition-colors;
   }
 }
