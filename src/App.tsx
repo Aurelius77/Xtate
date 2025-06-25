@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +8,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ResidentDashboard from "./components/resident/ResidentDashboard";
+import SecurityDashboard from "./components/security/SecurityDashboard";
 
 const queryClient = new QueryClient();
 
@@ -84,6 +84,14 @@ const App = () => (
               element={
                 <ProtectedRoute role="resident">
                   <ResidentDashboard />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/security" 
+              element={
+                <ProtectedRoute role="security">
+                  <SecurityDashboard />
                 </ProtectedRoute>
               } 
             />

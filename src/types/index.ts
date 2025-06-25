@@ -3,7 +3,7 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'resident';
+  role: 'admin' | 'resident' | 'security';
   full_name: string;
   phone: string;
   profile_image_url?: string;
