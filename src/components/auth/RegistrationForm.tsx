@@ -10,9 +10,40 @@ interface RegistrationFormProps {
   onModeChange: (mode: 'login' | 'register') => void;
 }
 
+interface FormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  unitNumber: string;
+  moveInDate: string;
+  kinName: string;
+  kinPhone: string;
+  kinRelationship: string;
+  hasCar: string;
+  carNumber: string;
+  carModel: string;
+}
+
+interface FormErrors {
+  fullName?: string;
+  email?: string;
+  phone?: string;
+  password?: string;
+  confirmPassword?: string;
+  unitNumber?: string;
+  moveInDate?: string;
+  kinName?: string;
+  kinPhone?: string;
+  kinRelationship?: string;
+  hasCar?: string;
+  carNumber?: string;
+}
+
 const RegistrationForm = ({ onClose, onModeChange }: RegistrationFormProps) => {
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormData>({
     // Personal Info
     fullName: '',
     email: '',
@@ -35,18 +66,18 @@ const RegistrationForm = ({ onClose, onModeChange }: RegistrationFormProps) => {
     carModel: '',
   });
 
-  const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState<FormErrors>({});
 
-  const handleInputChange = (field: string, value: string) => {
+  const handleInputChange = (field: keyof FormData, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     // Clear error when user starts typing
-    if (errors[field]) {
+    if (errors[field as keyof FormErrors]) {
       setErrors(prev => ({ ...prev, [field]: '' }));
     }
   };
 
   const validateStep = (stepNumber: number) => {
-    const newErrors = {};
+    const newErrors: FormErrors = {};
     
     if (stepNumber === 1) {
       if (!formData.fullName) newErrors.fullName = 'Full name is required';
