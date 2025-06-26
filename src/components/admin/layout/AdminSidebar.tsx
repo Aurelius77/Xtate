@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutDashboard, Users, DollarSign, Calendar, MessageSquare, FileText, Plus, Menu, Megaphone, Shield } from 'lucide-react';
+import { LayoutDashboard, Users, DollarSign, Calendar, MessageSquare, FileText, Plus, Menu, Megaphone, Shield, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface AdminSidebarProps {
@@ -20,7 +21,8 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
     { icon: FileText, label: 'Documents', page: 'documents' },
     { icon: DollarSign, label: 'Expenses', page: 'expenses' },
     { icon: Megaphone, label: 'Broadcast', page: 'broadcast' },
-    { icon: Shield, label: 'Access Codes', page: 'access-codes' }
+    { icon: Shield, label: 'Access Codes', page: 'access-codes' },
+    { icon: UserCheck, label: 'Security Management', page: 'security-management' }
   ];
 
   return (

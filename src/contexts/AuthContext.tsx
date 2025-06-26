@@ -17,7 +17,7 @@ interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  role: 'admin' | 'resident';
+  role: 'admin' | 'resident' | 'security';
   houseUnit?: string;
 }
 
@@ -65,15 +65,30 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       await new Promise(resolve => setTimeout(resolve, 1000));
       
       // Mock user data - in real app, this would come from the API
-      const mockUser: User = {
-        id: '1',
-        email,
-        role: email.includes('admin') ? 'admin' : 'resident',
-        full_name: email.includes('admin') ? 'Estate Administrator' : 'John Resident',
-        phone: '+234-800-000-0000',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      };
+      let mockUser: User;
+      
+      // Check if it's a security login
+      if (email.includes('security') || email === 'john.security@estate.com' || email === 'mary.guard@estate.com') {
+        mockUser = {
+          id: '1',
+          email,
+          role: 'security',
+          full_name: email.includes('john') ? 'John Security' : email.includes('mary') ? 'Mary Guard' : 'Security Personnel',
+          phone: '+234-800-000-0000',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      } else {
+        mockUser = {
+          id: '1',
+          email,
+          role: email.includes('admin') ? 'admin' : 'resident',
+          full_name: email.includes('admin') ? 'Estate Administrator' : 'John Resident',
+          phone: '+234-800-000-0000',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        };
+      }
 
       setUser(mockUser);
       localStorage.setItem('estateconnect_user', JSON.stringify(mockUser));
