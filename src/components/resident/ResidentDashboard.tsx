@@ -17,6 +17,7 @@ import ComplaintsPage from './pages/ComplaintsPage';
 import DocumentsPage from './pages/DocumentsPage';
 import GenerateAccessCodePage from './pages/GenerateAccessCodePage';
 import MyAccessCodesPage from './pages/MyAccessCodesPage';
+import ResidentSettingsPage from './pages/ResidentSettingsPage';
 
 const ResidentDashboard = () => {
   const { user, logout } = useAuth();
@@ -30,6 +31,7 @@ const ResidentDashboard = () => {
       case 'documents': return <DocumentsPage />;
       case 'generate-access-code': return <GenerateAccessCodePage />;
       case 'my-access-codes': return <MyAccessCodesPage />;
+      case 'settings': return <ResidentSettingsPage />;
       default: return renderDashboard();
     }
   };
