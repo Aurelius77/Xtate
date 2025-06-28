@@ -1,50 +1,35 @@
 
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
   :root {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
     --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 84% 4.9%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-
-    --radius: 0.75rem;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --ring: 224.3 76.3% 94.1%;
+    --chart-1: 220 70% 50%;
+    --chart-2: 160 60% 45%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
   }
 }
 
@@ -52,48 +37,60 @@
   * {
     @apply border-border;
   }
-
   body {
-    @apply bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-cyan-100 font-inter antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-  }
-
-  html {
-    height: 100%;
-  }
-
-  #root {
-    min-height: 100vh;
+    @apply bg-background text-foreground;
+    font-family: "Inter", sans-serif;
   }
 }
 
-/* Custom glassmorphism utilities */
-@layer utilities {
-  .glass {
-    @apply bg-slate-900/40 backdrop-blur-lg border border-cyan-400/20;
-  }
-
+@layer components {
   .glass-card {
-    @apply bg-slate-900/40 backdrop-blur-lg border border-cyan-400/20 rounded-xl;
+    @apply bg-slate-900/40 backdrop-blur-xl border border-cyan-400/20;
   }
+  
+  .glass-input {
+    @apply bg-slate-800/50 backdrop-blur-sm border-cyan-400/30 text-cyan-50 placeholder:text-cyan-300/50;
+  }
+  
+  .glass-button {
+    @apply bg-slate-800/60 backdrop-blur-sm border-cyan-400/20 hover:bg-slate-700/60;
+  }
+}
 
-  .sidebar-glass {
-    @apply bg-slate-900/50 backdrop-blur-lg border-r border-cyan-400/20;
+/* PWA specific styles */
+@media (display-mode: standalone) {
+  body {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -webkit-tap-highlight-color: transparent;
   }
+}
 
-  .text-bright {
-    @apply text-cyan-100;
-  }
+/* Smooth scrolling for better mobile experience */
+html {
+  scroll-behavior: smooth;
+}
 
-  .text-bright-secondary {
-    @apply text-cyan-200;
+/* Enhanced animations */
+@keyframes slide-in-from-bottom {
+  from {
+    transform: translateY(100%);
+    opacity: 0;
   }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
 
-  .text-bright-muted {
-    @apply text-cyan-300;
-  }
+.animate-in {
+  animation-fill-mode: both;
+}
 
-  .hover-bright {
-    @apply hover:text-cyan-50 transition-colors;
-  }
+.slide-in-from-bottom {
+  animation-name: slide-in-from-bottom;
+}
+
+.duration-500 {
+  animation-duration: 500ms;
 }
