@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,9 @@ import {
   CheckCircle, Star, ArrowRight
 } from "lucide-react";
 import AuthModal from "@/components/auth/AuthModal";
+import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
+import PricingSection from "@/components/landing/PricingSection";
+import DashboardPreview from "@/components/landing/DashboardPreview";
 
 const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -222,6 +224,12 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Dashboard Preview Section */}
+      <DashboardPreview />
+
+      {/* Pricing Section */}
+      <PricingSection />
+
       {/* Testimonials */}
       <section className="bg-slate-800/30 py-24">
         <div className="container mx-auto px-4">
@@ -343,6 +351,8 @@ const Index = () => {
         mode={authMode}
         onModeChange={setAuthMode}
       />
+      
+      <PWAInstallPrompt />
     </div>
   );
 };

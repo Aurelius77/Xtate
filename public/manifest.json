@@ -8,6 +8,8 @@
   "background_color": "#0f172a",
   "theme_color": "#0891b2",
   "orientation": "portrait-primary",
+  "scope": "/",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/favicon.ico",
@@ -40,6 +42,32 @@
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Admin Dashboard",
+      "short_name": "Admin",
+      "description": "Access admin dashboard",
+      "url": "/?role=admin",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Resident Portal",
+      "short_name": "Resident",
+      "description": "Access resident portal",
+      "url": "/?role=resident",
+      "icons": [
+        {
+          "src": "/icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
