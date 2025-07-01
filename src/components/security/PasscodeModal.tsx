@@ -47,7 +47,7 @@ const PasscodeModal = ({ isOpen, onUnlock }: PasscodeModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-md glass-card border-cyan-400/20" hideCloseButton>
+      <DialogContent className="sm:max-w-md glass-card border-cyan-400/20 [&>button]:hidden">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-cyan-50">
             <Shield className="h-5 w-5 text-cyan-400" />
