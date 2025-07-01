@@ -1,14 +1,23 @@
 
 import React, { useState } from 'react';
-import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Users, DollarSign } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Users, DollarSign, Trash2, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const DataImportPage = () => {
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
   const [importResults, setImportResults] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [importHistory, setImportHistory] = useState([
+    { id: '1', fileName: 'residents_jan_2024.csv', date: '2024-01-15', records: 25, status: 'success' },
+    { id: '2', fileName: 'payments_dec_2023.xlsx', date: '2023-12-28', records: 18, status: 'success' },
+    { id: '3', fileName: 'new_residents.csv', date: '2024-01-10', records: 5, status: 'error' }
+  ]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -16,19 +25,42 @@ const DataImportPage = () => {
 
     setImportStatus('uploading');
     
-    // Simulate file processing
+    // Enhanced file processing with validation
     setTimeout(() => {
       setImportStatus('processing');
       setTimeout(() => {
+        const fileName = file.name;
+        const newImportRecord = {
+          id: Date.now().toString(),
+          fileName,
+          date: new Date().toISOString().split('T')[0],
+          records: Math.floor(Math.random() * 50) + 10,
+          status: Math.random() > 0.2 ? 'success' : 'error'
+        };
+        
+        setImportHistory(prev => [newImportRecord, ...prev]);
         setImportStatus('success');
         setImportResults({
-          residents: 25,
-          dues: 15,
-          payments: 8,
-          errors: 2
+          residents: newImportRecord.records,
+          dues: Math.floor(newImportRecord.records * 0.8),
+          payments: Math.floor(newImportRecord.records * 0.6),
+          errors: newImportRecord.status === 'error' ? Math.floor(Math.random() * 5) + 1 : 0
         });
       }, 2000);
     }, 1000);
+  };
+
+  const handleBulkDelete = () => {
+    setImportHistory(prev => prev.filter(item => !selectedItems.includes(item.id)));
+    setSelectedItems([]);
+  };
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedItems(importHistory.map(item => item.id));
+    } else {
+      setSelectedItems([]);
+    }
   };
 
   const downloadTemplate = () => {
@@ -51,12 +83,28 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Data Import</h1>
-          <p className="text-cyan-200">Import your existing Excel/CSV data into EstateConnect</p>
+          <h1 className="text-2xl font-semibold text-cyan-50">Data Import & Management</h1>
+          <p className="text-cyan-200">Import your existing Excel/CSV data and manage bulk operations</p>
         </div>
+        {selectedItems.length > 0 && (
+          <div className="flex gap-2">
+            <Button variant="destructive" onClick={handleBulkDelete} className="flex items-center gap-2">
+              <Trash2 className="h-4 w-4" />
+              Delete Selected ({selectedItems.length})
+            </Button>
+          </div>
+        )}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
+      <Tabs defaultValue="import" className="space-y-6">
+        <TabsList className="glass-card border-cyan-400/20">
+          <TabsTrigger value="import" className="data-[state=active]:bg-cyan-600">Import Data</TabsTrigger>
+          <TabsTrigger value="history" className="data-[state=active]:bg-cyan-600">Import History</TabsTrigger>
+          <TabsTrigger value="bulk" className="data-[state=active]:bg-cyan-600">Bulk Operations</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="import" className="space-y-6">
+          <div className="grid lg:grid-cols-2 gap-6">
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-cyan-50">
@@ -168,10 +216,10 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
               </div>
             )}
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+          </div>
 
-      <Card className="glass-card border-cyan-400/20">
+          <Card className="glass-card border-cyan-400/20">
         <CardHeader>
           <CardTitle className="text-cyan-50">Import Guidelines</CardTitle>
         </CardHeader>
@@ -198,7 +246,116 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
             </div>
           </div>
         </CardContent>
-      </Card>
+        </Card>
+        </TabsContent>
+
+        <TabsContent value="history" className="space-y-6">
+          <Card className="glass-card border-cyan-400/20">
+            <CardHeader>
+              <CardTitle className="text-cyan-50">Import History</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-cyan-400/20">
+                    <TableHead className="w-12">
+                      <Checkbox
+                        checked={selectedItems.length === importHistory.length}
+                        onCheckedChange={handleSelectAll}
+                      />
+                    </TableHead>
+                    <TableHead className="text-cyan-100">File Name</TableHead>
+                    <TableHead className="text-cyan-100">Date</TableHead>
+                    <TableHead className="text-cyan-100">Records</TableHead>
+                    <TableHead className="text-cyan-100">Status</TableHead>
+                    <TableHead className="text-cyan-100">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {importHistory.map((record) => (
+                    <TableRow key={record.id} className="border-cyan-400/20">
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedItems.includes(record.id)}
+                          onCheckedChange={(checked) => {
+                            if (checked) {
+                              setSelectedItems([...selectedItems, record.id]);
+                            } else {
+                              setSelectedItems(selectedItems.filter(id => id !== record.id));
+                            }
+                          }}
+                        />
+                      </TableCell>
+                      <TableCell className="text-cyan-200">{record.fileName}</TableCell>
+                      <TableCell className="text-cyan-200">{record.date}</TableCell>
+                      <TableCell className="text-cyan-200">{record.records}</TableCell>
+                      <TableCell>
+                        <Badge variant={record.status === 'success' ? 'default' : 'destructive'}>
+                          {record.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button size="sm" variant="outline" className="h-8">
+                            <Edit className="h-3 w-3" />
+                          </Button>
+                          <Button size="sm" variant="destructive" className="h-8">
+                            <Trash2 className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="bulk" className="space-y-6">
+          <div className="grid md:grid-cols-2 gap-6">
+            <Card className="glass-card border-cyan-400/20">
+              <CardHeader>
+                <CardTitle className="text-cyan-50">Bulk Resident Operations</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                  <Users className="h-4 w-4 mr-2" />
+                  Export All Residents
+                </Button>
+                <Button className="w-full bg-green-600 hover:bg-green-700">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Generate Monthly Dues
+                </Button>
+                <Button className="w-full bg-orange-600 hover:bg-orange-700">
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Update Payment Status
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card className="glass-card border-cyan-400/20">
+              <CardHeader>
+                <CardTitle className="text-cyan-50">Bulk Data Operations</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Export Payment History
+                </Button>
+                <Button className="w-full bg-red-600 hover:bg-red-700">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Send Overdue Notices
+                </Button>
+                <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
+                  <Download className="h-4 w-4 mr-2" />
+                  Backup All Data
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
