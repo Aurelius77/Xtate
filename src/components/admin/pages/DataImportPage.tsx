@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Checkbox } from '@/components/ui/checkbox';
+import SecureDataImport from '@/components/data-import/SecureDataImport';
 
 const DataImportPage = () => {
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
@@ -104,6 +105,14 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
         </TabsList>
 
         <TabsContent value="import" className="space-y-6">
+          {/* Secure Data Import Component */}
+          <SecureDataImport 
+            onImportComplete={(result) => {
+              console.log('Import completed:', result);
+              // Handle import results here
+            }}
+          />
+          
           <div className="grid lg:grid-cols-2 gap-6">
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>

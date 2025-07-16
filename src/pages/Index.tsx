@@ -11,6 +11,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import PricingSection from "@/components/landing/PricingSection";
 import DashboardPreview from "@/components/landing/DashboardPreview";
+import { ConnectionStatus, SecurityRecommendations } from "@/components/security/SecurityAlert";
 
 const Index = () => {
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -106,6 +107,11 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+      {/* Security Recommendations */}
+      <div className="p-4">
+        <SecurityRecommendations />
+      </div>
+      
       {/* Header */}
       <header className="border-b border-slate-700/50 bg-slate-900/80 backdrop-blur-sm sticky top-0 z-40">
         <div className="container mx-auto px-4 py-4 flex justify-between items-center">
@@ -117,20 +123,25 @@ const Index = () => {
               EstateConnect
             </span>
           </div>
-          <div className="space-x-3">
-            <Button 
-              variant="ghost" 
-              onClick={() => handleAuthClick('login')}
-              className="text-cyan-300 hover:text-cyan-100 hover:bg-cyan-500/10"
-            >
-              Sign In
-            </Button>
-            <Button 
-              onClick={() => handleAuthClick('register')} 
-              className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white"
-            >
-              Get Started
-            </Button>
+          <div className="flex items-center space-x-6">
+            {/* Connection Status */}
+            <ConnectionStatus />
+            
+            <div className="space-x-3">
+              <Button 
+                variant="ghost" 
+                onClick={() => handleAuthClick('login')}
+                className="text-cyan-300 hover:text-cyan-100 hover:bg-cyan-500/10"
+              >
+                Sign In
+              </Button>
+              <Button 
+                onClick={() => handleAuthClick('register')} 
+                className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white"
+              >
+                Get Started
+              </Button>
+            </div>
           </div>
         </div>
       </header>

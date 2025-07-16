@@ -3,6 +3,7 @@ import { DollarSign, CreditCard, Clock, CheckCircle, AlertTriangle, Download, Ey
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import SecurePaymentForm from '@/components/payments/SecurePaymentForm';
 
 const MyDuesPage = () => {
   const [dues, setDues] = useState([
@@ -11,6 +12,9 @@ const MyDuesPage = () => {
     { id: 3, title: 'Facility Maintenance', amount: '₦25,000', dueDate: '2024-02-05', status: 'overdue' },
     { id: 4, title: 'Annual Subscription', amount: '₦100,000', dueDate: '2024-12-31', status: 'pending' },
   ]);
+  
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
+  const [selectedDue, setSelectedDue] = useState<any>(null);
 
   const [paymentHistory] = useState([
     { id: 1, title: 'Security Levy', amount: '₦15,000', paidDate: '2024-01-14', reference: 'PAY_001234' },
@@ -19,13 +23,25 @@ const MyDuesPage = () => {
   ]);
 
   const handlePayNow = (dueId: number) => {
-    alert('Redirecting to payment gateway...');
-    // Simulate payment process
-    setTimeout(() => {
+    const due = dues.find(d => d.id === dueId);
+    if (due) {
+      setSelectedDue(due);
+      setShowPaymentForm(true);
+    }
+  };
+  
+  const handlePaymentSuccess = (reference: string) => {
+    if (selectedDue) {
       setDues(prev => prev.map(due => 
-        due.id === dueId ? { ...due, status: 'paid' } : due
+        due.id === selectedDue.id ? { ...due, status: 'paid' } : due
       ));
-    }, 2000);
+      setShowPaymentForm(false);
+      setSelectedDue(null);
+    }
+  };
+  
+  const handlePaymentError = (error: string) => {
+    console.error('Payment failed:', error);
   };
 
   const getStatusIcon = (status: string) => {
@@ -198,6 +214,35 @@ const MyDuesPage = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Secure Payment Form Modal */}
+      {showPaymentForm && selectedDue && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-slate-900 p-6 rounded-lg max-w-md w-full mx-4">
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-cyan-50">
+                Pay {selectedDue.title}
+              </h3>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => setShowPaymentForm(false)}
+                className="text-cyan-300 hover:text-cyan-100"
+              >
+                ✕
+              </Button>
+            </div>
+            
+            <SecurePaymentForm
+              amount={parseInt(selectedDue.amount.replace(/[₦,]/g, ''))}
+              currency="NGN"
+              description={`Payment for ${selectedDue.title} - Due: ${selectedDue.dueDate}`}
+              onSuccess={handlePaymentSuccess}
+              onError={handlePaymentError}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

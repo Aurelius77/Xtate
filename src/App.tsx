@@ -4,7 +4,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { SecureAuthProvider, useAuth } from "@/contexts/SecureAuthContext";
 import { InactivityProvider } from "@/components/security/InactivityProvider";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import Index from "./pages/Index";
@@ -67,7 +67,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <AuthProvider>
+      <SecureAuthProvider>
         <InactivityProvider>
           <BrowserRouter>
             <Routes>
@@ -110,7 +110,7 @@ const App = () => (
             <PWAInstallPrompt />
           </BrowserRouter>
         </InactivityProvider>
-      </AuthProvider>
+      </SecureAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
