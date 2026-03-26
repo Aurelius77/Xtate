@@ -21,7 +21,7 @@ export const useInactivityTimeout = ({
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    let timeoutId: NodeJS.Timeout;
+    let timeoutId: ReturnType<typeof setTimeout>;
 
     const handleActivity = () => {
       resetTimer();
