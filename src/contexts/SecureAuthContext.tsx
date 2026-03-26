@@ -1,8 +1,7 @@
-// Enhanced secure authentication context with encryption and rate limiting
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User } from '@/types';
-import { authAdapter, isSupabaseConnected } from '@/lib/supabase-adapter';
-import { secureSession, rateLimiter, validateEmail, validatePassword, sanitizeInput } from '@/lib/security';
+import { supabase } from '@/integrations/supabase/client';
+import { rateLimiter, validateEmail, validatePassword, sanitizeInput } from '@/lib/security';
 import { useToast } from '@/hooks/use-toast';
 
 interface AuthContextType {
@@ -40,78 +39,85 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', userId)
+    .single();
+
+  if (profileError || !profile) return null;
+
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .single();
+
+  const role = (roleData?.role as 'admin' | 'resident' | 'security') || 'resident';
+
+  return {
+    id: profile.id,
+    email: profile.email,
+    role,
+    full_name: profile.full_name,
+    phone: profile.phone || '',
+    profile_image_url: profile.profile_image_url || undefined,
+    created_at: profile.created_at,
+    updated_at: profile.updated_at,
+  };
+}
+
 export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
 
-  // Check for existing session on mount
   useEffect(() => {
-    const checkAuth = async () => {
+    let mounted = true;
+
+    const initAuth = async () => {
       try {
-        setIsLoading(true);
-        
-        // Check for existing secure session
-        const savedUser = secureSession.get('user');
-        if (savedUser) {
-          // Validate session hasn't been tampered with
-          if (validateUser(savedUser)) {
-            setUser(savedUser);
-          } else {
-            secureSession.clear();
-          }
-        }
-        
-        // If Supabase is connected, validate with server
-        if (isSupabaseConnected() && savedUser) {
-          try {
-            const serverUser = await authAdapter.getCurrentUser();
-            if (serverUser) {
-              setUser(serverUser);
-              secureSession.set('user', serverUser);
-            } else {
-              // Server session expired
-              setUser(null);
-              secureSession.clear();
-            }
-          } catch (error) {
-            console.error('Server auth check failed:', error);
-          }
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user && mounted) {
+          const profile = await fetchUserProfile(session.user.id);
+          if (mounted) setUser(profile);
         }
       } catch (error) {
-        console.error('Auth check failed:', error);
-        secureSession.clear();
+        console.error('Auth init failed:', error);
       } finally {
-        setIsLoading(false);
+        if (mounted) setIsLoading(false);
       }
     };
 
-    checkAuth();
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        if (mounted) setUser(profile);
+      } else if (event === 'SIGNED_OUT') {
+        if (mounted) setUser(null);
+      }
+      if (mounted) setIsLoading(false);
+    });
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
-  const validateUser = (userData: any): boolean => {
-    return userData && 
-           typeof userData.id === 'string' && 
-           typeof userData.email === 'string' && 
-           validateEmail(userData.email) &&
-           ['admin', 'resident', 'security'].includes(userData.role);
-  };
-
   const login = async (email: string, password: string): Promise<void> => {
-    // Sanitize inputs
     const cleanEmail = sanitizeInput(email.toLowerCase());
-    const cleanPassword = sanitizeInput(password);
 
-    // Validate inputs
     if (!validateEmail(cleanEmail)) {
       throw new Error('Invalid email format');
     }
-
-    if (cleanPassword.length < 6) {
+    if (password.length < 6) {
       throw new Error('Password too short');
     }
 
-    // Rate limiting
     const rateLimitKey = `login_${cleanEmail}`;
     if (!rateLimiter.isAllowed(rateLimitKey, 5, 15 * 60 * 1000)) {
       throw new Error('Too many login attempts. Please try again in 15 minutes.');
@@ -119,31 +125,26 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
 
     try {
       setIsLoading(true);
-      
-      const userData = await authAdapter.login(cleanEmail, cleanPassword);
-      
-      if (!validateUser(userData)) {
-        throw new Error('Invalid user data received');
-      }
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: cleanEmail,
+        password,
+      });
 
-      setUser(userData);
-      secureSession.set('user', userData, 24); // 24 hour session
-      rateLimiter.reset(rateLimitKey); // Reset rate limit on successful login
+      if (error) throw new Error(error.message);
+
+      const profile = await fetchUserProfile(data.user.id);
+      if (!profile) throw new Error('Profile not found');
+
+      setUser(profile);
+      rateLimiter.reset(rateLimitKey);
 
       toast({
         title: "Login Successful",
-        description: `Welcome back, ${userData.full_name}!`,
+        description: `Welcome back, ${profile.full_name}!`,
       });
-
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Login failed';
-      
-      toast({
-        title: "Login Failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      
+      toast({ title: "Login Failed", description: errorMessage, variant: "destructive" });
       throw error;
     } finally {
       setIsLoading(false);
@@ -151,31 +152,20 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const register = async (userData: RegisterData): Promise<void> => {
-    // Sanitize inputs
     const cleanData = {
       fullName: sanitizeInput(userData.fullName),
       email: sanitizeInput(userData.email.toLowerCase()),
       phone: sanitizeInput(userData.phone),
       role: userData.role,
       houseUnit: userData.houseUnit ? sanitizeInput(userData.houseUnit) : undefined,
-      password: userData.password // Don't sanitize password as it might remove special chars
+      password: userData.password,
     };
 
-    // Validate inputs
-    if (!validateEmail(cleanData.email)) {
-      throw new Error('Invalid email format');
-    }
+    if (!validateEmail(cleanData.email)) throw new Error('Invalid email format');
+    const pwVal = validatePassword(cleanData.password);
+    if (!pwVal.isValid) throw new Error(pwVal.errors[0]);
+    if (cleanData.fullName.length < 2) throw new Error('Full name must be at least 2 characters');
 
-    const passwordValidation = validatePassword(cleanData.password);
-    if (!passwordValidation.isValid) {
-      throw new Error(passwordValidation.errors[0]);
-    }
-
-    if (cleanData.fullName.length < 2) {
-      throw new Error('Full name must be at least 2 characters');
-    }
-
-    // Rate limiting for registration
     const rateLimitKey = `register_${cleanData.email}`;
     if (!rateLimiter.isAllowed(rateLimitKey, 3, 60 * 60 * 1000)) {
       throw new Error('Too many registration attempts. Please try again later.');
@@ -183,39 +173,38 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
 
     try {
       setIsLoading(true);
-      
-      const newUser = await authAdapter.register(cleanData);
-      
-      if (!validateUser(newUser)) {
-        throw new Error('Invalid user data received');
+
+      const { data, error } = await supabase.auth.signUp({
+        email: cleanData.email,
+        password: cleanData.password,
+        options: {
+          data: {
+            full_name: cleanData.fullName,
+            phone: cleanData.phone,
+            role: cleanData.role,
+            house_unit: cleanData.houseUnit || '',
+          },
+        },
+      });
+
+      if (error) throw new Error(error.message);
+      if (!data.user) throw new Error('Registration failed');
+
+      rateLimiter.reset(rateLimitKey);
+
+      // Fetch profile (created by trigger)
+      const profile = await fetchUserProfile(data.user.id);
+      if (profile) {
+        setUser(profile);
       }
 
-      if (newUser.role === 'resident') {
-        setUser(newUser);
-        secureSession.set('user', newUser, 24);
-        
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to EstateConnect!",
-        });
-      } else {
-        toast({
-          title: "Registration Submitted",
-          description: "Admin account requires approval. You'll receive an email once approved.",
-        });
-      }
-
-      rateLimiter.reset(rateLimitKey); // Reset rate limit on successful registration
-
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to EstateConnect! Please check your email to verify your account.",
+      });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      
-      toast({
-        title: "Registration Failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      
+      toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
       throw error;
     } finally {
       setIsLoading(false);
@@ -225,78 +214,45 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   const logout = async (): Promise<void> => {
     try {
       setIsLoading(true);
-      
-      // Call server logout if Supabase is connected
-      if (isSupabaseConnected()) {
-        await authAdapter.logout();
-      }
-      
-      // Clear local session
+      await supabase.auth.signOut();
       setUser(null);
-      secureSession.clear();
-      
-      toast({
-        title: "Logged Out",
-        description: "You have been successfully logged out.",
-      });
-      
+      toast({ title: "Logged Out", description: "You have been successfully logged out." });
     } catch (error) {
       console.error('Logout error:', error);
-      // Clear local session even if server logout fails
       setUser(null);
-      secureSession.clear();
     } finally {
       setIsLoading(false);
     }
   };
 
   const updateProfile = async (updateData: Partial<User>): Promise<void> => {
-    if (!user) {
-      throw new Error('No user logged in');
-    }
+    if (!user) throw new Error('No user logged in');
 
-    // Sanitize update data
-    const cleanData: Partial<User> = {};
+    const cleanData: Record<string, string> = {};
     if (updateData.full_name) cleanData.full_name = sanitizeInput(updateData.full_name);
     if (updateData.phone) cleanData.phone = sanitizeInput(updateData.phone);
     if (updateData.email) {
       const cleanEmail = sanitizeInput(updateData.email.toLowerCase());
-      if (!validateEmail(cleanEmail)) {
-        throw new Error('Invalid email format');
-      }
+      if (!validateEmail(cleanEmail)) throw new Error('Invalid email format');
       cleanData.email = cleanEmail;
     }
 
     try {
       setIsLoading(true);
-      
-      const updatedUser = { 
-        ...user, 
-        ...cleanData, 
-        updated_at: new Date().toISOString() 
-      };
-      
-      if (!validateUser(updatedUser)) {
-        throw new Error('Invalid user data');
-      }
+      const { error } = await supabase
+        .from('profiles')
+        .update(cleanData)
+        .eq('id', user.id);
 
+      if (error) throw new Error(error.message);
+
+      const updatedUser = { ...user, ...cleanData, updated_at: new Date().toISOString() };
       setUser(updatedUser);
-      secureSession.set('user', updatedUser, 24);
-      
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-      
+
+      toast({ title: "Profile Updated", description: "Your profile has been successfully updated." });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Profile update failed';
-      
-      toast({
-        title: "Update Failed",
-        description: errorMessage,
-        variant: "destructive"
-      });
-      
+      toast({ title: "Update Failed", description: errorMessage, variant: "destructive" });
       throw error;
     } finally {
       setIsLoading(false);
@@ -304,16 +260,14 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   const refreshAuth = async (): Promise<void> => {
-    if (isSupabaseConnected()) {
-      try {
-        const serverUser = await authAdapter.getCurrentUser();
-        if (serverUser) {
-          setUser(serverUser);
-          secureSession.set('user', serverUser);
-        }
-      } catch (error) {
-        console.error('Auth refresh failed:', error);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        if (profile) setUser(profile);
       }
+    } catch (error) {
+      console.error('Auth refresh failed:', error);
     }
   };
 
@@ -321,12 +275,12 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
     user,
     isLoading,
     isAuthenticated: !!user,
-    isSupabaseConnected: isSupabaseConnected(),
+    isSupabaseConnected: true,
     login,
     register,
     logout,
     updateProfile,
-    refreshAuth
+    refreshAuth,
   };
 
   return (
