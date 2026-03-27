@@ -48,23 +48,10 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     
     try {
       await login(loginForm.email, loginForm.password);
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back to EstateConnect",
-      });
       onClose();
-      // Navigate based on role
-      if (loginForm.email.includes('admin')) {
-        navigate('/admin');
-      } else {
-        navigate('/resident');
-      }
+      navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: "Please check your credentials and try again",
-        variant: "destructive"
-      });
+      // Toast already shown by auth context
     } finally {
       setIsLoading(false);
     }
