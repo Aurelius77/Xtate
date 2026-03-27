@@ -48,23 +48,10 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     
     try {
       await login(loginForm.email, loginForm.password);
-      toast({
-        title: "Login Successful!",
-        description: "Welcome back to EstateConnect",
-      });
       onClose();
-      // Navigate based on role
-      if (loginForm.email.includes('admin')) {
-        navigate('/admin');
-      } else {
-        navigate('/resident');
-      }
+      navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Login Failed",
-        description: "Please check your credentials and try again",
-        variant: "destructive"
-      });
+      // Toast already shown by auth context
     } finally {
       setIsLoading(false);
     }
@@ -86,26 +73,10 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     
     try {
       await register(registerForm);
-      
-      if (registerForm.role === 'admin') {
-        toast({
-          title: "Registration Submitted!",
-          description: "Admin account requires approval. You'll receive an email once approved.",
-        });
-      } else {
-        toast({
-          title: "Registration Successful!",
-          description: "Welcome to EstateConnect!",
-        });
-        navigate('/resident');
-      }
       onClose();
+      navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: "Please try again or contact support",
-        variant: "destructive"
-      });
+      // Toast already shown by auth context
     } finally {
       setIsLoading(false);
     }
@@ -163,11 +134,6 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 </div>
               </div>
 
-              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
-                <strong>Demo Accounts:</strong><br />
-                Admin: admin@estate.com / password<br />
-                Resident: resident@estate.com / password
-              </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
