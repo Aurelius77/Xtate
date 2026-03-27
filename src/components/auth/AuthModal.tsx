@@ -134,11 +134,6 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 </div>
               </div>
 
-              <div className="text-xs text-gray-600 bg-gray-50 p-3 rounded">
-                <strong>Demo Accounts:</strong><br />
-                Admin: admin@estate.com / password<br />
-                Resident: resident@estate.com / password
-              </div>
 
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Signing in..." : "Sign In"}
