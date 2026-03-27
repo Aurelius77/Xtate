@@ -73,26 +73,10 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     
     try {
       await register(registerForm);
-      
-      if (registerForm.role === 'admin') {
-        toast({
-          title: "Registration Submitted!",
-          description: "Admin account requires approval. You'll receive an email once approved.",
-        });
-      } else {
-        toast({
-          title: "Registration Successful!",
-          description: "Welcome to EstateConnect!",
-        });
-        navigate('/resident');
-      }
       onClose();
+      navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Registration Failed",
-        description: "Please try again or contact support",
-        variant: "destructive"
-      });
+      // Toast already shown by auth context
     } finally {
       setIsLoading(false);
     }
