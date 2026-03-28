@@ -469,7 +469,7 @@ export type Database = {
     }
     Enums: {
       access_code_status: "active" | "used" | "expired" | "cancelled"
-      app_role: "admin" | "resident" | "security"
+      app_role: "admin" | "resident" | "security" | "super_admin"
       attendance_status: "present" | "absent"
       complaint_status: "open" | "in_progress" | "resolved"
       due_frequency: "one_time" | "monthly" | "quarterly" | "annually"
@@ -608,7 +608,7 @@ export const Constants = {
   public: {
     Enums: {
       access_code_status: ["active", "used", "expired", "cancelled"],
-      app_role: ["admin", "resident", "security"],
+      app_role: ["admin", "resident", "security", "super_admin"],
       attendance_status: ["present", "absent"],
       complaint_status: ["open", "in_progress", "resolved"],
       due_frequency: ["one_time", "monthly", "quarterly", "annually"],
