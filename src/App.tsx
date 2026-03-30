@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SecureAuthProvider, useAuth } from "@/contexts/SecureAuthContext";
+import { EstateProvider } from "@/contexts/EstateContext";
 import { InactivityProvider } from "@/components/security/InactivityProvider";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import Index from "./pages/Index";
@@ -12,11 +13,12 @@ import NotFound from "./pages/NotFound";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ResidentDashboard from "./components/resident/ResidentDashboard";
 import SecurityDashboard from "./components/security/SecurityDashboard";
+import SuperAdminDashboard from "./components/super-admin/SuperAdminDashboard";
 
 const queryClient = new QueryClient();
 
 // Protected Route Component
-const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 'admin' | 'resident' | 'security' }) => {
+const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 'admin' | 'resident' | 'security' | 'super_admin' }) => {
   const { isAuthenticated, user, isLoading } = useAuth();
   
   if (isLoading) {
@@ -32,7 +34,7 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 
   }
   
   if (role && user?.role !== role) {
-    // Redirect based on user role
+    if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />;
     if (user?.role === 'admin') return <Navigate to="/admin" replace />;
     if (user?.role === 'security') return <Navigate to="/security" replace />;
     return <Navigate to="/resident" replace />;
@@ -57,6 +59,7 @@ const DashboardRouter = () => {
     return <Navigate to="/" replace />;
   }
   
+  if (user.role === 'super_admin') return <SuperAdminDashboard />;
   if (user.role === 'admin') return <AdminDashboard />;
   if (user.role === 'security') return <SecurityDashboard />;
   return <ResidentDashboard />;
@@ -68,48 +71,58 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SecureAuthProvider>
-        <InactivityProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route 
-                path="/dashboard" 
-                element={
-                  <ProtectedRoute>
-                    <DashboardRouter />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/admin" 
-                element={
-                  <ProtectedRoute role="admin">
-                    <AdminDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/resident" 
-                element={
-                  <ProtectedRoute role="resident">
-                    <ResidentDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              <Route 
-                path="/security" 
-                element={
-                  <ProtectedRoute role="security">
-                    <SecurityDashboard />
-                  </ProtectedRoute>
-                } 
-              />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            <PWAInstallPrompt />
-          </BrowserRouter>
-        </InactivityProvider>
+        <EstateProvider>
+          <InactivityProvider>
+            <BrowserRouter>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route 
+                  path="/dashboard" 
+                  element={
+                    <ProtectedRoute>
+                      <DashboardRouter />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/super-admin" 
+                  element={
+                    <ProtectedRoute role="super_admin">
+                      <SuperAdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin" 
+                  element={
+                    <ProtectedRoute role="admin">
+                      <AdminDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/resident" 
+                  element={
+                    <ProtectedRoute role="resident">
+                      <ResidentDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                <Route 
+                  path="/security" 
+                  element={
+                    <ProtectedRoute role="security">
+                      <SecurityDashboard />
+                    </ProtectedRoute>
+                  } 
+                />
+                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <PWAInstallPrompt />
+            </BrowserRouter>
+          </InactivityProvider>
+        </EstateProvider>
       </SecureAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
