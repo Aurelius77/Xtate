@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           access_code: string
           created_at: string
+          estate_id: string | null
           id: string
           is_used: boolean
           purpose: string | null
@@ -33,6 +34,7 @@ export type Database = {
         Insert: {
           access_code: string
           created_at?: string
+          estate_id?: string | null
           id?: string
           is_used?: boolean
           purpose?: string | null
@@ -48,6 +50,7 @@ export type Database = {
         Update: {
           access_code?: string
           created_at?: string
+          estate_id?: string | null
           id?: string
           is_used?: boolean
           purpose?: string | null
@@ -62,6 +65,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "access_codes_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "access_codes_resident_id_fkey"
             columns: ["resident_id"]
             isOneToOne: false
@@ -75,6 +85,7 @@ export type Database = {
           content: string
           created_at: string
           created_by: string | null
+          estate_id: string | null
           id: string
           is_urgent: boolean
           title: string
@@ -83,6 +94,7 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string | null
+          estate_id?: string | null
           id?: string
           is_urgent?: boolean
           title: string
@@ -91,14 +103,24 @@ export type Database = {
           content?: string
           created_at?: string
           created_by?: string | null
+          estate_id?: string | null
           id?: string
           is_urgent?: boolean
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "announcements_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       attendance: {
         Row: {
+          estate_id: string | null
           id: string
           marked_at: string | null
           meeting_id: string
@@ -106,6 +128,7 @@ export type Database = {
           status: Database["public"]["Enums"]["attendance_status"]
         }
         Insert: {
+          estate_id?: string | null
           id?: string
           marked_at?: string | null
           meeting_id: string
@@ -113,6 +136,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["attendance_status"]
         }
         Update: {
+          estate_id?: string | null
           id?: string
           marked_at?: string | null
           meeting_id?: string
@@ -120,6 +144,13 @@ export type Database = {
           status?: Database["public"]["Enums"]["attendance_status"]
         }
         Relationships: [
+          {
+            foreignKeyName: "attendance_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "attendance_meeting_id_fkey"
             columns: ["meeting_id"]
@@ -136,11 +167,53 @@ export type Database = {
           },
         ]
       }
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          estate_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          estate_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          estate_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       complaints: {
         Row: {
           assigned_to: string | null
           created_at: string
           description: string
+          estate_id: string | null
           id: string
           photo_url: string | null
           resident_id: string
@@ -152,6 +225,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           description?: string
+          estate_id?: string | null
           id?: string
           photo_url?: string | null
           resident_id: string
@@ -163,6 +237,7 @@ export type Database = {
           assigned_to?: string | null
           created_at?: string
           description?: string
+          estate_id?: string | null
           id?: string
           photo_url?: string | null
           resident_id?: string
@@ -171,6 +246,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "complaints_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "complaints_resident_id_fkey"
             columns: ["resident_id"]
@@ -184,6 +266,7 @@ export type Database = {
         Row: {
           category: string | null
           created_at: string
+          estate_id: string | null
           file_size: string | null
           file_type: string
           file_url: string
@@ -195,6 +278,7 @@ export type Database = {
         Insert: {
           category?: string | null
           created_at?: string
+          estate_id?: string | null
           file_size?: string | null
           file_type?: string
           file_url: string
@@ -206,6 +290,7 @@ export type Database = {
         Update: {
           category?: string | null
           created_at?: string
+          estate_id?: string | null
           file_size?: string | null
           file_type?: string
           file_url?: string
@@ -214,7 +299,15 @@ export type Database = {
           title?: string
           uploaded_by?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "documents_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       dues: {
         Row: {
@@ -223,6 +316,7 @@ export type Database = {
           created_by: string | null
           description: string | null
           due_date: string
+          estate_id: string | null
           frequency: Database["public"]["Enums"]["due_frequency"]
           id: string
           is_active: boolean
@@ -234,6 +328,7 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           due_date: string
+          estate_id?: string | null
           frequency?: Database["public"]["Enums"]["due_frequency"]
           id?: string
           is_active?: boolean
@@ -245,10 +340,99 @@ export type Database = {
           created_by?: string | null
           description?: string | null
           due_date?: string
+          estate_id?: string | null
           frequency?: Database["public"]["Enums"]["due_frequency"]
           id?: string
           is_active?: boolean
           title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dues_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estate_settings: {
+        Row: {
+          brand_name: string | null
+          created_at: string
+          custom_domain: string | null
+          email_sender_name: string | null
+          estate_id: string
+          id: string
+          logo_url: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          support_contact: string | null
+          updated_at: string
+        }
+        Insert: {
+          brand_name?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          email_sender_name?: string | null
+          estate_id: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          support_contact?: string | null
+          updated_at?: string
+        }
+        Update: {
+          brand_name?: string | null
+          created_at?: string
+          custom_domain?: string | null
+          email_sender_name?: string | null
+          estate_id?: string
+          id?: string
+          logo_url?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          support_contact?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "estate_settings_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: true
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      estates: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          slug: string
+          status: string
+          subscription_plan: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          slug: string
+          status?: string
+          subscription_plan?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          slug?: string
+          status?: string
+          subscription_plan?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -259,6 +443,7 @@ export type Database = {
           created_at: string
           created_by: string | null
           description: string | null
+          estate_id: string | null
           id: string
           meeting_date: string
           title: string
@@ -269,6 +454,7 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          estate_id?: string | null
           id?: string
           meeting_date: string
           title: string
@@ -279,15 +465,25 @@ export type Database = {
           created_at?: string
           created_by?: string | null
           description?: string | null
+          estate_id?: string | null
           id?: string
           meeting_date?: string
           title?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "meetings_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notifications: {
         Row: {
           created_at: string
+          estate_id: string | null
           id: string
           is_read: boolean
           message: string
@@ -298,6 +494,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          estate_id?: string | null
           id?: string
           is_read?: boolean
           message?: string
@@ -308,6 +505,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          estate_id?: string | null
           id?: string
           is_read?: boolean
           message?: string
@@ -316,12 +514,21 @@ export type Database = {
           type?: Database["public"]["Enums"]["notification_type"]
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
           created_at: string
           email: string
+          estate_id: string | null
           full_name: string
           id: string
           phone: string | null
@@ -331,6 +538,7 @@ export type Database = {
         Insert: {
           created_at?: string
           email: string
+          estate_id?: string | null
           full_name: string
           id: string
           phone?: string | null
@@ -340,13 +548,22 @@ export type Database = {
         Update: {
           created_at?: string
           email?: string
+          estate_id?: string | null
           full_name?: string
           id?: string
           phone?: string | null
           profile_image_url?: string | null
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       resident_dues: {
         Row: {
@@ -354,6 +571,7 @@ export type Database = {
           confirmed_at: string | null
           confirmed_by: string | null
           due_id: string
+          estate_id: string | null
           id: string
           paid_at: string | null
           payment_reference: string | null
@@ -365,6 +583,7 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           due_id: string
+          estate_id?: string | null
           id?: string
           paid_at?: string | null
           payment_reference?: string | null
@@ -376,6 +595,7 @@ export type Database = {
           confirmed_at?: string | null
           confirmed_by?: string | null
           due_id?: string
+          estate_id?: string | null
           id?: string
           paid_at?: string | null
           payment_reference?: string | null
@@ -388,6 +608,13 @@ export type Database = {
             columns: ["due_id"]
             isOneToOne: false
             referencedRelation: "dues"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "resident_dues_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
             referencedColumns: ["id"]
           },
           {
@@ -405,6 +632,7 @@ export type Database = {
           date_moved_in: string | null
           emergency_contact: string | null
           employment_info: string | null
+          estate_id: string | null
           house_unit_number: string
           id: string
           is_active: boolean
@@ -415,6 +643,7 @@ export type Database = {
           date_moved_in?: string | null
           emergency_contact?: string | null
           employment_info?: string | null
+          estate_id?: string | null
           house_unit_number?: string
           id?: string
           is_active?: boolean
@@ -425,12 +654,65 @@ export type Database = {
           date_moved_in?: string | null
           emergency_contact?: string | null
           employment_info?: string | null
+          estate_id?: string | null
           house_unit_number?: string
           id?: string
           is_active?: boolean
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "residents_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          billing_cycle: string | null
+          created_at: string
+          end_date: string | null
+          estate_id: string
+          id: string
+          plan: string
+          start_date: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          billing_cycle?: string | null
+          created_at?: string
+          end_date?: string | null
+          estate_id: string
+          id?: string
+          plan?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          billing_cycle?: string | null
+          created_at?: string
+          end_date?: string | null
+          estate_id?: string
+          id?: string
+          plan?: string
+          start_date?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -455,6 +737,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_user_estate_id: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -466,6 +749,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       access_code_status: "active" | "used" | "expired" | "cancelled"
