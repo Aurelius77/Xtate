@@ -54,7 +54,7 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     .eq('user_id', userId)
     .single();
 
-  const role = (roleData?.role as 'admin' | 'resident' | 'security') || 'resident';
+  const role = (roleData?.role as 'admin' | 'resident' | 'security' | 'super_admin') || 'resident';
 
   return {
     id: profile.id,
