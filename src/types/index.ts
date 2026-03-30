@@ -3,12 +3,45 @@
 export interface User {
   id: string;
   email: string;
-  role: 'admin' | 'resident' | 'security';
+  role: 'admin' | 'resident' | 'security' | 'super_admin';
   full_name: string;
   phone: string;
   profile_image_url?: string;
+  estate_id?: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface Estate {
+  id: string;
+  name: string;
+  slug: string;
+  status: 'active' | 'suspended' | 'inactive';
+  subscription_plan: 'basic' | 'pro' | 'enterprise';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface EstateSettings {
+  id: string;
+  estate_id: string;
+  brand_name?: string;
+  logo_url?: string;
+  primary_color?: string;
+  secondary_color?: string;
+  custom_domain?: string;
+  email_sender_name?: string;
+  support_contact?: string;
+}
+
+export interface Subscription {
+  id: string;
+  estate_id: string;
+  plan: 'basic' | 'pro' | 'enterprise';
+  status: 'active' | 'expired' | 'trial' | 'cancelled';
+  billing_cycle?: 'monthly' | 'yearly';
+  start_date: string;
+  end_date?: string;
 }
 
 export interface Resident {

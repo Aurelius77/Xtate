@@ -54,7 +54,7 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     .eq('user_id', userId)
     .single();
 
-  const role = (roleData?.role as 'admin' | 'resident' | 'security') || 'resident';
+  const role = (roleData?.role as 'admin' | 'resident' | 'security' | 'super_admin') || 'resident';
 
   return {
     id: profile.id,
@@ -63,6 +63,7 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     full_name: profile.full_name,
     phone: profile.phone || '',
     profile_image_url: profile.profile_image_url || undefined,
+    estate_id: profile.estate_id || undefined,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
   };
