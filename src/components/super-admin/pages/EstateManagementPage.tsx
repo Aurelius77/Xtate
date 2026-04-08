@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Building2, Plus, Search, Users, Edit, Trash2 } from 'lucide-react';
+import { Building2, Plus, Search, Users, Edit, Trash2, Eye } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useImpersonation } from '@/hooks/useImpersonation';
 import { Estate } from '@/types';
 
 const EstateManagementPage = () => {
@@ -19,6 +20,7 @@ const EstateManagementPage = () => {
   const [newEstate, setNewEstate] = useState({ name: '', slug: '', subscription_plan: 'basic' as string });
   const [estateCounts, setEstateCounts] = useState<Record<string, number>>({});
   const { toast } = useToast();
+  const { startImpersonation } = useImpersonation();
 
   const fetchEstates = async () => {
     setLoading(true);
@@ -166,6 +168,9 @@ const EstateManagementPage = () => {
                   <Badge variant="secondary" className="text-xs">{estate.subscription_plan}</Badge>
                 </div>
                 <div className="flex gap-2 pt-2">
+                  <Button variant="outline" size="sm" className="flex-1 h-8 text-xs" onClick={() => startImpersonation(estate.id, estate.name)}>
+                    <Eye className="h-3 w-3 mr-1" /> View as Admin
+                  </Button>
                   <Select value={estate.status} onValueChange={v => handleStatusChange(estate.id, v)}>
                     <SelectTrigger className="flex-1 h-8 text-xs">
                       <SelectValue />

@@ -229,7 +229,7 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   const updateProfile = async (updateData: Partial<User>): Promise<void> => {
     if (!user) throw new Error('No user logged in');
 
-    const cleanData: Record<string, string> = {};
+    const cleanData: { full_name?: string; phone?: string; email?: string } = {};
     if (updateData.full_name) cleanData.full_name = sanitizeInput(updateData.full_name);
     if (updateData.phone) cleanData.phone = sanitizeInput(updateData.phone);
     if (updateData.email) {
