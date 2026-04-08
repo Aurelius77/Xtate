@@ -2,8 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { Users, DollarSign, Clock, AlertCircle, TrendingUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useEstateId } from '@/hooks/useEstateId';
 
 const AdminDashboardStats = () => {
+  const estateId = useEstateId();
   const [stats, setStats] = useState({
     totalResidents: 0,
     monthlyRevenue: 0,
@@ -14,12 +16,13 @@ const AdminDashboardStats = () => {
 
   useEffect(() => {
     const fetchStats = async () => {
+      if (!estateId) return;
       try {
         const [residentsRes, paidDuesRes, pendingDuesRes, complaintsRes] = await Promise.all([
-          supabase.from('residents').select('id', { count: 'exact', head: true }).eq('is_active', true),
-          supabase.from('resident_dues').select('amount').eq('status', 'paid'),
-          supabase.from('resident_dues').select('amount').in('status', ['pending', 'overdue']),
-          supabase.from('complaints').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']),
+          supabase.from('residents').select('id', { count: 'exact', head: true }).eq('is_active', true).eq('estate_id', estateId),
+          supabase.from('resident_dues').select('amount').eq('status', 'paid').eq('estate_id', estateId),
+          supabase.from('resident_dues').select('amount').in('status', ['pending', 'overdue']).eq('estate_id', estateId),
+          supabase.from('complaints').select('id', { count: 'exact', head: true }).in('status', ['open', 'in_progress']).eq('estate_id', estateId),
         ]);
 
         const monthlyRevenue = (paidDuesRes.data || []).reduce((sum, d) => sum + Number(d.amount), 0);
@@ -38,7 +41,7 @@ const AdminDashboardStats = () => {
       }
     };
     fetchStats();
-  }, []);
+  }, [estateId]);
 
   const formatCurrency = (amount: number) => {
     if (amount >= 1000000) return `₦${(amount / 1000000).toFixed(1)}M`;
