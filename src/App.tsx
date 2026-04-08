@@ -34,6 +34,10 @@ const ProtectedRoute = ({ children, role }: { children: React.ReactNode; role?: 
   }
   
   if (role && user?.role !== role) {
+    // Allow super_admin to access admin routes (for impersonation)
+    if (user?.role === 'super_admin' && role === 'admin') {
+      return <>{children}</>;
+    }
     if (user?.role === 'super_admin') return <Navigate to="/super-admin" replace />;
     if (user?.role === 'admin') return <Navigate to="/admin" replace />;
     if (user?.role === 'security') return <Navigate to="/security" replace />;
