@@ -8,6 +8,7 @@ import EstateManagementPage from './pages/EstateManagementPage';
 import SubscriptionManagementPage from './pages/SubscriptionManagementPage';
 import AuditLogsPage from './pages/AuditLogsPage';
 import PlatformSettingsPage from './pages/PlatformSettingsPage';
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage';
 import AdminDashboard from '@/components/admin/AdminDashboard';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
@@ -38,6 +39,7 @@ const SuperAdminDashboard = () => {
 
   const renderCurrentPage = () => {
     switch (currentPage) {
+      case 'analytics': return <AnalyticsDashboardPage />;
       case 'estates': return <EstateManagementPage />;
       case 'subscriptions': return <SubscriptionManagementPage />;
       case 'audit-logs': return <AuditLogsPage />;
