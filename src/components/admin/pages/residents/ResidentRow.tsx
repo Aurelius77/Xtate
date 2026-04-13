@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
 interface Resident {
-  id: number;
+  id: string | number;
   name: string;
   unit: string;
   phone: string;
@@ -16,8 +16,8 @@ interface Resident {
 
 interface ResidentRowProps {
   resident: Resident;
-  onStatusToggle: (id: number) => void;
-  onDelete: (id: number) => void;
+  onStatusToggle: (id: any) => void;
+  onDelete: (id: any) => void;
 }
 
 const ResidentRow = ({ resident, onStatusToggle, onDelete }: ResidentRowProps) => {

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
+import { useEstateId } from '@/hooks/useEstateId';
 
 interface PaymentRow {
   name: string;
@@ -11,10 +12,12 @@ interface PaymentRow {
 }
 
 const AdminRecentPayments = () => {
+  const estateId = useEstateId();
   const [payments, setPayments] = useState<PaymentRow[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!estateId) { setLoading(false); return; }
     const fetchPayments = async () => {
       try {
         const { data, error } = await supabase
@@ -26,6 +29,7 @@ const AdminRecentPayments = () => {
               profile:profiles!residents_user_id_fkey(full_name)
             )
           `)
+          .eq('estate_id', estateId)
           .order('paid_at', { ascending: false, nullsFirst: false })
           .limit(10);
 
@@ -33,21 +37,14 @@ const AdminRecentPayments = () => {
 
         const rows: PaymentRow[] = (data || []).map((d: any) => {
           const resident = d.resident;
-          const name = resident?.profile?.full_name || 'Unknown';
-          const unit = resident?.house_unit_number || '-';
-          const timeAgo = d.paid_at
-            ? getTimeAgo(new Date(d.paid_at))
-            : 'Not paid';
-
           return {
-            name,
-            unit,
+            name: resident?.profile?.full_name || 'Unknown',
+            unit: resident?.house_unit_number || '-',
             amount: `₦${Number(d.amount).toLocaleString()}`,
             status: d.status,
-            time: timeAgo,
+            time: d.paid_at ? getTimeAgo(new Date(d.paid_at)) : 'Not paid',
           };
         });
-
         setPayments(rows);
       } catch (error) {
         console.error('Failed to fetch payments:', error);
@@ -56,7 +53,7 @@ const AdminRecentPayments = () => {
       }
     };
     fetchPayments();
-  }, []);
+  }, [estateId]);
 
   const getTimeAgo = (date: Date) => {
     const diff = Date.now() - date.getTime();
@@ -103,11 +100,9 @@ const AdminRecentPayments = () => {
                     <td className="py-3 px-3 font-medium text-cyan-100">{payment.amount}</td>
                     <td className="py-3 px-3 hidden md:table-cell">
                       <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                        payment.status === 'paid'
-                          ? 'bg-green-500/20 text-green-300'
-                          : payment.status === 'pending'
-                          ? 'bg-yellow-500/20 text-yellow-300'
-                          : 'bg-red-500/20 text-red-300'
+                        payment.status === 'paid' ? 'bg-green-500/20 text-green-300' :
+                        payment.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
+                        'bg-red-500/20 text-red-300'
                       }`}>
                         <div className="h-2 w-2 rounded-full bg-current" />
                         {payment.status}
