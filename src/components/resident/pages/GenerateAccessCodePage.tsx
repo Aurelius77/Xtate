@@ -135,7 +135,7 @@ const GenerateAccessCodePage = () => {
   const revokeCode = async (id: string) => {
     const { error } = await supabase
       .from('access_codes')
-      .update({ status: 'revoked', is_used: true })
+      .update({ status: 'cancelled', is_used: true })
       .eq('id', id);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -262,7 +262,7 @@ const GenerateAccessCodePage = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Badge className={isActive ? 'bg-green-500/20 text-green-400 border-green-400/30' : 'bg-slate-500/20 text-slate-300 border-slate-400/30'}>
-                        {c.is_used ? 'Used' : c.status === 'revoked' ? 'Revoked' : isActive ? 'Active' : 'Expired'}
+                        {c.status === 'cancelled' ? 'Revoked' : c.is_used ? 'Used' : isActive ? 'Active' : 'Expired'}
                       </Badge>
                       {isActive && (
                         <Button size="sm" variant="ghost" onClick={() => revokeCode(c.id)} className="text-red-300 hover:text-red-400">
