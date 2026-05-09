@@ -35,21 +35,29 @@ Deno.serve(async (req) => {
       const { data: list } = await supabase.auth.admin.listUsers();
       const existing = list?.users?.find((x) => x.email?.toLowerCase() === u.email);
 
+      let userId = existing?.id;
+
       if (!existing) {
-        const { error } = await supabase.auth.admin.createUser({
+        const { data: created, error } = await supabase.auth.admin.createUser({
           email: u.email,
           password: u.password,
           email_confirm: true,
           user_metadata: {
             full_name: u.full_name,
             phone: "",
-            role: u.role,
             house_unit: u.house_unit ?? "",
           },
         });
         if (error && !`${error.message}`.toLowerCase().includes("already")) {
           throw error;
         }
+        userId = created?.user?.id;
+      }
+
+      // Trigger always assigns 'resident'. Force the demo account's role server-side.
+      if (userId && u.role !== "resident") {
+        await supabase.from("user_roles").delete().eq("user_id", userId);
+        await supabase.from("user_roles").insert({ user_id: userId, role: u.role });
       }
     }
 

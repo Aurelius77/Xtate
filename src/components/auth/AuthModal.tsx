@@ -38,7 +38,7 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'resident' as 'admin' | 'resident',
+    role: 'resident' as const,
     houseUnit: ''
   });
 
@@ -150,34 +150,6 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
           <TabsContent value="register" className="mt-6">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="role">Account Type</Label>
-                <Select
-                  value={registerForm.role}
-                  onValueChange={(value: 'admin' | 'resident') => 
-                    setRegisterForm({ ...registerForm, role: value })
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="resident">
-                      <div className="flex items-center space-x-2">
-                        <span>Resident</span>
-                        <Badge variant="secondary" className="text-xs">Recommended</Badge>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="admin">
-                      <div className="flex items-center space-x-2">
-                        <Shield className="h-3 w-3" />
-                        <span>Estate Administrator</span>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input
                   id="fullName"
@@ -212,18 +184,16 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 />
               </div>
 
-              {registerForm.role === 'resident' && (
-                <div className="space-y-2">
-                  <Label htmlFor="houseUnit">House/Unit Number</Label>
-                  <Input
-                    id="houseUnit"
-                    placeholder="e.g., Block A, Flat 3"
-                    value={registerForm.houseUnit}
-                    onChange={(e) => setRegisterForm({ ...registerForm, houseUnit: e.target.value })}
-                    required
-                  />
-                </div>
-              )}
+              <div className="space-y-2">
+                <Label htmlFor="houseUnit">House/Unit Number</Label>
+                <Input
+                  id="houseUnit"
+                  placeholder="e.g., Block A, Flat 3"
+                  value={registerForm.houseUnit}
+                  onChange={(e) => setRegisterForm({ ...registerForm, houseUnit: e.target.value })}
+                  required
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -264,19 +234,18 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
 
-              {registerForm.role === 'admin' && (
-                <Card className="border-amber-200 bg-amber-50">
-                  <CardContent className="pt-4">
-                    <div className="flex items-center space-x-2 text-amber-800">
-                      <Shield className="h-4 w-4" />
-                      <span className="text-sm font-medium">Admin Registration</span>
-                    </div>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Admin accounts require approval. You'll receive an email once approved.
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
+              <Card className="border-amber-200 bg-amber-50">
+                <CardContent className="pt-4">
+                  <div className="flex items-center space-x-2 text-amber-800">
+                    <Shield className="h-4 w-4" />
+                    <span className="text-sm font-medium">Resident Account</span>
+                  </div>
+                  <p className="text-xs text-amber-700 mt-1">
+                    All public registrations create resident accounts. Admin and security roles are
+                    granted by an estate super admin via invitation.
+                  </p>
+                </CardContent>
+              </Card>
             </form>
           </TabsContent>
         </Tabs>

@@ -1,8 +1,7 @@
-// Security utilities for encryption, validation, and protection
+// Security utilities for validation and protection.
+// NOTE: client-side "encryption" was removed — a key compiled into the public JS
+// bundle provides zero confidentiality. Never store secrets in the browser.
 import CryptoJS from 'crypto-js';
-
-// Encryption key - in production, this should come from environment
-const ENCRYPTION_KEY = 'estate-connect-secure-key-2024';
 
 // Input sanitization
 export const sanitizeInput = (input: string): string => {
@@ -37,26 +36,15 @@ export const validatePhone = (phone: string): boolean => {
   return phoneRegex.test(phone.replace(/[\s-()]/g, ''));
 };
 
-// Encrypt sensitive data
-export const encryptData = (data: string): string => {
-  try {
-    return CryptoJS.AES.encrypt(data, ENCRYPTION_KEY).toString();
-  } catch (error) {
-    console.error('Encryption failed:', error);
-    return data;
-  }
-};
+/**
+ * @deprecated Client-side encryption with a bundled key is NOT secure.
+ * These helpers are kept as no-op pass-throughs for backwards compatibility.
+ * Do real encryption server-side in an edge function using Deno.env secrets.
+ */
+export const encryptData = (data: string): string => data;
 
-// Decrypt sensitive data
-export const decryptData = (encryptedData: string): string => {
-  try {
-    const bytes = CryptoJS.AES.decrypt(encryptedData, ENCRYPTION_KEY);
-    return bytes.toString(CryptoJS.enc.Utf8);
-  } catch (error) {
-    console.error('Decryption failed:', error);
-    return encryptedData;
-  }
-};
+/** @deprecated See encryptData. */
+export const decryptData = (encryptedData: string): string => encryptedData;
 
 // Rate limiting for client-side protection
 class RateLimiter {
