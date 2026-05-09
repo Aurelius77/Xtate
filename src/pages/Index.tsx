@@ -11,6 +11,7 @@ import AuthModal from "@/components/auth/AuthModal";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import PricingSection from "@/components/landing/PricingSection";
 import DashboardPreview from "@/components/landing/DashboardPreview";
+import DemoLoginButtons from "@/components/landing/DemoLoginButtons";
 import { ConnectionStatus, SecurityRecommendations } from "@/components/security/SecurityAlert";
 
 const Index = () => {
@@ -182,7 +183,9 @@ const Index = () => {
             Watch Demo
           </Button>
         </div>
-        
+
+        <DemoLoginButtons />
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
           <div className="text-center">
