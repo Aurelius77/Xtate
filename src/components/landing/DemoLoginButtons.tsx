@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Shield, UserCheck, Users, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/SecureAuthContext";
@@ -16,6 +17,7 @@ const DEMO_ACCOUNTS: Record<DemoRole, { email: string; password: string; label: 
 const DemoLoginButtons = () => {
   const { login } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loadingRole, setLoadingRole] = useState<DemoRole | null>(null);
 
   const handleDemoLogin = async (role: DemoRole) => {
@@ -25,6 +27,7 @@ const DemoLoginButtons = () => {
       // Ensure demo accounts are seeded (idempotent)
       await supabase.functions.invoke("seed-demo-users");
       await login(account.email, account.password);
+      navigate("/dashboard");
     } catch (err) {
       toast({
         title: "Demo login failed",
