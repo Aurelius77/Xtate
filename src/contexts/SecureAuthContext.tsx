@@ -10,7 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isSupabaseConnected: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  register: (userData: RegisterData) => Promise<{ needsEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   refreshAuth: () => Promise<void>;
@@ -152,7 +152,7 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
     }
   };
 
-  const register = async (userData: RegisterData): Promise<void> => {
+  const register = async (userData: RegisterData): Promise<{ needsEmailConfirmation: boolean }> => {
     const cleanData = {
       fullName: sanitizeInput(userData.fullName),
       email: sanitizeInput(userData.email.toLowerCase()),
@@ -175,10 +175,12 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
 
+      const redirectUrl = `${window.location.origin}/dashboard`;
       const { data, error } = await supabase.auth.signUp({
         email: cleanData.email,
         password: cleanData.password,
         options: {
+          emailRedirectTo: redirectUrl,
           data: {
             full_name: cleanData.fullName,
             phone: cleanData.phone,
@@ -191,18 +193,24 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
       if (error) throw new Error(error.message);
       if (!data.user) throw new Error('Registration failed');
 
-      rateLimiter.reset(rateLimitKey);
+      rateLimitKey && rateLimiter.reset(rateLimitKey);
 
-      // Fetch profile (created by trigger)
-      const profile = await fetchUserProfile(data.user.id);
-      if (profile) {
-        setUser(profile);
+      // If session is present, the user is signed in immediately (email confirmation disabled).
+      if (data.session) {
+        const profile = await fetchUserProfile(data.user.id);
+        if (profile) setUser(profile);
+        toast({
+          title: "Registration Successful",
+          description: "Welcome to EstateConnect!",
+        });
+        return { needsEmailConfirmation: false };
       }
 
       toast({
-        title: "Registration Successful",
-        description: "Welcome to EstateConnect! Please check your email to verify your account.",
+        title: "Check your email",
+        description: "We sent you a confirmation link. Please verify your email to sign in.",
       });
+      return { needsEmailConfirmation: true };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Registration failed';
       toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
