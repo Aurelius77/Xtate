@@ -72,9 +72,13 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     setIsLoading(true);
     
     try {
-      await register(registerForm);
+      const result = await register(registerForm);
       onClose();
-      navigate('/dashboard');
+      if (result.needsEmailConfirmation) {
+        onModeChange('login');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (error) {
       // Toast already shown by auth context
     } finally {
