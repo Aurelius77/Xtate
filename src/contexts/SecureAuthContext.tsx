@@ -10,7 +10,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isSupabaseConnected: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  register: (userData: RegisterData) => Promise<{ needsEmailConfirmation: boolean }>;
   logout: () => Promise<void>;
   updateProfile: (userData: Partial<User>) => Promise<void>;
   refreshAuth: () => Promise<void>;
