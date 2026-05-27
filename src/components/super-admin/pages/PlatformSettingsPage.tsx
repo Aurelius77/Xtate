@@ -21,11 +21,11 @@ const PlatformSettingsPage = () => {
           <CardContent className="space-y-4">
             <div>
               <Label>Platform Name</Label>
-              <Input defaultValue="EstateConnect" />
+              <Input defaultValue="XTATE" />
             </div>
             <div>
               <Label>Support Email</Label>
-              <Input defaultValue="support@estateconnect.com" />
+              <Input defaultValue="support@xtate.app" />
             </div>
             <div>
               <Label>Default Primary Color</Label>

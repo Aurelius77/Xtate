@@ -2,6 +2,7 @@
 import React from 'react';
 import { LayoutDashboard, DollarSign, Calendar, MessageSquare, FileText, Key, QrCode, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface ResidentSidebarProps {
   currentPage: string;
@@ -10,6 +11,8 @@ interface ResidentSidebarProps {
 }
 
 const ResidentSidebar = ({ currentPage, setCurrentPage, onLogout }: ResidentSidebarProps) => {
+  const { branding } = useTenant();
+  const brandName = branding?.name || 'XTATE';
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard' },
     { icon: DollarSign, label: 'My Dues', page: 'dues' },
@@ -24,10 +27,14 @@ const ResidentSidebar = ({ currentPage, setCurrentPage, onLogout }: ResidentSide
   return (
     <aside className="w-64 flex flex-col gap-6 sidebar-glass p-6">
       <div className="flex items-center gap-3">
-        <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
-          <LayoutDashboard className="h-5 w-5" />
-        </div>
-        <span className="text-lg font-semibold tracking-tight text-cyan-50">EstateConnect</span>
+        {branding?.logoUrl ? (
+          <img src={branding.logoUrl} alt={`${brandName} logo`} className="h-8 w-8 rounded-lg object-cover" />
+        ) : (
+          <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
+            <LayoutDashboard className="h-5 w-5" />
+          </div>
+        )}
+        <span className="text-lg font-semibold tracking-tight text-cyan-50">{brandName}</span>
       </div>
 
       <nav className="flex flex-col gap-1 text-sm">

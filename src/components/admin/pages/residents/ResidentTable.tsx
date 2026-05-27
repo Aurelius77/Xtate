@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import ResidentRow from './ResidentRow';
 
 interface Resident {
-  id: string | number;
+  id: string;
   name: string;
   unit: string;
   phone: string;
@@ -16,8 +16,8 @@ interface Resident {
 
 interface ResidentTableProps {
   residents: Resident[];
-  onStatusToggle: (id: any) => void;
-  onDelete: (id: any) => void;
+  onStatusToggle: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const ResidentTable = ({ residents, onStatusToggle, onDelete }: ResidentTableProps) => {

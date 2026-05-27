@@ -11,6 +11,16 @@ interface PaymentRow {
   time: string;
 }
 
+interface PaymentQueryRow {
+  amount: number | string;
+  status: string;
+  paid_at: string | null;
+  resident: {
+    house_unit_number: string | null;
+    profile: { full_name: string | null } | null;
+  } | null;
+}
+
 const AdminRecentPayments = () => {
   const estateId = useEstateId();
   const [payments, setPayments] = useState<PaymentRow[]>([]);
@@ -35,7 +45,7 @@ const AdminRecentPayments = () => {
 
         if (error) throw error;
 
-        const rows: PaymentRow[] = (data || []).map((d: any) => {
+        const rows: PaymentRow[] = ((data || []) as PaymentQueryRow[]).map((d) => {
           const resident = d.resident;
           return {
             name: resident?.profile?.full_name || 'Unknown',

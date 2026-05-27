@@ -121,7 +121,7 @@ export const SecurityRecommendations = () => {
     <SecurityAlert
       type="update"
       message="For production use, connect to Supabase for enterprise-grade security including encryption, authentication, and real-time data protection."
-      action={() => window.open('https://docs.lovable.dev/integrations/supabase/', '_blank')}
+      action={() => window.open('https://supabase.com/docs', '_blank')}
       actionLabel="Connect Supabase"
     />
   );

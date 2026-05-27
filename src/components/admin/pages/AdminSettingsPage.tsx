@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
+type SettingValue = string | number | boolean;
+
 const AdminSettingsPage = () => {
   const [settings, setSettings] = useState({
     // Profile Settings
@@ -35,7 +37,7 @@ const AdminSettingsPage = () => {
     maintenanceMode: false
   });
 
-  const handleSettingChange = (key: string, value: any) => {
+  const handleSettingChange = (key: string, value: SettingValue) => {
     setSettings(prev => ({ ...prev, [key]: value }));
   };
 

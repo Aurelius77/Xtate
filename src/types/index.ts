@@ -34,6 +34,25 @@ export interface EstateSettings {
   support_contact?: string;
 }
 
+export interface Tenant {
+  id: string;
+  estate_id?: string | null;
+  name: string;
+  slug: string;
+  status: 'active' | 'suspended' | 'inactive';
+  plan: 'free' | 'standard' | 'custom' | 'basic' | 'pro' | 'enterprise';
+  logo_url?: string | null;
+  primary_color?: string | null;
+  secondary_color?: string | null;
+  custom_domain?: string | null;
+  currency: string;
+  timezone: string;
+  address?: string | null;
+  metadata?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Subscription {
   id: string;
   estate_id: string;

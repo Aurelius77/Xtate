@@ -121,7 +121,7 @@ const RegistrationForm = ({ onClose, onModeChange }: RegistrationFormProps) => {
         </Button>
         <CardTitle>Create Account</CardTitle>
         <CardDescription>
-          Step {step} of 4 - Join EstateConnect today
+          Step {step} of 4 - Join XTATE today
         </CardDescription>
         
         {/* Progress Bar */}

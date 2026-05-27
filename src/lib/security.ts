@@ -75,7 +75,7 @@ export const rateLimiter = new RateLimiter();
 
 // Secure session management
 export const secureSession = {
-  set: (key: string, data: any, expiryHours: number = 24): void => {
+  set: (key: string, data: unknown, expiryHours: number = 24): void => {
     const item = {
       data: encryptData(JSON.stringify(data)),
       expiry: Date.now() + (expiryHours * 60 * 60 * 1000)
@@ -83,7 +83,7 @@ export const secureSession = {
     sessionStorage.setItem(`secure_${key}`, JSON.stringify(item));
   },
   
-  get: (key: string): any => {
+  get: <T = unknown>(key: string): T | null => {
     try {
       const item = sessionStorage.getItem(`secure_${key}`);
       if (!item) return null;
@@ -94,7 +94,7 @@ export const secureSession = {
         return null;
       }
       
-      return JSON.parse(decryptData(parsed.data));
+      return JSON.parse(decryptData(parsed.data)) as T;
     } catch {
       return null;
     }

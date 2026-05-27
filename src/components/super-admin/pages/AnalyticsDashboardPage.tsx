@@ -6,11 +6,30 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pi
 
 const COLORS = ['#8b5cf6', '#3b82f6', '#10b981', '#f59e0b', '#ef4444'];
 
+interface EstateAnalytics {
+  name: string;
+  users: number;
+  revenue: number;
+  pending: number;
+  plan: string;
+  status: string;
+}
+
+interface PlanDistribution {
+  name: string;
+  value: number;
+}
+
+interface UserGrowth {
+  month: string;
+  users: number;
+}
+
 const AnalyticsDashboardPage = () => {
   const [loading, setLoading] = useState(true);
-  const [estateData, setEstateData] = useState<any[]>([]);
-  const [planDistribution, setPlanDistribution] = useState<any[]>([]);
-  const [userGrowth, setUserGrowth] = useState<any[]>([]);
+  const [estateData, setEstateData] = useState<EstateAnalytics[]>([]);
+  const [planDistribution, setPlanDistribution] = useState<PlanDistribution[]>([]);
+  const [userGrowth, setUserGrowth] = useState<UserGrowth[]>([]);
 
   useEffect(() => {
     const fetchAnalytics = async () => {

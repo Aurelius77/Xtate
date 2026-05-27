@@ -82,7 +82,7 @@ const Index = () => {
       name: "Sarah Johnson",
       role: "Estate Manager",
       estate: "Lekki Gardens",
-      comment: "EstateConnect has transformed how we manage our 200+ unit estate. The automated dues collection alone has saved us countless hours.",
+      comment: "XTATE has transformed how we manage our 200+ unit estate. The automated dues collection alone has saved us countless hours.",
       rating: 5
     },
     {
@@ -121,7 +121,7 @@ const Index = () => {
               <Building className="text-white h-5 w-5" />
             </div>
             <span className="font-bold text-2xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-              EstateConnect
+              XTATE
             </span>
           </div>
           <div className="flex items-center space-x-6">
@@ -283,7 +283,7 @@ const Index = () => {
             Ready to Transform Your Estate?
           </h2>
           <p className="text-xl mb-10 text-cyan-100 max-w-3xl mx-auto">
-            Join hundreds of estates already using EstateConnect to streamline operations, 
+            Join hundreds of estates already using XTATE to streamline operations, 
             enhance security, and improve resident satisfaction.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -317,7 +317,7 @@ const Index = () => {
                   <Building className="text-white h-5 w-5" />
                 </div>
                 <span className="font-bold text-2xl bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
-                  EstateConnect
+                  XTATE
                 </span>
               </div>
               <p className="text-cyan-200 max-w-md">
@@ -354,7 +354,7 @@ const Index = () => {
             </div>
           </div>
           <div className="border-t border-slate-700/50 mt-12 pt-8 text-center text-cyan-300">
-            <p>&copy; 2024 EstateConnect. All rights reserved. Built with ❤️ for Nigerian estates.</p>
+            <p>&copy; 2026 XTATE. All rights reserved. Built for Nigerian estates.</p>
           </div>
         </div>
       </footer>

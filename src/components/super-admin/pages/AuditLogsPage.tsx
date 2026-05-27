@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { ScrollText } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Json } from '@/integrations/supabase/types';
 
 interface AuditLog {
   id: string;
-  user_id: string;
+  actor_user_id: string | null;
   action: string;
   entity: string;
   entity_id: string | null;
-  metadata: any;
-  estate_id: string | null;
+  metadata: Json | null;
+  tenant_id: string | null;
   created_at: string;
 }
 
@@ -22,7 +22,7 @@ const AuditLogsPage = () => {
   useEffect(() => {
     const fetch = async () => {
       const { data } = await supabase
-        .from('audit_logs')
+        .from('platform_audit_log')
         .select('*')
         .order('created_at', { ascending: false })
         .limit(100);

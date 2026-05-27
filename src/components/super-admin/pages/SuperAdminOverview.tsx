@@ -3,33 +3,34 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Building2, Users, CreditCard, Activity, ArrowRight, TrendingUp } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
+import type { Tables } from '@/integrations/supabase/types';
 
 interface OverviewProps {
   onNavigate: (page: string) => void;
 }
 
 const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
-  const [stats, setStats] = useState({ estates: 0, users: 0, activeSubscriptions: 0, revenue: 0 });
-  const [recentEstates, setRecentEstates] = useState<any[]>([]);
+  const [stats, setStats] = useState({ tenants: 0, users: 0, activeBilling: 0, revenue: 0 });
+  const [recentTenants, setRecentTenants] = useState<Tables<'tenants'>[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const [estatesRes, profilesRes, subsRes, recentRes] = await Promise.all([
-          supabase.from('estates').select('id', { count: 'exact', head: true }),
+        const [tenantsRes, profilesRes, billingRes, recentRes] = await Promise.all([
+          supabase.from('tenants').select('id', { count: 'exact', head: true }),
           supabase.from('profiles').select('id', { count: 'exact', head: true }),
-          supabase.from('subscriptions').select('id', { count: 'exact', head: true }).eq('status', 'active'),
-          supabase.from('estates').select('*').order('created_at', { ascending: false }).limit(5),
+          supabase.from('tenant_billing').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('tenants').select('*').order('created_at', { ascending: false }).limit(5),
         ]);
 
         setStats({
-          estates: estatesRes.count || 0,
+          tenants: tenantsRes.count || 0,
           users: profilesRes.count || 0,
-          activeSubscriptions: subsRes.count || 0,
+          activeBilling: billingRes.count || 0,
           revenue: 0,
         });
-        setRecentEstates(recentRes.data || []);
+        setRecentTenants(recentRes.data || []);
       } catch (err) {
         console.error('Failed to fetch super admin stats:', err);
       } finally {
@@ -40,9 +41,9 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
   }, []);
 
   const statCards = [
-    { title: 'Total Estates', value: stats.estates, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+    { title: 'Total Tenants', value: stats.tenants, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-500/10' },
     { title: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
-    { title: 'Active Subscriptions', value: stats.activeSubscriptions, icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+    { title: 'Active Billing', value: stats.activeBilling, icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { title: 'Platform Health', value: '99.9%', icon: Activity, color: 'text-amber-400', bg: 'bg-amber-500/10' },
   ];
 
@@ -50,7 +51,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Platform Overview</h1>
-        <p className="text-muted-foreground">Monitor and manage all estates from one place</p>
+        <p className="text-muted-foreground">Monitor and manage all tenants from one place</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -73,7 +74,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Recent Estates</CardTitle>
+            <CardTitle className="text-lg">Recent Tenants</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => onNavigate('estates')}>
               View All <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
@@ -81,23 +82,23 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
           <CardContent>
             {loading ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
-            ) : recentEstates.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No estates found</p>
+            ) : recentTenants.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No tenants found</p>
             ) : (
               <div className="space-y-3">
-                {recentEstates.map((estate) => (
-                  <div key={estate.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
+                {recentTenants.map((tenant) => (
+                  <div key={tenant.id} className="flex items-center justify-between p-3 rounded-lg bg-accent/30">
                     <div>
-                      <p className="font-medium text-foreground">{estate.name}</p>
-                      <p className="text-xs text-muted-foreground">/{estate.slug}</p>
+                      <p className="font-medium text-foreground">{tenant.name}</p>
+                      <p className="text-xs text-muted-foreground">/{tenant.slug}</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className={`px-2 py-0.5 rounded-full text-xs ${
-                        estate.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' :
-                        estate.status === 'suspended' ? 'bg-amber-500/10 text-amber-400' :
+                        tenant.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' :
+                        tenant.status === 'suspended' ? 'bg-amber-500/10 text-amber-400' :
                         'bg-red-500/10 text-red-400'
-                      }`}>{estate.status}</span>
-                      <span className="px-2 py-0.5 rounded-full text-xs bg-violet-500/10 text-violet-400">{estate.subscription_plan}</span>
+                      }`}>{tenant.status}</span>
+                      <span className="px-2 py-0.5 rounded-full text-xs bg-violet-500/10 text-violet-400">{tenant.plan}</span>
                     </div>
                   </div>
                 ))}
@@ -112,10 +113,10 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('estates')}>
-              <Building2 className="h-4 w-4 mr-2" /> Manage Estates
+              <Building2 className="h-4 w-4 mr-2" /> Manage Tenants
             </Button>
-            <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('subscriptions')}>
-              <CreditCard className="h-4 w-4 mr-2" /> Manage Subscriptions
+            <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('billing')}>
+              <CreditCard className="h-4 w-4 mr-2" /> Manage Billing
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('audit-logs')}>
               <Activity className="h-4 w-4 mr-2" /> View Audit Logs

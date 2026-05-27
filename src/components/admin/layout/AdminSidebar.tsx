@@ -3,6 +3,7 @@ import { LayoutDashboard, Users, DollarSign, Calendar, MessageSquare, FileText, 
 import { Button } from '@/components/ui/button';
 import { useFeatureGate } from '@/hooks/useFeatureGate';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface AdminSidebarProps {
   sidebarOpen: boolean;
@@ -14,6 +15,8 @@ interface AdminSidebarProps {
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage, onLogout }: AdminSidebarProps) => {
   const { hasFeature, plan, loading } = useFeatureGate();
+  const { branding } = useTenant();
+  const brandName = branding?.name || 'XTATE';
 
   const menuItems = [
     { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard', feature: null },
@@ -42,10 +45,14 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
 
         <aside className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col gap-6 sidebar-glass p-6`}>
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
-              <LayoutDashboard className="h-5 w-5" />
-            </div>
-            <span className="text-lg font-semibold tracking-tight text-cyan-50">EstateConnect</span>
+            {branding?.logoUrl ? (
+              <img src={branding.logoUrl} alt={`${brandName} logo`} className="h-8 w-8 rounded-lg object-cover" />
+            ) : (
+              <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
+                <LayoutDashboard className="h-5 w-5" />
+              </div>
+            )}
+            <span className="text-lg font-semibold tracking-tight text-cyan-50">{brandName}</span>
           </div>
 
           <Button className="flex items-center justify-between gap-3 text-sm font-medium bg-blue-600/20 hover:bg-blue-600/30 transition p-3 rounded-lg w-full text-cyan-100">
@@ -81,7 +88,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
                   <Tooltip key={index}>
                     <TooltipTrigger asChild>{btn}</TooltipTrigger>
                     <TooltipContent side="right">
-                      <p>Upgrade to Pro or Enterprise to unlock this feature</p>
+                      <p>Upgrade your XTATE plan to unlock this feature</p>
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -92,15 +99,15 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
 
           <div className="mt-auto glass-card p-4">
             <p className="text-sm leading-snug text-cyan-100">
-              {plan === 'enterprise' ? 'Enterprise plan – all features unlocked!' :
-               plan === 'pro' ? 'Pro plan active' :
-               'Upgrade to Estate Pro for advanced analytics and unlimited residents!'}
+              {plan === 'enterprise' || plan === 'custom' ? 'All enabled XTATE features are available.' :
+               plan === 'pro' || plan === 'standard' ? 'Standard plan active' :
+               'Upgrade XTATE to unlock advanced tools and higher limits.'}
             </p>
             <div className="flex items-center justify-between mt-4 text-sm">
               <button className="hover:underline text-cyan-200" onClick={onLogout}>
                 Sign Out
               </button>
-              {plan === 'basic' && (
+              {(plan === 'basic' || plan === 'free') && (
                 <Button size="sm" className="bg-white/10 hover:bg-white/20 transition text-cyan-100">
                   Upgrade
                 </Button>

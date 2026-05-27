@@ -16,9 +16,9 @@ const DEMO_USERS: Array<{
   role: Role;
   house_unit?: string;
 }> = [
-  { email: "demo.admin@estateconnect.app", password: "DemoPass123!", full_name: "Demo Admin", role: "admin" },
-  { email: "demo.resident@estateconnect.app", password: "DemoPass123!", full_name: "Demo Resident", role: "resident", house_unit: "B12" },
-  { email: "demo.security@estateconnect.app", password: "DemoPass123!", full_name: "Demo Security", role: "security" },
+  { email: "demo.admin@xtate.app", password: "DemoPass123!", full_name: "Demo Admin", role: "admin" },
+  { email: "demo.resident@xtate.app", password: "DemoPass123!", full_name: "Demo Resident", role: "resident", house_unit: "B12" },
+  { email: "demo.security@xtate.app", password: "DemoPass123!", full_name: "Demo Security", role: "security" },
 ];
 
 Deno.serve(async (req) => {

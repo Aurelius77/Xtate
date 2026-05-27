@@ -9,6 +9,16 @@ interface SupabaseConfig {
   isConnected: boolean;
 }
 
+interface RegisterUserData {
+  email: string;
+  role?: User['role'];
+  fullName: string;
+  phone: string;
+}
+
+type RealtimePayload = Record<string, unknown>;
+type AnalyticsProperties = Record<string, unknown>;
+
 // Global Supabase configuration
 let supabaseConfig: SupabaseConfig = {
   isConnected: false
@@ -55,7 +65,7 @@ export const authAdapter = {
     }
   },
 
-  register: async (userData: any): Promise<User> => {
+  register: async (userData: RegisterUserData): Promise<User> => {
     if (isSupabaseConnected()) {
       // TODO: Implement Supabase registration
       throw new Error('Supabase registration not yet implemented');
@@ -237,7 +247,7 @@ export const fileAdapter = {
 
 // Real-time subscriptions adapter
 export const realtimeAdapter = {
-  subscribe: (table: string, callback: (payload: any) => void) => {
+  subscribe: (table: string, callback: (payload: RealtimePayload) => void) => {
     if (isSupabaseConnected()) {
       // TODO: Implement Supabase real-time subscriptions
       // return supabase.channel(table).on('postgres_changes', { event: '*', schema: 'public', table }, callback).subscribe();
@@ -253,7 +263,7 @@ export const realtimeAdapter = {
 
 // Analytics adapter
 export const analyticsAdapter = {
-  track: (event: string, properties?: Record<string, any>): void => {
+  track: (event: string, properties?: AnalyticsProperties): void => {
     if (isSupabaseConnected()) {
       // TODO: Implement analytics via Supabase Edge Functions
       console.log(`Analytics tracking: ${event}`, properties);

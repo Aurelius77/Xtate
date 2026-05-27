@@ -90,7 +90,7 @@ const PWAInstallPrompt = () => {
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-cyan-50 mb-1">
-                Add EstateConnect to Home Screen
+                Add XTATE to Home Screen
               </h3>
               {isIOS ? (
                 <div className="space-y-2">

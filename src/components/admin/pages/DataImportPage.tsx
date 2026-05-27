@@ -10,9 +10,16 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import SecureDataImport from '@/components/data-import/SecureDataImport';
 
+interface ImportResults {
+  residents: number;
+  dues: number;
+  payments: number;
+  errors: number;
+}
+
 const DataImportPage = () => {
   const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
-  const [importResults, setImportResults] = useState<any>(null);
+  const [importResults, setImportResults] = useState<ImportResults | null>(null);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [importHistory, setImportHistory] = useState([
     { id: '1', fileName: 'residents_jan_2024.csv', date: '2024-01-15', records: 25, status: 'success' },

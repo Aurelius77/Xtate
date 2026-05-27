@@ -125,8 +125,9 @@ const GenerateAccessCodePage = () => {
       toast({ title: 'Access Code Generated', description: `Code ${inserted.access_code} created for ${inserted.visitor_name}` });
       form.reset();
       loadCodes();
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message ?? 'Failed to generate code', variant: 'destructive' });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Failed to generate code';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsGenerating(false);
     }

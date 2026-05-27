@@ -23,6 +23,8 @@ interface SecureDataImportProps {
   maxFileSizeMB?: number;
 }
 
+type CSVRow = Record<string, string>;
+
 const SecureDataImport = ({ 
   onImportComplete, 
   allowedTypes = ['text/csv', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'],
@@ -59,10 +61,10 @@ const SecureDataImport = ({
   }, [allowedTypes, maxFileSizeMB]);
 
   // Parse CSV with security validation
-  const parseCSVSecure = (content: string): { data: any[]; errors: string[] } => {
+  const parseCSVSecure = useCallback((content: string): { data: CSVRow[]; errors: string[] } => {
     const lines = content.split('\n').filter(line => line.trim());
     const errors: string[] = [];
-    const data: any[] = [];
+    const data: CSVRow[] = [];
 
     if (lines.length === 0) {
       errors.push('File is empty');
@@ -91,7 +93,7 @@ const SecureDataImport = ({
     for (let i = 1; i < lines.length; i++) {
       try {
         const values = lines[i].split(',').map(v => sanitizeInput(v.trim()));
-        const row: any = {};
+        const row: CSVRow = {};
         
         headers.forEach((header, index) => {
           const value = values[index] || '';
@@ -127,10 +129,10 @@ const SecureDataImport = ({
     }
 
     return { data, errors };
-  };
+  }, []);
 
   // Process file upload
-  const processFile = async (file: File) => {
+  const processFile = useCallback(async (file: File) => {
     setIsProcessing(true);
     setUploadProgress(0);
     setImportResult(null);
@@ -192,10 +194,10 @@ const SecureDataImport = ({
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, [onImportComplete, parseCSVSecure, toast]);
 
   // Handle file selection
-  const handleFileSelect = (file: File) => {
+  const handleFileSelect = useCallback((file: File) => {
     const validation = validateFileSecure(file);
     
     if (!validation.isValid) {
@@ -209,7 +211,7 @@ const SecureDataImport = ({
 
     setCurrentFile(file);
     processFile(file);
-  };
+  }, [processFile, toast, validateFileSecure]);
 
   // Drag and drop handlers
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -230,7 +232,7 @@ const SecureDataImport = ({
     if (files.length > 0) {
       handleFileSelect(files[0]);
     }
-  }, []);
+  }, [handleFileSelect]);
 
   const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;

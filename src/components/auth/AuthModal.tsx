@@ -7,11 +7,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Eye, EyeOff, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/SecureAuthContext";
+import { useTenant } from "@/contexts/TenantContext";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -25,6 +24,7 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { login, register } = useAuth();
+  const { tenantId, tenantSlug } = useTenant();
   const navigate = useNavigate();
 
   const [loginForm, setLoginForm] = useState({
@@ -38,7 +38,6 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     password: '',
     confirmPassword: '',
     phone: '',
-    role: 'resident' as const,
     houseUnit: ''
   });
 
@@ -51,7 +50,13 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
       onClose();
       navigate('/dashboard');
     } catch (error) {
-      // Toast already shown by auth context
+      if (error instanceof Error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +77,11 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     setIsLoading(true);
     
     try {
-      const result = await register(registerForm);
+      const result = await register({
+        ...registerForm,
+        tenantId: tenantId || undefined,
+        tenantSlug: tenantSlug || undefined,
+      });
       onClose();
       if (result.needsEmailConfirmation) {
         onModeChange('login');
@@ -80,7 +89,11 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
         navigate('/dashboard');
       }
     } catch (error) {
-      // Toast already shown by auth context
+      toast({
+        title: "Registration Failed",
+        description: error instanceof Error ? error.message : "Unable to create account",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -91,7 +104,7 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-center text-2xl font-bold">
-            Welcome to EstateConnect
+            Welcome to XTATE
           </DialogTitle>
         </DialogHeader>
 

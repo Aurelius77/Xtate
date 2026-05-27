@@ -9,9 +9,9 @@ import { useToast } from "@/hooks/use-toast";
 type DemoRole = "admin" | "resident" | "security";
 
 const DEMO_ACCOUNTS: Record<DemoRole, { email: string; password: string; label: string; icon: React.ElementType }> = {
-  admin: { email: "demo.admin@estateconnect.app", password: "DemoPass123!", label: "Try as Admin", icon: UserCheck },
-  resident: { email: "demo.resident@estateconnect.app", password: "DemoPass123!", label: "Try as Resident", icon: Users },
-  security: { email: "demo.security@estateconnect.app", password: "DemoPass123!", label: "Try as Security", icon: Shield },
+  admin: { email: "demo.admin@xtate.app", password: "DemoPass123!", label: "Try as Admin", icon: UserCheck },
+  resident: { email: "demo.resident@xtate.app", password: "DemoPass123!", label: "Try as Resident", icon: Users },
+  security: { email: "demo.security@xtate.app", password: "DemoPass123!", label: "Try as Security", icon: Shield },
 };
 
 const DemoLoginButtons = () => {

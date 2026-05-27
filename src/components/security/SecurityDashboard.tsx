@@ -117,8 +117,9 @@ const SecurityDashboard = () => {
       const resident = residentMap[data.resident_id];
       setVerifiedCode({ ...(data as ActiveCode), resident });
       toast({ title: 'Code Verified', description: `Access granted for ${data.visitor_name}` });
-    } catch (e: any) {
-      toast({ title: 'Error', description: e.message ?? 'Verification failed', variant: 'destructive' });
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : 'Verification failed';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
     } finally {
       setIsVerifying(false);
     }

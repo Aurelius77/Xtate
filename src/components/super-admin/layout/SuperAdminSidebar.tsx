@@ -1,4 +1,4 @@
-import { Building2, LayoutDashboard, CreditCard, ScrollText, Settings, LogOut, Menu, Zap, BarChart3 } from 'lucide-react';
+import { Building2, LayoutDashboard, CreditCard, ScrollText, Settings, LogOut, Menu, Zap, BarChart3, LifeBuoy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface SuperAdminSidebarProps {
@@ -13,9 +13,10 @@ const SuperAdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurren
   const menuItems = [
     { label: 'Overview', icon: LayoutDashboard, page: 'dashboard' },
     { label: 'Analytics', icon: BarChart3, page: 'analytics' },
-    { label: 'Estates', icon: Building2, page: 'estates' },
-    { label: 'Subscriptions', icon: CreditCard, page: 'subscriptions' },
+    { label: 'Tenants', icon: Building2, page: 'estates' },
+    { label: 'Billing', icon: CreditCard, page: 'billing' },
     { label: 'Audit Logs', icon: ScrollText, page: 'audit-logs' },
+    { label: 'Support', icon: LifeBuoy, page: 'support' },
     { label: 'Settings', icon: Settings, page: 'settings' },
   ];
 

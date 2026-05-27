@@ -8,7 +8,7 @@ const DashboardPreview = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-            See EstateConnect
+            See XTATE
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
               {" "}In Action
             </span>
@@ -24,7 +24,7 @@ const DashboardPreview = () => {
               <div className="relative rounded-lg overflow-hidden">
                 <img 
                   src="/lovable-uploads/395ceb7b-df03-4f22-a2ef-c35bdb623fdd.png" 
-                  alt="EstateConnect Admin Dashboard Preview" 
+                  alt="XTATE Admin Dashboard Preview" 
                   className="w-full h-auto"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent pointer-events-none" />

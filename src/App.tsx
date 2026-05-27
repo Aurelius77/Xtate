@@ -5,6 +5,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { SecureAuthProvider, useAuth } from "@/contexts/SecureAuthContext";
+import { TenantProvider } from "@/contexts/TenantContext";
+import { FeatureFlagProvider } from "@/contexts/FeatureFlagContext";
 import { EstateProvider } from "@/contexts/EstateContext";
 import { InactivityProvider } from "@/components/security/InactivityProvider";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
@@ -75,58 +77,70 @@ const App = () => (
       <Toaster />
       <Sonner />
       <SecureAuthProvider>
-        <EstateProvider>
-          <InactivityProvider>
-            <BrowserRouter>
-              <Routes>
-                <Route path="/" element={<Index />} />
+        <TenantProvider>
+          <FeatureFlagProvider>
+            <EstateProvider>
+              <InactivityProvider>
+                <BrowserRouter>
+                  <Routes>
+                    <Route path="/" element={<Index />} />
+                    <Route 
+                      path="/dashboard" 
+                      element={
+                        <ProtectedRoute>
+                          <DashboardRouter />
+                        </ProtectedRoute>
+                      } 
+                    />
                 <Route 
-                  path="/dashboard" 
+                  path="/super-admin" 
                   element={
-                    <ProtectedRoute>
-                      <DashboardRouter />
-                    </ProtectedRoute>
+                    <ProtectedRoute role="super_admin">
+                      <SuperAdminDashboard />
+                        </ProtectedRoute>
                   } 
                 />
                 <Route 
-                  path="/super-admin" 
+                  path="/sa/*" 
                   element={
                     <ProtectedRoute role="super_admin">
                       <SuperAdminDashboard />
                     </ProtectedRoute>
                   } 
                 />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <ProtectedRoute role="admin">
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/resident" 
-                  element={
-                    <ProtectedRoute role="resident">
-                      <ResidentDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route 
-                  path="/security" 
-                  element={
-                    <ProtectedRoute role="security">
-                      <SecurityDashboard />
-                    </ProtectedRoute>
-                  } 
-                />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-              <PWAInstallPrompt />
-            </BrowserRouter>
-          </InactivityProvider>
-        </EstateProvider>
+                    <Route 
+                      path="/admin" 
+                      element={
+                        <ProtectedRoute role="admin">
+                          <AdminDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/resident" 
+                      element={
+                        <ProtectedRoute role="resident">
+                          <ResidentDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    <Route 
+                      path="/security" 
+                      element={
+                        <ProtectedRoute role="security">
+                          <SecurityDashboard />
+                        </ProtectedRoute>
+                      } 
+                    />
+                    {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                  <PWAInstallPrompt />
+                </BrowserRouter>
+              </InactivityProvider>
+            </EstateProvider>
+          </FeatureFlagProvider>
+        </TenantProvider>
       </SecureAuthProvider>
     </TooltipProvider>
   </QueryClientProvider>

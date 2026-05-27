@@ -13,6 +13,16 @@ interface DueItem {
   status: string;
 }
 
+interface ResidentDueQueryRow {
+  id: string;
+  amount: number | string;
+  status: string;
+  due: {
+    title: string | null;
+    due_date: string | null;
+  } | null;
+}
+
 const ResidentRecentDues = () => {
   const { user } = useAuth();
   const [recentDues, setRecentDues] = useState<DueItem[]>([]);
@@ -43,7 +53,7 @@ const ResidentRecentDues = () => {
 
         if (error) throw error;
 
-        const items: DueItem[] = (data || []).map((d: any) => ({
+        const items: DueItem[] = ((data || []) as ResidentDueQueryRow[]).map((d) => ({
           id: d.id,
           title: d.due?.title || 'Untitled Due',
           amount: Number(d.amount),

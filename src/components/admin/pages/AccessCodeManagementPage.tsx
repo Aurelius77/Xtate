@@ -8,9 +8,43 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
 
+interface AccessCodeRow {
+  id: string;
+  code: string;
+  resident: string;
+  unit: string;
+  visitorName: string;
+  visitorPhone: string;
+  purpose: string;
+  validFrom: string;
+  validUntil: string;
+  status: string;
+  isUsed: boolean;
+  usedAt: string | null;
+  createdAt: string;
+}
+
+interface AccessCodeQueryRow {
+  id: string;
+  access_code: string;
+  resident: {
+    house_unit_number: string | null;
+    profile: { full_name: string | null } | null;
+  } | null;
+  visitor_name: string;
+  visitor_phone: string | null;
+  purpose: string | null;
+  valid_from: string;
+  valid_until: string;
+  status: string;
+  is_used: boolean;
+  used_at: string | null;
+  created_at: string;
+}
+
 const AccessCodeManagementPage = () => {
   const estateId = useEstateId();
-  const [accessCodes, setAccessCodes] = useState<any[]>([]);
+  const [accessCodes, setAccessCodes] = useState<AccessCodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -26,7 +60,7 @@ const AccessCodeManagementPage = () => {
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) { console.error(error); setLoading(false); return; }
-      setAccessCodes((data || []).map((c: any) => ({
+      setAccessCodes(((data || []) as AccessCodeQueryRow[]).map((c) => ({
         id: c.id,
         code: c.access_code,
         resident: c.resident?.profile?.full_name || 'Unknown',

@@ -1,7 +1,7 @@
 
 {
-  "name": "EstateConnect - Estate Management Platform",
-  "short_name": "EstateConnect",
+  "name": "XTATE - Estate Management Platform",
+  "short_name": "XTATE",
   "description": "Modern Estate Management Platform for residents and administrators",
   "start_url": "/",
   "display": "standalone",

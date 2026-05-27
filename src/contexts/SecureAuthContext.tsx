@@ -21,8 +21,10 @@ interface RegisterData {
   email: string;
   password: string;
   phone: string;
-  role: 'admin' | 'resident' | 'security';
+  role?: 'admin' | 'resident' | 'security';
   houseUnit?: string;
+  tenantId?: string;
+  tenantSlug?: string;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -44,17 +46,16 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
 
   if (profileError || !profile) return null;
 
-  const { data: roleData } = await supabase
+  const { data: roleRows } = await supabase
     .from('user_roles')
     .select('role')
-    .eq('user_id', userId)
-    .single();
+    .eq('user_id', userId);
 
-  const role = (roleData?.role as 'admin' | 'resident' | 'security' | 'super_admin') || 'resident';
+  const role = (roleRows?.[0]?.role as 'admin' | 'resident' | 'security' | 'super_admin') || 'resident';
 
   return {
     id: profile.id,
@@ -77,12 +78,16 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
+    const loadSessionProfile = async (userId: string) => {
+      const profile = await fetchUserProfile(userId);
+      if (mounted) setUser(profile);
+    };
+
     const initAuth = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (session?.user && mounted) {
-          const profile = await fetchUserProfile(session.user.id);
-          if (mounted) setUser(profile);
+          await loadSessionProfile(session.user.id);
         }
       } catch (error) {
         console.error('Auth init failed:', error);
@@ -93,14 +98,20 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
 
     initAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
-        const profile = await fetchUserProfile(session.user.id);
-        if (mounted) setUser(profile);
+        if (mounted) setIsLoading(false);
+        setTimeout(() => {
+          loadSessionProfile(session.user.id).catch((error) => {
+            console.error('Auth profile refresh failed:', error);
+          });
+        }, 0);
       } else if (event === 'SIGNED_OUT') {
         if (mounted) setUser(null);
+        if (mounted) setIsLoading(false);
+      } else if (mounted) {
+        setIsLoading(false);
       }
-      if (mounted) setIsLoading(false);
     });
 
     return () => {
@@ -157,8 +168,9 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
       fullName: sanitizeInput(userData.fullName),
       email: sanitizeInput(userData.email.toLowerCase()),
       phone: sanitizeInput(userData.phone),
-      role: userData.role,
       houseUnit: userData.houseUnit ? sanitizeInput(userData.houseUnit) : undefined,
+      tenantId: userData.tenantId ? sanitizeInput(userData.tenantId) : undefined,
+      tenantSlug: userData.tenantSlug ? sanitizeInput(userData.tenantSlug.toLowerCase()) : undefined,
       password: userData.password,
     };
 
@@ -175,46 +187,100 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
 
-      const redirectUrl = `${window.location.origin}/dashboard`;
-      const { data, error } = await supabase.auth.signUp({
-        email: cleanData.email,
-        password: cleanData.password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            full_name: cleanData.fullName,
-            phone: cleanData.phone,
-            role: cleanData.role,
-            house_unit: cleanData.houseUnit || '',
-          },
+      const { data: functionData, error: functionError } = await supabase.functions.invoke<{
+        ok: boolean;
+        error?: string;
+      }>('create-resident-account', {
+        body: {
+          fullName: cleanData.fullName,
+          email: cleanData.email,
+          password: cleanData.password,
+          phone: cleanData.phone,
+          houseUnit: cleanData.houseUnit,
+          tenantId: cleanData.tenantId,
+          tenantSlug: cleanData.tenantSlug,
         },
       });
 
-      if (error) throw new Error(error.message);
-      if (!data.user) throw new Error('Registration failed');
-
-      rateLimitKey && rateLimiter.reset(rateLimitKey);
-
-      // If session is present, the user is signed in immediately (email confirmation disabled).
-      if (data.session) {
-        const profile = await fetchUserProfile(data.user.id);
-        if (profile) setUser(profile);
-        toast({
-          title: "Registration Successful",
-          description: "Welcome to EstateConnect!",
-        });
-        return { needsEmailConfirmation: false };
+      if (functionError) {
+        throw new Error(functionError.message);
+      }
+      if (!functionData?.ok) {
+        throw new Error(functionData?.error || 'Account creation failed');
       }
 
-      toast({
-        title: "Check your email",
-        description: "We sent you a confirmation link. Please verify your email to sign in.",
+      const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({
+        email: cleanData.email,
+        password: cleanData.password,
       });
-      return { needsEmailConfirmation: true };
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
-      toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
-      throw error;
+
+      if (loginError) throw new Error(loginError.message);
+
+      const profile = await fetchUserProfile(loginData.user.id);
+      if (!profile) throw new Error('Account created, but profile setup is incomplete');
+
+      setUser(profile);
+      rateLimiter.reset(rateLimitKey);
+
+      toast({
+        title: "Registration Successful",
+        description: "Welcome to XTATE!",
+      });
+
+      return { needsEmailConfirmation: false };
+    } catch (primaryError) {
+      const message = primaryError instanceof Error ? primaryError.message : 'Registration failed';
+
+      const canFallbackToSignup = message.toLowerCase().includes('function');
+      if (!canFallbackToSignup) {
+        toast({ title: "Registration Failed", description: message, variant: "destructive" });
+        throw primaryError;
+      }
+
+      try {
+        // Fallback for local/dev environments where the Edge Function has not been deployed.
+        const redirectUrl = `${window.location.origin}/dashboard`;
+        const { data, error } = await supabase.auth.signUp({
+          email: cleanData.email,
+          password: cleanData.password,
+          options: {
+            emailRedirectTo: redirectUrl,
+            data: {
+              full_name: cleanData.fullName,
+              phone: cleanData.phone,
+              house_unit: cleanData.houseUnit || '',
+              tenant_id: cleanData.tenantId || '',
+              tenant_slug: cleanData.tenantSlug || '',
+            },
+          },
+        });
+
+        if (error) throw new Error(error.message);
+        if (!data.user) throw new Error('Registration failed');
+
+        rateLimiter.reset(rateLimitKey);
+
+        // If session is present, the user is signed in immediately (email confirmation disabled).
+        if (data.session) {
+          const profile = await fetchUserProfile(data.user.id);
+          if (profile) setUser(profile);
+          toast({
+            title: "Registration Successful",
+            description: "Welcome to XTATE!",
+          });
+          return { needsEmailConfirmation: false };
+        }
+
+        toast({
+          title: "Check your email",
+          description: "We sent you a confirmation link. Please verify your email to sign in.",
+        });
+        return { needsEmailConfirmation: true };
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+        toast({ title: "Registration Failed", description: errorMessage, variant: "destructive" });
+        throw error;
+      }
     } finally {
       setIsLoading(false);
     }

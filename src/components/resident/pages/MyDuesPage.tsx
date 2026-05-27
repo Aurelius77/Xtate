@@ -5,8 +5,16 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import SecurePaymentForm from '@/components/payments/SecurePaymentForm';
 
+interface Due {
+  id: number;
+  title: string;
+  amount: string;
+  dueDate: string;
+  status: string;
+}
+
 const MyDuesPage = () => {
-  const [dues, setDues] = useState([
+  const [dues, setDues] = useState<Due[]>([
     { id: 1, title: 'Monthly Service Charge', amount: '₦50,000', dueDate: '2024-01-31', status: 'pending' },
     { id: 2, title: 'Security Levy', amount: '₦15,000', dueDate: '2024-01-15', status: 'paid' },
     { id: 3, title: 'Facility Maintenance', amount: '₦25,000', dueDate: '2024-02-05', status: 'overdue' },
@@ -14,7 +22,7 @@ const MyDuesPage = () => {
   ]);
   
   const [showPaymentForm, setShowPaymentForm] = useState(false);
-  const [selectedDue, setSelectedDue] = useState<any>(null);
+  const [selectedDue, setSelectedDue] = useState<Due | null>(null);
 
   const [paymentHistory] = useState([
     { id: 1, title: 'Security Levy', amount: '₦15,000', paidDate: '2024-01-14', reference: 'PAY_001234' },

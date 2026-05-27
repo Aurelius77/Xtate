@@ -59,7 +59,7 @@ INSERT INTO public.estates (id, name, slug, status, subscription_plan)
 VALUES ('00000000-0000-0000-0000-000000000001', 'Default Estate', 'default', 'active', 'enterprise');
 
 INSERT INTO public.estate_settings (estate_id, brand_name)
-VALUES ('00000000-0000-0000-0000-000000000001', 'EstateConnect');
+VALUES ('00000000-0000-0000-0000-000000000001', 'XTATE');
 
 INSERT INTO public.subscriptions (estate_id, plan, status)
 VALUES ('00000000-0000-0000-0000-000000000001', 'enterprise', 'active');

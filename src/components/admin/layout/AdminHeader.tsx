@@ -1,18 +1,22 @@
 
 import React from 'react';
 import { Bell, HelpCircle } from 'lucide-react';
+import { useTenant } from '@/contexts/TenantContext';
 
 interface AdminHeaderProps {
   userName?: string;
 }
 
 const AdminHeader = ({ userName }: AdminHeaderProps) => {
+  const { branding } = useTenant();
+  const brandName = branding?.name || 'Estate Management';
+
   return (
     <header className="flex items-center justify-between gap-4 px-4 lg:px-6 py-4 glass">
       <div className="flex items-center gap-4">
         <div className="lg:hidden w-8"></div>
         <div>
-          <h1 className="text-base lg:text-lg font-medium text-cyan-50">Estate Management Dashboard</h1>
+          <h1 className="text-base lg:text-lg font-medium text-cyan-50">{brandName} Dashboard</h1>
           <p className="text-xs lg:text-sm text-cyan-200">
             Welcome back, {userName} • Admin Dashboard
           </p>

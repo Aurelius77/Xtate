@@ -1,73 +1,92 @@
-# Welcome to your Lovable project
+# XTATE
 
-## Project info
+XTATE is a whitelabel estate management platform for residential communities. The current codebase is a React, TypeScript, Vite, Tailwind, shadcn-ui, and Supabase application with resident, estate admin, security, and super admin surfaces.
 
-**URL**: https://lovable.dev/projects/6e719db0-d209-4d25-8954-6522c530f44c
+## Current Focus
 
-## How can I edit this code?
+Phase 1 is focused on the XTATE foundation:
 
-There are several ways of editing your application.
+- Rebrand the inherited EstateConnect application to XTATE.
+- Introduce a tenant architecture while preserving the existing `estate_id` flows.
+- Add tenant resolution for subdomain and local development use.
+- Move feature access toward database-backed tenant feature flags.
+- Prepare dynamic tenant branding.
+- Prepare the platform-level super admin area.
+- Tighten RLS around new tenant-scoped data.
 
-**Use Lovable**
+The working implementation plan lives in:
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6e719db0-d209-4d25-8954-6522c530f44c) and start prompting.
+```txt
+docs/XTATE_PHASE_1_PLAN.md
+```
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- Vite
+- React
+- TypeScript
+- Tailwind CSS
+- shadcn-ui
+- Supabase
+- React Router
+- TanStack Query
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Local Development
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Install dependencies:
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+npm install
+```
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Start the development server:
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
+```sh
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+Build for production:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```sh
+npm run build
+```
 
-**Use GitHub Codespaces**
+Run linting:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run lint
+```
 
-## What technologies are used for this project?
+## Supabase
 
-This project is built with:
+The app currently uses Supabase for authentication, database access, storage policies, and Edge Functions. Existing multi-estate behavior is based on `estate_id`; Phase 1 introduces platform tenant tables and a gradual migration path toward `tenant_id`.
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Important areas:
 
-## How can I deploy this project?
+```txt
+supabase/migrations
+supabase/functions
+src/integrations/supabase
+src/contexts/SecureAuthContext.tsx
+src/contexts/EstateContext.tsx
+src/hooks/useEstateId.tsx
+```
 
-Simply open [Lovable](https://lovable.dev/projects/6e719db0-d209-4d25-8954-6522c530f44c) and click on Share -> Publish.
+## Architecture Notes
 
-## Can I connect a custom domain to my Lovable project?
+XTATE should run as a shared multi-tenant SaaS:
 
-Yes, you can!
+```txt
+xtate.app                -> public marketing site
+app.xtate.app            -> general application entry
+lekki.xtate.app          -> tenant portal for Lekki
+paradise.xtate.app       -> tenant portal for Paradise
+```
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+All tenants can share the same frontend and backend infrastructure, with tenant isolation enforced by tenant-aware queries and Supabase Row Level Security.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+## Documentation
+
+- Phase 1 plan: `docs/XTATE_PHASE_1_PLAN.md`
+
+Update the plan checklist as implementation progresses.

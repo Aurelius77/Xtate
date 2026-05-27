@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'estateconnect-pwa-v3';
+const CACHE_NAME = 'xtate-pwa-v1';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',

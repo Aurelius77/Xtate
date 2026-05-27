@@ -2,3 +2,6 @@ project_id = "isoqgamhqbmglupczjeq"
 
 [functions.seed-demo-users]
 verify_jwt = false
+
+[functions.create-resident-account]
+verify_jwt = false

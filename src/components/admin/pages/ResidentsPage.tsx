@@ -8,12 +8,33 @@ import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
 import { useToast } from '@/hooks/use-toast';
 
+interface ResidentListItem {
+  id: string;
+  name: string;
+  unit: string;
+  phone: string;
+  email: string;
+  status: string;
+  dues: string;
+}
+
+interface ResidentQueryRow {
+  id: string;
+  house_unit_number: string | null;
+  is_active: boolean;
+  profile: {
+    full_name: string | null;
+    email: string | null;
+    phone: string | null;
+  } | null;
+}
+
 const ResidentsPage = () => {
   const estateId = useEstateId();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [residents, setResidents] = useState<any[]>([]);
+  const [residents, setResidents] = useState<ResidentListItem[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,7 +46,7 @@ const ResidentsPage = () => {
         .select('id, house_unit_number, is_active, created_at, user_id, profile:profiles!residents_user_id_fkey(full_name, email, phone)')
         .eq('estate_id', estateId);
       if (error) { console.error(error); setLoading(false); return; }
-      setResidents((data || []).map((r: any) => ({
+      setResidents(((data || []) as ResidentQueryRow[]).map((r) => ({
         id: r.id,
         name: r.profile?.full_name || 'Unknown',
         unit: r.house_unit_number || '-',
