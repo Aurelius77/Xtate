@@ -48,14 +48,27 @@ const DocumentsPage = () => {
     }
   };
 
-  const openDocument = (document: DocumentRow, download = false) => {
+  const openDocument = async (document: DocumentRow, download = false) => {
     if (!document.file_url) {
       toast({ title: 'Unavailable', description: 'This document does not have a file URL yet.' });
       return;
     }
 
+    let url = document.file_url;
+    if (!/^https?:\/\//.test(document.file_url)) {
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .createSignedUrl(document.file_url, 60 * 5, download ? { download: document.title } : undefined);
+
+      if (error) {
+        toast({ title: 'Unable to Open Document', description: error.message, variant: 'destructive' });
+        return;
+      }
+      url = data.signedUrl;
+    }
+
     const anchor = window.document.createElement('a');
-    anchor.href = document.file_url;
+    anchor.href = url;
     anchor.target = '_blank';
     anchor.rel = 'noopener noreferrer';
     if (download) anchor.download = document.title;

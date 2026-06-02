@@ -17,10 +17,12 @@ interface Resident {
 interface ResidentTableProps {
   residents: Resident[];
   onStatusToggle: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDeactivate: (id: string) => void;
+  onEdit: (id: string) => void;
+  onView: (id: string) => void;
 }
 
-const ResidentTable = ({ residents, onStatusToggle, onDelete }: ResidentTableProps) => {
+const ResidentTable = ({ residents, onStatusToggle, onDeactivate, onEdit, onView }: ResidentTableProps) => {
   return (
     <Card className="glass-card border-cyan-400/20">
       <CardHeader>
@@ -48,7 +50,9 @@ const ResidentTable = ({ residents, onStatusToggle, onDelete }: ResidentTablePro
                   key={resident.id}
                   resident={resident}
                   onStatusToggle={onStatusToggle}
-                  onDelete={onDelete}
+                  onDeactivate={onDeactivate}
+                  onEdit={onEdit}
+                  onView={onView}
                 />
               ))}
             </tbody>

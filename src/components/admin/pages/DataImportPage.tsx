@@ -1,126 +1,218 @@
-
 import React, { useState } from 'react';
-import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Users, DollarSign, Trash2, Edit } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, CheckCircle, AlertCircle, Users, DollarSign } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Checkbox } from '@/components/ui/checkbox';
-import SecureDataImport from '@/components/data-import/SecureDataImport';
+import { supabase } from '@/integrations/supabase/client';
+import { useEstateId } from '@/hooks/useEstateId';
+import { useToast } from '@/hooks/use-toast';
+import { useTenant } from '@/contexts/TenantContext';
+import type { Database } from '@/integrations/supabase/types';
 
-interface ImportResults {
-  residents: number;
-  dues: number;
-  payments: number;
-  errors: number;
+type DueStatus = Database['public']['Enums']['due_status'];
+
+interface ImportResult {
+  row: number;
+  email: string;
+  status: 'success' | 'error';
+  message: string;
 }
 
+type CSVRow = Record<string, string>;
+
+const normalizeHeader = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, '');
+const getValue = (row: CSVRow, aliases: string[]) => {
+  const keys = Object.keys(row);
+  const match = keys.find((key) => aliases.includes(normalizeHeader(key)));
+  return match ? row[match]?.trim() || '' : '';
+};
+
+const parseCSV = (content: string) => {
+  const lines = content.split(/\r?\n/).filter((line) => line.trim());
+  if (lines.length < 2) return [];
+
+  const headers = lines[0].split(',').map((header) => header.trim());
+  return lines.slice(1).map((line) => {
+    const values = line.split(',').map((value) => value.trim());
+    return headers.reduce<CSVRow>((row, header, index) => {
+      row[header] = values[index] || '';
+      return row;
+    }, {});
+  });
+};
+
 const DataImportPage = () => {
-  const [importStatus, setImportStatus] = useState<'idle' | 'uploading' | 'processing' | 'success' | 'error'>('idle');
-  const [importResults, setImportResults] = useState<ImportResults | null>(null);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [importHistory, setImportHistory] = useState([
-    { id: '1', fileName: 'residents_jan_2024.csv', date: '2024-01-15', records: 25, status: 'success' },
-    { id: '2', fileName: 'payments_dec_2023.xlsx', date: '2023-12-28', records: 18, status: 'success' },
-    { id: '3', fileName: 'new_residents.csv', date: '2024-01-10', records: 5, status: 'error' }
-  ]);
-
-  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImportStatus('uploading');
-    
-    // Enhanced file processing with validation
-    setTimeout(() => {
-      setImportStatus('processing');
-      setTimeout(() => {
-        const fileName = file.name;
-        const newImportRecord = {
-          id: Date.now().toString(),
-          fileName,
-          date: new Date().toISOString().split('T')[0],
-          records: Math.floor(Math.random() * 50) + 10,
-          status: Math.random() > 0.2 ? 'success' : 'error'
-        };
-        
-        setImportHistory(prev => [newImportRecord, ...prev]);
-        setImportStatus('success');
-        setImportResults({
-          residents: newImportRecord.records,
-          dues: Math.floor(newImportRecord.records * 0.8),
-          payments: Math.floor(newImportRecord.records * 0.6),
-          errors: newImportRecord.status === 'error' ? Math.floor(Math.random() * 5) + 1 : 0
-        });
-      }, 2000);
-    }, 1000);
-  };
-
-  const handleBulkDelete = () => {
-    setImportHistory(prev => prev.filter(item => !selectedItems.includes(item.id)));
-    setSelectedItems([]);
-  };
-
-  const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedItems(importHistory.map(item => item.id));
-    } else {
-      setSelectedItems([]);
-    }
-  };
+  const estateId = useEstateId();
+  const { tenantId, tenantSlug } = useTenant();
+  const { toast } = useToast();
+  const [importStatus, setImportStatus] = useState<'idle' | 'processing' | 'success' | 'error'>('idle');
+  const [results, setResults] = useState<ImportResult[]>([]);
+  const [currentFileName, setCurrentFileName] = useState<string | null>(null);
 
   const downloadTemplate = () => {
-    // Create a sample CSV content
-    const csvContent = `Full Name,Email,Phone,Unit Number,Date Moved In,Emergency Contact,Due Title,Due Amount,Due Date,Payment Status
-John Doe,john@email.com,+234 801 234 5678,A-101,2023-01-15,Jane Doe - +234 802 345 6789,Monthly Service Charge,50000,2024-01-01,paid
-Sarah Johnson,sarah@email.com,+234 803 456 7890,B-205,2023-03-20,Mike Johnson - +234 804 567 8901,Quarterly Maintenance,75000,2024-02-01,pending
-Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodriguez - +234 806 789 0123,Annual Security Fee,25000,2024-03-01,overdue`;
+    const csvContent = `Full Name,Email,Phone,Unit Number,Temporary Password,Date Moved In,Emergency Contact,Due Title,Due Amount,Due Date,Payment Status
+John Doe,john@example.com,+2348012345678,A-101,TempPass123!,2026-06-01,Jane Doe +2348023456789,Monthly Service Charge,50000,2026-07-01,pending
+Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mike Johnson +2348045678901,Security Levy,15000,2026-07-01,pending`;
 
     const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'estate_data_template.csv';
-    a.click();
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = 'xtate_resident_import_template.csv';
+    anchor.click();
     window.URL.revokeObjectURL(url);
   };
+
+  const readFile = (file: File) => new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (event) => resolve(String(event.target?.result || ''));
+    reader.onerror = () => reject(new Error('Failed to read file'));
+    reader.readAsText(file);
+  });
+
+  const importDueForResident = async (row: CSVRow, residentUserId: string) => {
+    if (!estateId) return;
+
+    const dueTitle = getValue(row, ['duetitle']);
+    const dueAmount = Number(getValue(row, ['dueamount']));
+    const dueDate = getValue(row, ['duedate']);
+    const paymentStatus = getValue(row, ['paymentstatus']).toLowerCase() as DueStatus;
+
+    if (!dueTitle || !Number.isFinite(dueAmount) || dueAmount <= 0 || !dueDate) return;
+
+    const { data: resident, error: residentError } = await supabase
+      .from('residents')
+      .select('id')
+      .eq('user_id', residentUserId)
+      .maybeSingle();
+
+    if (residentError) throw residentError;
+    if (!resident?.id) throw new Error('Created resident profile not found');
+
+    const { data: due, error: dueError } = await supabase
+      .from('dues')
+      .insert({
+        estate_id: estateId,
+        title: dueTitle,
+        amount: dueAmount,
+        due_date: dueDate,
+        frequency: 'one_time',
+        is_active: true,
+      })
+      .select('id')
+      .single();
+
+    if (dueError) throw dueError;
+
+    const status: DueStatus = ['paid', 'pending', 'overdue', 'pending_confirmation'].includes(paymentStatus)
+      ? paymentStatus
+      : 'pending';
+
+    const { error: residentDueError } = await supabase.from('resident_dues').insert({
+      due_id: due.id,
+      resident_id: resident.id,
+      estate_id: estateId,
+      amount: dueAmount,
+      status,
+      paid_at: status === 'paid' ? new Date().toISOString() : null,
+    });
+
+    if (residentDueError) throw residentDueError;
+  };
+
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!tenantId && !tenantSlug) {
+      toast({ title: 'Tenant Not Ready', description: 'Resident import needs a tenant context.', variant: 'destructive' });
+      return;
+    }
+
+    setCurrentFileName(file.name);
+    setImportStatus('processing');
+    setResults([]);
+
+    try {
+      const content = await readFile(file);
+      const rows = parseCSV(content);
+      const nextResults: ImportResult[] = [];
+
+      for (const [index, row] of rows.entries()) {
+        const fullName = getValue(row, ['fullname', 'name']);
+        const email = getValue(row, ['email', 'emailaddress']).toLowerCase();
+        const phone = getValue(row, ['phone', 'phonenumber']);
+        const houseUnit = getValue(row, ['unitnumber', 'houseunit', 'houseunitnumber']);
+        const password = getValue(row, ['temporarypassword', 'password', 'temppassword']);
+        const emergencyContact = getValue(row, ['emergencycontact']);
+
+        try {
+          if (!fullName || !email || !houseUnit || !password) {
+            throw new Error('Missing full name, email, unit number, or temporary password');
+          }
+
+          const { data, error } = await supabase.functions.invoke<{ ok: boolean; userId?: string; error?: string }>('create-resident-account', {
+            body: {
+              fullName,
+              email,
+              phone,
+              houseUnit,
+              password,
+              tenantId: tenantId || undefined,
+              tenantSlug: tenantSlug || undefined,
+            },
+          });
+
+          if (error || !data?.ok || !data.userId) {
+            throw new Error(error?.message || data?.error || 'Could not create resident account');
+          }
+
+          if (emergencyContact) {
+            await supabase
+              .from('residents')
+              .update({ emergency_contact: emergencyContact })
+              .eq('user_id', data.userId);
+          }
+
+          await importDueForResident(row, data.userId);
+
+          nextResults.push({ row: index + 2, email, status: 'success', message: 'Imported' });
+        } catch (error) {
+          const message = error instanceof Error ? error.message : 'Import failed';
+          nextResults.push({ row: index + 2, email: email || '-', status: 'error', message });
+        }
+      }
+
+      setResults(nextResults);
+      setImportStatus(nextResults.some((result) => result.status === 'success') ? 'success' : 'error');
+      toast({
+        title: 'Import Complete',
+        description: `${nextResults.filter((result) => result.status === 'success').length} imported, ${nextResults.filter((result) => result.status === 'error').length} failed.`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not process import file.';
+      setImportStatus('error');
+      toast({ title: 'Import Failed', description: message, variant: 'destructive' });
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const successful = results.filter((result) => result.status === 'success').length;
+  const failed = results.filter((result) => result.status === 'error').length;
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-cyan-50">Data Import & Management</h1>
-          <p className="text-cyan-200">Import your existing Excel/CSV data and manage bulk operations</p>
+          <p className="text-cyan-200">Import resident accounts and optional due records from CSV</p>
         </div>
-        {selectedItems.length > 0 && (
-          <div className="flex gap-2">
-            <Button variant="destructive" onClick={handleBulkDelete} className="flex items-center gap-2">
-              <Trash2 className="h-4 w-4" />
-              Delete Selected ({selectedItems.length})
-            </Button>
-          </div>
-        )}
       </div>
 
-      <Tabs defaultValue="import" className="space-y-6">
-        <TabsList className="glass-card border-cyan-400/20">
-          <TabsTrigger value="import" className="data-[state=active]:bg-cyan-600">Import Data</TabsTrigger>
-          <TabsTrigger value="history" className="data-[state=active]:bg-cyan-600">Import History</TabsTrigger>
-          <TabsTrigger value="bulk" className="data-[state=active]:bg-cyan-600">Bulk Operations</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="import" className="space-y-6">
-          {/* Secure Data Import Component */}
-          <SecureDataImport 
-            onImportComplete={(result) => {
-              console.log('Import completed:', result);
-              // Handle import results here
-            }}
-          />
-          
-          <div className="grid lg:grid-cols-2 gap-6">
+      <div className="grid lg:grid-cols-2 gap-6">
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-cyan-50">
@@ -130,20 +222,20 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-cyan-200 text-sm">
-              Download our Excel template to format your existing data correctly before importing.
+              Use the CSV template so resident account creation and optional due assignment can run correctly.
             </p>
             <div className="space-y-3">
               <div className="flex items-center gap-2 text-sm text-cyan-300">
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                Resident information (Name, Email, Phone, Unit)
+                Required: Full Name, Email, Unit Number, Temporary Password
               </div>
               <div className="flex items-center gap-2 text-sm text-cyan-300">
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                Due records and payment status
+                Optional: Phone, Emergency Contact, Due Title, Due Amount, Due Date
               </div>
               <div className="flex items-center gap-2 text-sm text-cyan-300">
                 <CheckCircle className="h-4 w-4 text-green-400" />
-                Emergency contacts
+                Passwords must satisfy the signup password rules
               </div>
             </div>
             <Button onClick={downloadTemplate} className="w-full bg-cyan-600 hover:bg-cyan-700">
@@ -162,80 +254,80 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-cyan-200 text-sm">
-              Upload your formatted Excel or CSV file to import resident and payment data.
+              Upload a completed CSV file. Each valid row creates a resident auth account for this estate.
             </p>
-            
-            {importStatus === 'idle' && (
-              <div className="border-2 border-dashed border-cyan-400/30 rounded-lg p-6 text-center">
-                <FileSpreadsheet className="h-12 w-12 text-cyan-400 mx-auto mb-3" />
-                <Input
-                  type="file"
-                  accept=".csv,.xlsx,.xls"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label htmlFor="file-upload" className="cursor-pointer">
-                  <Button asChild className="bg-blue-600 hover:bg-blue-700">
-                    <span>Choose File to Upload</span>
-                  </Button>
-                </label>
-                <p className="text-xs text-cyan-300 mt-2">Supports CSV, Excel files</p>
-              </div>
-            )}
-
-            {importStatus === 'uploading' && (
-              <div className="text-center py-6">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-3"></div>
-                <p className="text-cyan-200">Uploading file...</p>
-              </div>
-            )}
-
-            {importStatus === 'processing' && (
-              <div className="text-center py-6">
-                <div className="animate-pulse">
-                  <FileSpreadsheet className="h-8 w-8 text-cyan-400 mx-auto mb-3" />
-                </div>
-                <p className="text-cyan-200">Processing data...</p>
-              </div>
-            )}
-
-            {importStatus === 'success' && importResults && (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-green-400">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Import Successful!</span>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-green-500/10 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-green-400" />
-                      <span className="text-sm text-green-300">{importResults.residents} Residents</span>
-                    </div>
-                  </div>
-                  <div className="bg-blue-500/10 p-3 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <DollarSign className="h-4 w-4 text-blue-400" />
-                      <span className="text-sm text-blue-300">{importResults.dues} Due Records</span>
-                    </div>
-                  </div>
-                </div>
-                {importResults.errors > 0 && (
-                  <div className="flex items-center gap-2 text-orange-400">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">{importResults.errors} rows had errors (skipped)</span>
-                  </div>
-                )}
-                <Button onClick={() => setImportStatus('idle')} variant="outline" className="w-full mt-3">
-                  Import Another File
+            <div className="border-2 border-dashed border-cyan-400/30 rounded-lg p-6 text-center">
+              <FileSpreadsheet className="h-12 w-12 text-cyan-400 mx-auto mb-3" />
+              <Input type="file" accept=".csv,text/csv" onChange={handleFileUpload} className="hidden" id="file-upload" disabled={importStatus === 'processing'} />
+              <label htmlFor="file-upload" className="cursor-pointer">
+                <Button asChild className="bg-blue-600 hover:bg-blue-700" disabled={importStatus === 'processing'}>
+                  <span>{importStatus === 'processing' ? 'Processing...' : 'Choose CSV File'}</span>
                 </Button>
+              </label>
+              <p className="text-xs text-cyan-300 mt-2">CSV only for real imports</p>
+            </div>
+
+            {currentFileName && (
+              <div className="grid grid-cols-3 gap-3">
+                <div className="bg-cyan-500/10 p-3 rounded-lg">
+                  <p className="text-xs text-cyan-300">File</p>
+                  <p className="text-sm text-cyan-100 truncate">{currentFileName}</p>
+                </div>
+                <div className="bg-green-500/10 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <Users className="h-4 w-4 text-green-400" />
+                    <span className="text-sm text-green-300">{successful} imported</span>
+                  </div>
+                </div>
+                <div className="bg-red-500/10 p-3 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-red-400" />
+                    <span className="text-sm text-red-300">{failed} failed</span>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
-          </Card>
-          </div>
+        </Card>
+      </div>
 
-          <Card className="glass-card border-cyan-400/20">
+      <Card className="glass-card border-cyan-400/20">
+        <CardHeader>
+          <CardTitle className="text-cyan-50">Import Results</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {results.length === 0 ? (
+            <p className="text-cyan-300 text-sm">No import has been run yet.</p>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow className="border-cyan-400/20">
+                  <TableHead className="text-cyan-200">Row</TableHead>
+                  <TableHead className="text-cyan-200">Email</TableHead>
+                  <TableHead className="text-cyan-200">Status</TableHead>
+                  <TableHead className="text-cyan-200">Message</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {results.map((result) => (
+                  <TableRow key={`${result.row}-${result.email}`} className="border-cyan-400/20">
+                    <TableCell className="text-cyan-100">{result.row}</TableCell>
+                    <TableCell className="text-cyan-100">{result.email}</TableCell>
+                    <TableCell>
+                      <Badge className={result.status === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}>
+                        {result.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-cyan-200">{result.message}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="glass-card border-cyan-400/20">
         <CardHeader>
           <CardTitle className="text-cyan-50">Import Guidelines</CardTitle>
         </CardHeader>
@@ -244,134 +336,28 @@ Emily Rodriguez,emily@email.com,+234 805 678 9012,C-301,2023-06-10,Carlos Rodrig
             <div>
               <h4 className="font-medium text-cyan-100 mb-3">Required Fields</h4>
               <ul className="space-y-2 text-sm text-cyan-300">
-                <li>• Full Name (required)</li>
-                <li>• Email Address (required)</li>
-                <li>• Phone Number (required)</li>
-                <li>• Unit Number (required)</li>
-                <li>• Date Moved In (YYYY-MM-DD format)</li>
+                <li>Full Name</li>
+                <li>Email Address</li>
+                <li>Unit Number</li>
+                <li>Temporary Password</li>
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-cyan-100 mb-3">Optional Fields</h4>
+              <h4 className="font-medium text-cyan-100 mb-3">Optional Due Fields</h4>
               <ul className="space-y-2 text-sm text-cyan-300">
-                <li>• Emergency Contact</li>
-                <li>• Due Title & Amount</li>
-                <li>• Payment Status (paid/pending/overdue)</li>
-                <li>• Due Date (YYYY-MM-DD format)</li>
+                <li>Due Title</li>
+                <li>Due Amount</li>
+                <li>Due Date</li>
+                <li>Payment Status: paid, pending, overdue</li>
               </ul>
             </div>
           </div>
-        </CardContent>
-        </Card>
-        </TabsContent>
-
-        <TabsContent value="history" className="space-y-6">
-          <Card className="glass-card border-cyan-400/20">
-            <CardHeader>
-              <CardTitle className="text-cyan-50">Import History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-cyan-400/20">
-                    <TableHead className="w-12">
-                      <Checkbox
-                        checked={selectedItems.length === importHistory.length}
-                        onCheckedChange={handleSelectAll}
-                      />
-                    </TableHead>
-                    <TableHead className="text-cyan-100">File Name</TableHead>
-                    <TableHead className="text-cyan-100">Date</TableHead>
-                    <TableHead className="text-cyan-100">Records</TableHead>
-                    <TableHead className="text-cyan-100">Status</TableHead>
-                    <TableHead className="text-cyan-100">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {importHistory.map((record) => (
-                    <TableRow key={record.id} className="border-cyan-400/20">
-                      <TableCell>
-                        <Checkbox
-                          checked={selectedItems.includes(record.id)}
-                          onCheckedChange={(checked) => {
-                            if (checked) {
-                              setSelectedItems([...selectedItems, record.id]);
-                            } else {
-                              setSelectedItems(selectedItems.filter(id => id !== record.id));
-                            }
-                          }}
-                        />
-                      </TableCell>
-                      <TableCell className="text-cyan-200">{record.fileName}</TableCell>
-                      <TableCell className="text-cyan-200">{record.date}</TableCell>
-                      <TableCell className="text-cyan-200">{record.records}</TableCell>
-                      <TableCell>
-                        <Badge variant={record.status === 'success' ? 'default' : 'destructive'}>
-                          {record.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" className="h-8">
-                            <Edit className="h-3 w-3" />
-                          </Button>
-                          <Button size="sm" variant="destructive" className="h-8">
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="bulk" className="space-y-6">
-          <div className="grid md:grid-cols-2 gap-6">
-            <Card className="glass-card border-cyan-400/20">
-              <CardHeader>
-                <CardTitle className="text-cyan-50">Bulk Resident Operations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                  <Users className="h-4 w-4 mr-2" />
-                  Export All Residents
-                </Button>
-                <Button className="w-full bg-green-600 hover:bg-green-700">
-                  <DollarSign className="h-4 w-4 mr-2" />
-                  Generate Monthly Dues
-                </Button>
-                <Button className="w-full bg-orange-600 hover:bg-orange-700">
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  Update Payment Status
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="glass-card border-cyan-400/20">
-              <CardHeader>
-                <CardTitle className="text-cyan-50">Bulk Data Operations</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <Button className="w-full bg-purple-600 hover:bg-purple-700">
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export Payment History
-                </Button>
-                <Button className="w-full bg-red-600 hover:bg-red-700">
-                  <AlertCircle className="h-4 w-4 mr-2" />
-                  Send Overdue Notices
-                </Button>
-                <Button className="w-full bg-cyan-600 hover:bg-cyan-700">
-                  <Download className="h-4 w-4 mr-2" />
-                  Backup All Data
-                </Button>
-              </CardContent>
-            </Card>
+          <div className="flex items-center gap-2 text-sm text-blue-300 mt-5">
+            <DollarSign className="h-4 w-4" />
+            Due rows are assigned only to the resident created on that same row.
           </div>
-        </TabsContent>
-      </Tabs>
+        </CardContent>
+      </Card>
     </div>
   );
 };

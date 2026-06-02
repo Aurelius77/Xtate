@@ -17,10 +17,12 @@ interface Resident {
 interface ResidentRowProps {
   resident: Resident;
   onStatusToggle: (id: string) => void;
-  onDelete: (id: string) => void;
+  onDeactivate: (id: string) => void;
+  onEdit: (id: string) => void;
+  onView: (id: string) => void;
 }
 
-const ResidentRow = ({ resident, onStatusToggle, onDelete }: ResidentRowProps) => {
+const ResidentRow = ({ resident, onStatusToggle, onDeactivate, onEdit, onView }: ResidentRowProps) => {
   return (
     <tr className="hover:bg-cyan-500/10 transition border-b border-cyan-400/10">
       <td className="py-3 px-3">
@@ -48,17 +50,17 @@ const ResidentRow = ({ resident, onStatusToggle, onDelete }: ResidentRowProps) =
       <td className="py-3 px-3 font-medium text-cyan-100">{resident.dues}</td>
       <td className="py-3 px-3">
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className="hover:bg-cyan-500/20 text-cyan-200 hover:text-cyan-50">
+          <Button size="sm" variant="ghost" className="hover:bg-cyan-500/20 text-cyan-200 hover:text-cyan-50" onClick={() => onView(resident.id)}>
             <Eye className="h-3 w-3" />
           </Button>
-          <Button size="sm" variant="ghost" className="hover:bg-blue-500/20 text-blue-300 hover:text-blue-100">
+          <Button size="sm" variant="ghost" className="hover:bg-blue-500/20 text-blue-300 hover:text-blue-100" onClick={() => onEdit(resident.id)}>
             <Edit className="h-3 w-3" />
           </Button>
           <Button 
             size="sm" 
             variant="ghost" 
             className="hover:bg-red-500/20 text-red-300 hover:text-red-100"
-            onClick={() => onDelete(resident.id)}
+            onClick={() => onDeactivate(resident.id)}
           >
             <Trash2 className="h-3 w-3" />
           </Button>

@@ -1,49 +1,178 @@
-
-import React, { useState } from 'react';
-import { Settings, User, Bell, Shield, Database, Palette, Globe } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Settings, User, Shield, Palette, Globe, Mail, Phone } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SecureAuthContext';
+import { useEstate } from '@/contexts/EstateContext';
+import { useToast } from '@/hooks/use-toast';
+import { useEstateId } from '@/hooks/useEstateId';
 
-type SettingValue = string | number | boolean;
+interface SettingsForm {
+  fullName: string;
+  email: string;
+  phone: string;
+  estateName: string;
+  brandName: string;
+  supportContact: string;
+  emailSenderName: string;
+  customDomain: string;
+  primaryColor: string;
+  secondaryColor: string;
+}
+
+const defaultSettings: SettingsForm = {
+  fullName: '',
+  email: '',
+  phone: '',
+  estateName: '',
+  brandName: '',
+  supportContact: '',
+  emailSenderName: '',
+  customDomain: '',
+  primaryColor: '#0891b2',
+  secondaryColor: '#2563eb',
+};
 
 const AdminSettingsPage = () => {
-  const [settings, setSettings] = useState({
-    // Profile Settings
-    fullName: 'John Administrator',
-    email: 'admin@estate.com',
-    phone: '+234 801 234 5678',
-    
-    // Estate Settings
-    estateName: 'Paradise Estate',
-    estateAddress: '123 Paradise Street, Lagos',
-    currency: 'NGN',
-    
-    // Notification Settings
-    emailNotifications: true,
-    smsNotifications: false,
-    dueReminders: true,
-    meetingReminders: true,
-    
-    // Security Settings
-    twoFactorAuth: false,
-    sessionTimeout: 30,
-    
-    // System Settings
-    autoBackup: true,
-    dataRetention: 365,
-    maintenanceMode: false
-  });
+  const estateId = useEstateId();
+  const { user, updateProfile } = useAuth();
+  const { refreshSettings } = useEstate();
+  const { toast } = useToast();
+  const [settings, setSettings] = useState<SettingsForm>(defaultSettings);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleSettingChange = (key: string, value: SettingValue) => {
-    setSettings(prev => ({ ...prev, [key]: value }));
+  const handleSettingChange = (key: keyof SettingsForm, value: string) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    console.log('Saving settings:', settings);
+  const loadSettings = useCallback(async () => {
+    if (!user || !estateId) {
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    const [profileRes, estateRes, settingsRes] = await Promise.all([
+      supabase.from('profiles').select('full_name, email, phone').eq('id', user.id).maybeSingle(),
+      supabase.from('estates').select('name').eq('id', estateId).maybeSingle(),
+      supabase.from('estate_settings').select('*').eq('estate_id', estateId).maybeSingle(),
+    ]);
+
+    if (profileRes.error) {
+      toast({ title: 'Error', description: profileRes.error.message, variant: 'destructive' });
+    }
+    if (estateRes.error) {
+      toast({ title: 'Error', description: estateRes.error.message, variant: 'destructive' });
+    }
+    if (settingsRes.error) {
+      toast({ title: 'Error', description: settingsRes.error.message, variant: 'destructive' });
+    }
+
+    const profile = profileRes.data;
+    const estate = estateRes.data;
+    const estateSettings = settingsRes.data;
+
+    setSettings({
+      fullName: profile?.full_name || user.full_name || '',
+      email: profile?.email || user.email || '',
+      phone: profile?.phone || user.phone || '',
+      estateName: estate?.name || '',
+      brandName: estateSettings?.brand_name || estate?.name || '',
+      supportContact: estateSettings?.support_contact || '',
+      emailSenderName: estateSettings?.email_sender_name || '',
+      customDomain: estateSettings?.custom_domain || '',
+      primaryColor: estateSettings?.primary_color || defaultSettings.primaryColor,
+      secondaryColor: estateSettings?.secondary_color || defaultSettings.secondaryColor,
+    });
+    setLoading(false);
+  }, [estateId, toast, user]);
+
+  useEffect(() => {
+    void loadSettings();
+  }, [loadSettings]);
+
+  const handleSave = async () => {
+    if (!user || !estateId) {
+      toast({ title: 'Not Ready', description: 'Missing admin or estate context.', variant: 'destructive' });
+      return;
+    }
+
+    if (!settings.fullName.trim() || !settings.estateName.trim()) {
+      toast({ title: 'Missing Details', description: 'Full name and estate name are required.', variant: 'destructive' });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const [profileRes, estateRes, settingsRes] = await Promise.all([
+        supabase
+          .from('profiles')
+          .update({
+            full_name: settings.fullName.trim(),
+            phone: settings.phone.trim() || null,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id),
+        supabase
+          .from('estates')
+          .update({
+            name: settings.estateName.trim(),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', estateId),
+        supabase
+          .from('estate_settings')
+          .upsert({
+            estate_id: estateId,
+            brand_name: settings.brandName.trim() || settings.estateName.trim(),
+            support_contact: settings.supportContact.trim() || null,
+            email_sender_name: settings.emailSenderName.trim() || null,
+            custom_domain: settings.customDomain.trim() || null,
+            primary_color: settings.primaryColor || null,
+            secondary_color: settings.secondaryColor || null,
+            updated_at: new Date().toISOString(),
+          }, { onConflict: 'estate_id' }),
+      ]);
+
+      if (profileRes.error) throw profileRes.error;
+      if (estateRes.error) throw estateRes.error;
+      if (settingsRes.error) throw settingsRes.error;
+
+      await updateProfile({
+        full_name: settings.fullName.trim(),
+        phone: settings.phone.trim(),
+      });
+      await refreshSettings();
+
+      toast({ title: 'Settings Saved', description: 'Admin and estate settings have been updated.' });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not save settings.';
+      toast({ title: 'Save Failed', description: message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!settings.email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(settings.email, {
+      redirectTo: `${window.location.origin}/auth`,
+    });
+
+    if (error) {
+      toast({ title: 'Password Reset Failed', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Password Reset Sent', description: 'Check your email for the reset link.' });
+  };
+
+  const showUnavailable = (feature: string) => {
+    toast({ title: 'Not Backed Yet', description: `${feature} needs a database field or service integration before it can be saved.` });
   };
 
   return (
@@ -51,21 +180,21 @@ const AdminSettingsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-cyan-50">Admin Settings</h1>
-          <p className="text-cyan-200">Manage your account and system preferences</p>
+          <p className="text-cyan-200">Manage your account and estate preferences</p>
         </div>
-        <Button onClick={handleSave} className="bg-cyan-600 hover:bg-cyan-700">
-          Save Changes
+        <Button onClick={handleSave} className="bg-cyan-600 hover:bg-cyan-700" disabled={loading || saving}>
+          {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        {/* Profile Settings */}
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-cyan-50">
               <User className="h-5 w-5" />
               Profile Settings
             </CardTitle>
+            <CardDescription className="text-cyan-200">Your admin profile information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -73,8 +202,9 @@ const AdminSettingsPage = () => {
               <Input
                 id="fullName"
                 value={settings.fullName}
-                onChange={(e) => handleSettingChange('fullName', e.target.value)}
+                onChange={(event) => handleSettingChange('fullName', event.target.value)}
                 className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
@@ -83,8 +213,8 @@ const AdminSettingsPage = () => {
                 id="email"
                 type="email"
                 value={settings.email}
-                onChange={(e) => handleSettingChange('email', e.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="glass border-cyan-400/30 text-cyan-100 opacity-70"
+                disabled
               />
             </div>
             <div className="space-y-2">
@@ -92,20 +222,21 @@ const AdminSettingsPage = () => {
               <Input
                 id="phone"
                 value={settings.phone}
-                onChange={(e) => handleSettingChange('phone', e.target.value)}
+                onChange={(event) => handleSettingChange('phone', event.target.value)}
                 className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Estate Settings */}
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-cyan-50">
               <Globe className="h-5 w-5" />
               Estate Settings
             </CardTitle>
+            <CardDescription className="text-cyan-200">Estate identity and support contact</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -113,151 +244,143 @@ const AdminSettingsPage = () => {
               <Input
                 id="estateName"
                 value={settings.estateName}
-                onChange={(e) => handleSettingChange('estateName', e.target.value)}
+                onChange={(event) => handleSettingChange('estateName', event.target.value)}
                 className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="estateAddress" className="text-cyan-200">Estate Address</Label>
+              <Label htmlFor="brandName" className="text-cyan-200">Brand Display Name</Label>
               <Input
-                id="estateAddress"
-                value={settings.estateAddress}
-                onChange={(e) => handleSettingChange('estateAddress', e.target.value)}
+                id="brandName"
+                value={settings.brandName}
+                onChange={(event) => handleSettingChange('brandName', event.target.value)}
                 className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="currency" className="text-cyan-200">Currency</Label>
-              <select
-                id="currency"
-                value={settings.currency}
-                onChange={(e) => handleSettingChange('currency', e.target.value)}
-                className="glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50 w-full"
-              >
-                <option value="NGN">Nigerian Naira (₦)</option>
-                <option value="USD">US Dollar ($)</option>
-                <option value="GBP">British Pound (£)</option>
-                <option value="EUR">Euro (€)</option>
-              </select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Notification Settings */}
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
-              <Bell className="h-5 w-5" />
-              Notification Settings
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="emailNotifications" className="text-cyan-200">Email Notifications</Label>
-              <Switch
-                id="emailNotifications"
-                checked={settings.emailNotifications}
-                onCheckedChange={(checked) => handleSettingChange('emailNotifications', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="smsNotifications" className="text-cyan-200">SMS Notifications</Label>
-              <Switch
-                id="smsNotifications"
-                checked={settings.smsNotifications}
-                onCheckedChange={(checked) => handleSettingChange('smsNotifications', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="dueReminders" className="text-cyan-200">Due Payment Reminders</Label>
-              <Switch
-                id="dueReminders"
-                checked={settings.dueReminders}
-                onCheckedChange={(checked) => handleSettingChange('dueReminders', checked)}
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="meetingReminders" className="text-cyan-200">Meeting Reminders</Label>
-              <Switch
-                id="meetingReminders"
-                checked={settings.meetingReminders}
-                onCheckedChange={(checked) => handleSettingChange('meetingReminders', checked)}
+              <Label htmlFor="supportContact" className="text-cyan-200">Support Contact</Label>
+              <Input
+                id="supportContact"
+                value={settings.supportContact}
+                onChange={(event) => handleSettingChange('supportContact', event.target.value)}
+                className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
           </CardContent>
         </Card>
 
-        {/* Security Settings */}
         <Card className="glass-card border-cyan-400/20">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-cyan-50">
-              <Shield className="h-5 w-5" />
-              Security Settings
+              <Palette className="h-5 w-5" />
+              Branding
             </CardTitle>
+            <CardDescription className="text-cyan-200">Colors used by the estate experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="twoFactorAuth" className="text-cyan-200">Two-Factor Authentication</Label>
-              <Switch
-                id="twoFactorAuth"
-                checked={settings.twoFactorAuth}
-                onCheckedChange={(checked) => handleSettingChange('twoFactorAuth', checked)}
+            <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="primaryColor" className="text-cyan-200">Primary Color</Label>
+                <Input
+                  id="primaryColor"
+                  value={settings.primaryColor}
+                  onChange={(event) => handleSettingChange('primaryColor', event.target.value)}
+                  className="glass border-cyan-400/30 text-cyan-100"
+                  disabled={loading || saving}
+                />
+              </div>
+              <Input
+                type="color"
+                value={settings.primaryColor}
+                onChange={(event) => handleSettingChange('primaryColor', event.target.value)}
+                className="h-10 w-12 p-1 glass border-cyan-400/30"
+                disabled={loading || saving}
+                aria-label="Primary color picker"
+              />
+            </div>
+            <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
+              <div className="space-y-2">
+                <Label htmlFor="secondaryColor" className="text-cyan-200">Secondary Color</Label>
+                <Input
+                  id="secondaryColor"
+                  value={settings.secondaryColor}
+                  onChange={(event) => handleSettingChange('secondaryColor', event.target.value)}
+                  className="glass border-cyan-400/30 text-cyan-100"
+                  disabled={loading || saving}
+                />
+              </div>
+              <Input
+                type="color"
+                value={settings.secondaryColor}
+                onChange={(event) => handleSettingChange('secondaryColor', event.target.value)}
+                className="h-10 w-12 p-1 glass border-cyan-400/30"
+                disabled={loading || saving}
+                aria-label="Secondary color picker"
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="glass-card border-cyan-400/20">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-cyan-50">
+              <Mail className="h-5 w-5" />
+              Communication
+            </CardTitle>
+            <CardDescription className="text-cyan-200">Email sender and domain metadata</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="emailSenderName" className="text-cyan-200">Email Sender Name</Label>
+              <Input
+                id="emailSenderName"
+                value={settings.emailSenderName}
+                onChange={(event) => handleSettingChange('emailSenderName', event.target.value)}
+                className="glass border-cyan-400/30 text-cyan-100"
+                disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="sessionTimeout" className="text-cyan-200">Session Timeout (minutes)</Label>
+              <Label htmlFor="customDomain" className="text-cyan-200">Custom Domain</Label>
               <Input
-                id="sessionTimeout"
-                type="number"
-                value={settings.sessionTimeout}
-                onChange={(e) => handleSettingChange('sessionTimeout', parseInt(e.target.value))}
-                className="glass border-cyan-400/30 text-cyan-100"
+                id="customDomain"
+                value={settings.customDomain}
+                onChange={(event) => handleSettingChange('customDomain', event.target.value)}
+                placeholder="estate.example.com"
+                className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300"
+                disabled={loading || saving}
               />
             </div>
-            <Button variant="outline" className="w-full glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20">
-              Change Password
-            </Button>
           </CardContent>
         </Card>
       </div>
 
-      {/* System Settings */}
       <Card className="glass-card border-cyan-400/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-cyan-50">
-            <Database className="h-5 w-5" />
-            System Settings
+            <Shield className="h-5 w-5" />
+            Security
           </CardTitle>
+          <CardDescription className="text-cyan-200">Account security actions</CardDescription>
         </CardHeader>
-        <CardContent>
-          <div className="grid md:grid-cols-3 gap-6">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="autoBackup" className="text-cyan-200">Auto Backup</Label>
-              <Switch
-                id="autoBackup"
-                checked={settings.autoBackup}
-                onCheckedChange={(checked) => handleSettingChange('autoBackup', checked)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dataRetention" className="text-cyan-200">Data Retention (days)</Label>
-              <Input
-                id="dataRetention"
-                type="number"
-                value={settings.dataRetention}
-                onChange={(e) => handleSettingChange('dataRetention', parseInt(e.target.value))}
-                className="glass border-cyan-400/30 text-cyan-100"
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <Label htmlFor="maintenanceMode" className="text-cyan-200">Maintenance Mode</Label>
-              <Switch
-                id="maintenanceMode"
-                checked={settings.maintenanceMode}
-                onCheckedChange={(checked) => handleSettingChange('maintenanceMode', checked)}
-              />
-            </div>
-          </div>
+        <CardContent className="grid sm:grid-cols-3 gap-3">
+          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={handlePasswordReset}>
+            Change Password
+          </Button>
+          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('Two-factor authentication')}>
+            Two-Factor Auth
+          </Button>
+          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('System backup settings')}>
+            <Settings className="h-4 w-4 mr-2" />
+            System Options
+          </Button>
+          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('SMS notification settings')}>
+            <Phone className="h-4 w-4 mr-2" />
+            SMS Settings
+          </Button>
         </CardContent>
       </Card>
     </div>
