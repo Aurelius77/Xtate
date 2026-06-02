@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { LayoutDashboard, DollarSign, Calendar, MessageSquare, FileText, Key, QrCode, Settings } from 'lucide-react';
+import { LayoutDashboard, DollarSign, Calendar, MessageSquare, FileText, Key, QrCode, Settings, LifeBuoy, Bell } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTenant } from '@/contexts/TenantContext';
 
@@ -21,6 +21,8 @@ const ResidentSidebar = ({ currentPage, setCurrentPage, onLogout }: ResidentSide
     { icon: FileText, label: 'Documents', page: 'documents' },
     { icon: QrCode, label: 'Generate Access Code', page: 'generate-access-code' },
     { icon: Key, label: 'My Access Codes', page: 'my-access-codes' },
+    { icon: Bell, label: 'Notifications', page: 'notifications' },
+    { icon: LifeBuoy, label: 'Support', page: 'support' },
     { icon: Settings, label: 'Settings', page: 'settings' }
   ];
 
@@ -62,7 +64,7 @@ const ResidentSidebar = ({ currentPage, setCurrentPage, onLogout }: ResidentSide
           <button className="hover:underline text-cyan-200" onClick={onLogout}>
             Sign Out
           </button>
-          <Button size="sm" className="bg-white/10 hover:bg-white/20 transition text-cyan-100">
+          <Button size="sm" className="bg-white/10 hover:bg-white/20 transition text-cyan-100" onClick={() => setCurrentPage('support')}>
             Help
           </Button>
         </div>

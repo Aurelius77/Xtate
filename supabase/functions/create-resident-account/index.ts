@@ -46,25 +46,6 @@ const validatePassword = (password: string) => {
   return null;
 };
 
-const findUserByEmail = async (
-  supabase: ReturnType<typeof createClient>,
-  email: string,
-) => {
-  let page = 1;
-  const perPage = 1000;
-
-  while (true) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
-    if (error) throw error;
-
-    const user = data.users.find((candidate) => candidate.email?.toLowerCase() === email);
-    if (user) return user;
-    if (data.users.length < perPage) return null;
-
-    page += 1;
-  }
-};
-
 const resolveTenant = async (
   supabase: ReturnType<typeof createClient>,
   tenantId: string,
@@ -129,9 +110,6 @@ Deno.serve(async (req) => {
 
     const { tenant, estateId } = await resolveTenant(supabase, tenantId, tenantSlug);
 
-    const existing = await findUserByEmail(supabase, email);
-    if (existing) return json({ ok: false, error: "An account with this email already exists" });
-
     const { data: created, error: createError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -146,7 +124,13 @@ Deno.serve(async (req) => {
       },
     });
 
-    if (createError) throw createError;
+    if (createError) {
+      const message = createError.message.toLowerCase();
+      if (message.includes("already") || message.includes("registered") || message.includes("exists")) {
+        return json({ ok: false, error: "An account with this email already exists" });
+      }
+      throw createError;
+    }
     const userId = created.user?.id;
     if (!userId) throw new Error("Supabase did not return a created user id");
 

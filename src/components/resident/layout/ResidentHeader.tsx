@@ -3,13 +3,17 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Bell, Search, User } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface ResidentHeaderProps {
   userName?: string;
+  onNavigate?: (page: string) => void;
+  onSearch?: () => void;
 }
 
-const ResidentHeader = ({ userName }: ResidentHeaderProps) => {
+const ResidentHeader = ({ userName, onNavigate, onSearch }: ResidentHeaderProps) => {
   const { branding } = useTenant();
+  const { toast } = useToast();
   const brandName = branding?.name || 'your estate';
 
   return (
@@ -25,6 +29,7 @@ const ResidentHeader = ({ userName }: ResidentHeaderProps) => {
             variant="outline"
             size="sm"
             className="glass border-cyan-400/30 text-cyan-200 hover:text-cyan-50"
+            onClick={onSearch}
           >
             <Search className="h-4 w-4" />
           </Button>
@@ -33,6 +38,7 @@ const ResidentHeader = ({ userName }: ResidentHeaderProps) => {
             variant="outline"
             size="sm"
             className="glass border-cyan-400/30 text-cyan-200 hover:text-cyan-50"
+            onClick={() => onNavigate?.('notifications')}
           >
             <Bell className="h-4 w-4" />
           </Button>
@@ -41,6 +47,7 @@ const ResidentHeader = ({ userName }: ResidentHeaderProps) => {
             variant="outline"
             size="sm"
             className="glass border-cyan-400/30 text-cyan-200 hover:text-cyan-50"
+            onClick={() => onNavigate?.('settings')}
           >
             <User className="h-4 w-4" />
           </Button>

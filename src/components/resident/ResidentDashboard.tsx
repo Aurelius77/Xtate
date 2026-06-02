@@ -18,10 +18,14 @@ import DocumentsPage from './pages/DocumentsPage';
 import GenerateAccessCodePage from './pages/GenerateAccessCodePage';
 import MyAccessCodesPage from './pages/MyAccessCodesPage';
 import ResidentSettingsPage from './pages/ResidentSettingsPage';
+import SupportPage from './pages/SupportPage';
+import NotificationsPage from './pages/NotificationsPage';
+import ResidentSearchDialog from './ResidentSearchDialog';
 
 const ResidentDashboard = () => {
   const { user, logout } = useAuth();
   const [currentPage, setCurrentPage] = React.useState('dashboard');
+  const [searchOpen, setSearchOpen] = React.useState(false);
 
   const renderCurrentPage = () => {
     switch (currentPage) {
@@ -32,6 +36,8 @@ const ResidentDashboard = () => {
       case 'generate-access-code': return <GenerateAccessCodePage />;
       case 'my-access-codes': return <MyAccessCodesPage />;
       case 'settings': return <ResidentSettingsPage />;
+      case 'support': return <SupportPage />;
+      case 'notifications': return <NotificationsPage />;
       default: return renderDashboard();
     }
   };
@@ -41,7 +47,7 @@ const ResidentDashboard = () => {
       <ResidentDashboardStats />
       
       <div className="grid lg:grid-cols-3 gap-6">
-        <ResidentQuickActions />
+        <ResidentQuickActions onNavigate={setCurrentPage} />
         <ResidentRecentDues />
       </div>
     </>
@@ -56,12 +62,13 @@ const ResidentDashboard = () => {
       />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <ResidentHeader userName={user?.full_name} />
+        <ResidentHeader userName={user?.full_name} onNavigate={setCurrentPage} onSearch={() => setSearchOpen(true)} />
         
         <section className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-6">
           {renderCurrentPage()}
         </section>
       </div>
+      <ResidentSearchDialog open={searchOpen} onOpenChange={setSearchOpen} onNavigate={setCurrentPage} />
     </div>
   );
 };

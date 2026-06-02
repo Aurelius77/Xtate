@@ -1,58 +1,67 @@
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Clock, User, Phone, FileText, Share2, X, Eye } from 'lucide-react';
-import { VisitorAccessCode } from '@/types/visitor-access';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/SecureAuthContext';
+import type { Tables } from '@/integrations/supabase/types';
 
 const MyAccessCodesPage = () => {
+  const { user } = useAuth();
   const { toast } = useToast();
-  
-  // Mock data - in real app, this would come from an API
-  const [accessCodes] = useState<VisitorAccessCode[]>([
-    {
-      id: '1',
-      resident_id: 'res1',
-      visitor_name: 'John Doe',
-      visitor_phone: '+1234567890',
-      access_code: '123456',
-      purpose: 'Personal Visit',
-      valid_from: '2024-01-15T10:00:00Z',
-      valid_until: '2024-01-15T18:00:00Z',
-      is_used: false,
-      created_at: '2024-01-14T15:30:00Z',
-      status: 'active'
-    },
-    {
-      id: '2',
-      resident_id: 'res1',
-      visitor_name: 'Jane Smith',
-      visitor_phone: '+0987654321',
-      access_code: '789012',
-      purpose: 'Delivery',
-      valid_from: '2024-01-14T09:00:00Z',
-      valid_until: '2024-01-14T17:00:00Z',
-      is_used: true,
-      used_at: '2024-01-14T14:30:00Z',
-      created_at: '2024-01-14T08:00:00Z',
-      status: 'used'
-    },
-    {
-      id: '3',
-      resident_id: 'res1',
-      visitor_name: 'Mike Johnson',
-      access_code: '345678',
-      purpose: 'Service/Maintenance',
-      valid_from: '2024-01-13T08:00:00Z',
-      valid_until: '2024-01-13T12:00:00Z',
-      is_used: false,
-      created_at: '2024-01-12T16:00:00Z',
-      status: 'expired'
+  const [accessCodes, setAccessCodes] = useState<Tables<'access_codes'>[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [residentId, setResidentId] = useState<string | null>(null);
+
+  const fetchCodes = useCallback(async (targetResidentId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('access_codes')
+      .select('*')
+      .eq('resident_id', targetResidentId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      setAccessCodes(data ?? []);
     }
-  ]);
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadResidentAndCodes = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('residents')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.id) {
+        setAccessCodes([]);
+        setLoading(false);
+        return;
+      }
+
+      setResidentId(data.id);
+      await fetchCodes(data.id);
+    };
+
+    void loadResidentAndCodes();
+  }, [fetchCodes, toast, user]);
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -73,7 +82,7 @@ const MyAccessCodesPage = () => {
     return new Date(dateString).toLocaleString();
   };
 
-  const shareCode = (code: VisitorAccessCode) => {
+  const shareCode = (code: Tables<'access_codes'>) => {
     const shareText = `Access Code: ${code.access_code}\nVisitor: ${code.visitor_name}\nValid: ${formatDateTime(code.valid_from)} - ${formatDateTime(code.valid_until)}`;
     
     if (navigator.share) {
@@ -90,12 +99,19 @@ const MyAccessCodesPage = () => {
     }
   };
 
-  const cancelCode = (codeId: string) => {
-    // In real app, this would make an API call
-    toast({
-      title: "Code Cancelled",
-      description: "Access code has been cancelled successfully",
-    });
+  const cancelCode = async (codeId: string) => {
+    const { error } = await supabase
+      .from('access_codes')
+      .update({ status: 'cancelled', is_used: true })
+      .eq('id', codeId);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Code Cancelled', description: 'Access code has been cancelled successfully' });
+    if (residentId) await fetchCodes(residentId);
   };
 
   const activeCodesCount = accessCodes.filter(code => code.status === 'active').length;
@@ -155,6 +171,11 @@ const MyAccessCodesPage = () => {
           <CardTitle className="text-cyan-50">Access Codes History</CardTitle>
         </CardHeader>
         <CardContent>
+          {loading ? (
+            <p className="text-cyan-200">Loading access codes...</p>
+          ) : accessCodes.length === 0 ? (
+            <p className="text-cyan-200">No access codes yet.</p>
+          ) : (
           <Table>
             <TableHeader>
               <TableRow className="border-cyan-400/20">
@@ -218,6 +239,7 @@ const MyAccessCodesPage = () => {
               ))}
             </TableBody>
           </Table>
+          )}
         </CardContent>
       </Card>
     </div>

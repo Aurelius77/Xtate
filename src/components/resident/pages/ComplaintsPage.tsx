@@ -1,59 +1,76 @@
-import React, { useState } from 'react';
-import { MessageSquare, Plus, AlertCircle, CheckCircle, Clock, Camera, Send, Upload, X } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { MessageSquare, Plus, AlertCircle, CheckCircle, Clock, Send, Upload, X } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/SecureAuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+import type { Tables } from '@/integrations/supabase/types';
+
+type NewComplaint = {
+  title: string;
+  description: string;
+  media: File | null;
+};
 
 const ComplaintsPage = () => {
-  const [complaints, setComplaints] = useState([
-    { 
-      id: 1, 
-      title: 'Water Supply Issue', 
-      description: 'No water supply in my unit since this morning',
-      status: 'open', 
-      priority: 'high',
-      submittedDate: '2 hours ago',
-      response: null,
-      media: null,
-      adminComments: []
-    },
-    { 
-      id: 2, 
-      title: 'Elevator Maintenance', 
-      description: 'Elevator making strange noises, needs inspection',
-      status: 'in_progress', 
-      priority: 'medium',
-      submittedDate: '1 day ago',
-      response: 'Maintenance team has been notified and will inspect tomorrow.',
-      media: null,
-      adminComments: [
-        { id: 1, comment: 'Maintenance team has been notified', timestamp: '1 day ago', admin: 'John Admin' }
-      ]
-    },
-    { 
-      id: 3, 
-      title: 'Parking Space Issue', 
-      description: 'Unauthorized vehicle in my designated parking space',
-      status: 'resolved', 
-      priority: 'low',
-      submittedDate: '3 days ago',
-      response: 'Security has resolved the issue. Vehicle has been removed.',
-      media: null,
-      adminComments: [
-        { id: 1, comment: 'Security team notified', timestamp: '3 days ago', admin: 'Jane Admin' },
-        { id: 2, comment: 'Issue resolved, vehicle removed', timestamp: '2 days ago', admin: 'Security Team' }
-      ]
-    },
-  ]);
-
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [complaints, setComplaints] = useState<Tables<'complaints'>[]>([]);
+  const [resident, setResident] = useState<Pick<Tables<'residents'>, 'id' | 'estate_id'> | null>(null);
+  const [loading, setLoading] = useState(true);
   const [showNewComplaint, setShowNewComplaint] = useState(false);
-  const [newComplaint, setNewComplaint] = useState({
+  const [newComplaint, setNewComplaint] = useState<NewComplaint>({
     title: '',
     description: '',
-    priority: 'medium',
     media: null
   });
+
+  const fetchComplaints = useCallback(async (residentId: string) => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('complaints')
+      .select('*')
+      .eq('resident_id', residentId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } else {
+      setComplaints(data ?? []);
+    }
+    setLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!user) return;
+
+    const loadResident = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('residents')
+        .select('id, estate_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (error) {
+        toast({ title: 'Error', description: error.message, variant: 'destructive' });
+        setLoading(false);
+        return;
+      }
+
+      setResident(data);
+      if (data?.id) {
+        await fetchComplaints(data.id);
+      } else {
+        setLoading(false);
+      }
+    };
+
+    void loadResident();
+  }, [fetchComplaints, toast, user]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -66,20 +83,31 @@ const ComplaintsPage = () => {
     setNewComplaint(prev => ({ ...prev, media: null }));
   };
 
-  const handleSubmitComplaint = () => {
-    if (newComplaint.title && newComplaint.description) {
-      const complaint = {
-        id: complaints.length + 1,
-        ...newComplaint,
-        status: 'open',
-        submittedDate: 'Just now',
-        response: null,
-        adminComments: []
-      };
-      setComplaints(prev => [complaint, ...prev]);
-      setNewComplaint({ title: '', description: '', priority: 'medium', media: null });
-      setShowNewComplaint(false);
+  const handleSubmitComplaint = async () => {
+    if (!resident?.id) {
+      toast({ title: 'Error', description: 'Resident profile not found.', variant: 'destructive' });
+      return;
     }
+    if (!newComplaint.title.trim() || !newComplaint.description.trim()) return;
+
+    const { error } = await supabase.from('complaints').insert({
+      resident_id: resident.id,
+      estate_id: resident.estate_id,
+      title: newComplaint.title.trim(),
+      description: newComplaint.description.trim(),
+      photo_url: null,
+      status: 'open',
+    });
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+
+    toast({ title: 'Complaint Submitted', description: 'Estate management can now review your complaint.' });
+    setNewComplaint({ title: '', description: '', media: null });
+    setShowNewComplaint(false);
+    await fetchComplaints(resident.id);
   };
 
   const getStatusIcon = (status: string) => {
@@ -91,13 +119,8 @@ const ComplaintsPage = () => {
     }
   };
 
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case 'high': return 'text-red-400';
-      case 'medium': return 'text-yellow-400';
-      case 'low': return 'text-green-400';
-      default: return 'text-white/60';
-    }
+  const formatSubmittedDate = (date: string) => {
+    return new Date(date).toLocaleString();
   };
 
   return (
@@ -140,18 +163,6 @@ const ComplaintsPage = () => {
                 value={newComplaint.description}
                 onChange={(e) => setNewComplaint(prev => ({ ...prev, description: e.target.value }))}
               />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-cyan-200 mb-2">Priority</label>
-              <select
-                className="glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50"
-                value={newComplaint.priority}
-                onChange={(e) => setNewComplaint(prev => ({ ...prev, priority: e.target.value }))}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-cyan-200 mb-2">Attach Image/Video (Optional)</label>
@@ -244,6 +255,11 @@ const ComplaintsPage = () => {
           <CardDescription className="text-cyan-200">Track the status of your submitted complaints</CardDescription>
         </CardHeader>
         <CardContent>
+          {loading ? (
+            <p className="text-cyan-200">Loading complaints...</p>
+          ) : complaints.length === 0 ? (
+            <p className="text-cyan-200">No complaints submitted yet.</p>
+          ) : (
           <div className="space-y-4">
             {complaints.map((complaint) => (
               <div key={complaint.id} className="p-4 glass rounded-lg border-cyan-400/20">
@@ -255,12 +271,9 @@ const ComplaintsPage = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-medium text-cyan-50">{complaint.title}</h3>
-                        <span className={`text-xs font-medium ${getPriorityColor(complaint.priority)}`}>
-                          {complaint.priority}
-                        </span>
                       </div>
                       <p className="text-sm text-cyan-200 mb-2">{complaint.description}</p>
-                      <span className="text-xs text-cyan-300">{complaint.submittedDate}</span>
+                      <span className="text-xs text-cyan-300">{formatSubmittedDate(complaint.created_at)}</span>
                     </div>
                   </div>
                   <Badge 
@@ -278,20 +291,10 @@ const ComplaintsPage = () => {
                   </Badge>
                 </div>
                 
-                {complaint.adminComments && complaint.adminComments.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    <p className="text-xs text-cyan-300 font-medium">Admin Comments:</p>
-                    {complaint.adminComments.map((comment) => (
-                      <div key={comment.id} className="p-3 bg-slate-800/50 rounded-lg border-l-2 border-cyan-500">
-                        <p className="text-sm text-cyan-100">{comment.comment}</p>
-                        <p className="text-xs text-cyan-300 mt-1">{comment.admin} • {comment.timestamp}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
             ))}
           </div>
+          )}
         </CardContent>
       </Card>
     </div>

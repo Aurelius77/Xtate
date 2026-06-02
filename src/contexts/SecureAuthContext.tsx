@@ -70,6 +70,35 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
   };
 }
 
+const shouldFallbackToClientSignup = (message: string) => {
+  const normalized = message.toLowerCase();
+  const validationFailures = [
+    'already exists',
+    'already registered',
+    'tenant not found',
+    'not accepting registrations',
+    'not linked to an estate',
+    'invalid email',
+    'password must',
+    'full name must',
+    'house/unit number',
+  ];
+
+  if (validationFailures.some((failure) => normalized.includes(failure))) {
+    return false;
+  }
+
+  return [
+    'function',
+    'edge',
+    'failed to fetch',
+    'database error',
+    'service_role',
+    'supabase_service_role_key',
+    'account creation failed',
+  ].some((failure) => normalized.includes(failure));
+};
+
 export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -231,8 +260,7 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
     } catch (primaryError) {
       const message = primaryError instanceof Error ? primaryError.message : 'Registration failed';
 
-      const canFallbackToSignup = message.toLowerCase().includes('function');
-      if (!canFallbackToSignup) {
+      if (!shouldFallbackToClientSignup(message)) {
         toast({ title: "Registration Failed", description: message, variant: "destructive" });
         throw primaryError;
       }
