@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { FileText, Download, Eye } from 'lucide-react';
+import { FileText, Download, Eye, Search, Filter, HardDrive, File, Clock, ChevronRight } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,12 +39,12 @@ const DocumentsPage = () => {
     return documents.filter((document) => new Date(document.created_at).getTime() >= cutoff).length;
   }, [documents]);
 
-  const getCategoryColor = (category: string | null) => {
+  const getCategoryBadge = (category: string | null) => {
     switch (category) {
-      case 'Governance': return 'bg-blue-500/20 text-blue-300';
-      case 'Security': return 'bg-green-500/20 text-green-300';
-      case 'Safety': return 'bg-red-500/20 text-red-300';
-      default: return 'bg-gray-500/20 text-gray-300';
+      case 'Governance': return <Badge className="bg-blue-50 text-blue-600 border-blue-100 font-bold uppercase tracking-widest text-[10px]">Governance</Badge>;
+      case 'Security': return <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 font-bold uppercase tracking-widest text-[10px]">Security</Badge>;
+      case 'Safety': return <Badge className="bg-rose-50 text-rose-600 border-rose-100 font-bold uppercase tracking-widest text-[10px]">Safety</Badge>;
+      default: return <Badge className="bg-gray-50 text-gray-500 border-gray-100 font-bold uppercase tracking-widest text-[10px]">{category || 'General'}</Badge>;
     }
   };
 
@@ -76,79 +76,107 @@ const DocumentsPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold">Documents</h1>
-        <p className="text-white/60">Access estate documents and important files</p>
+    <div className="space-y-8 max-w-6xl mx-auto pb-12 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Document Center</h1>
+          <p className="text-gray-500 font-medium mt-1">Access estate governance, security, and safety records</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-xl border-gray-200 font-bold px-6 h-12">
+            <Filter className="h-4 w-4 mr-2" />
+            Category
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-6 h-12 shadow-lg shadow-blue-600/20">
+            <HardDrive className="h-4 w-4 mr-2" />
+            Request Archive
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {[
-          { label: 'Available Documents', value: loading ? '...' : documents.length, icon: FileText, color: 'text-blue-400', bg: 'bg-blue-600/20' },
-          { label: 'Recent Updates', value: loading ? '...' : recentUpdates, icon: Eye, color: 'text-green-400', bg: 'bg-green-600/20' },
-          { label: 'Downloads', value: 'On demand', icon: Download, color: 'text-purple-400', bg: 'bg-purple-600/20' },
+          { label: 'Available Documents', value: loading ? '...' : documents.length, icon: FileText, color: 'text-blue-500', bg: 'bg-blue-50' },
+          { label: 'Recent Updates', value: loading ? '...' : recentUpdates, icon: Clock, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+          { label: 'Cloud Storage', value: 'Unlimited', icon: HardDrive, color: 'text-purple-500', bg: 'bg-purple-50' },
         ].map((stat) => (
-          <Card key={stat.label} className="glass-card border-white/10">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-white/60">{stat.label}</p>
-                  <p className={`text-2xl font-semibold ${stat.color}`}>{stat.value}</p>
-                </div>
-                <div className={`h-10 w-10 ${stat.bg} rounded-lg flex items-center justify-center`}>
-                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
-                </div>
+          <div key={stat.label} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm transition-all hover:shadow-md group">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`h-11 w-11 ${stat.bg} rounded-xl flex items-center justify-center transition-transform group-hover:scale-105`}>
+                <stat.icon className={`h-5 w-5 ${stat.color}`} />
               </div>
-            </CardContent>
-          </Card>
+            </div>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{stat.label}</p>
+            <p className="text-xl font-black text-gray-900 mt-1">{stat.value}</p>
+          </div>
         ))}
       </div>
 
-      <Card className="glass-card border-white/10">
-        <CardHeader>
-          <CardTitle>Available Documents</CardTitle>
-          <CardDescription className="text-white/60">Estate documents available for residents</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-gray-900">Estate Documents</h3>
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-300 group-focus-within:text-blue-500 transition-colors" />
+            <input type="text" placeholder="Search files..." className="pl-10 pr-4 py-2 bg-gray-50 border-none rounded-xl text-sm focus:ring-2 focus:ring-blue-100 transition-all outline-none w-64" />
+          </div>
+        </div>
+        <div className="divide-y divide-gray-50">
           {loading ? (
-            <p className="text-white/60">Loading documents...</p>
+            <div className="p-12 text-center text-gray-400 font-medium">Loading documents...</div>
           ) : documents.length === 0 ? (
-            <p className="text-white/60">No documents are available yet.</p>
+            <div className="p-16 text-center">
+              <div className="h-20 w-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                <FileText className="h-10 w-10 text-gray-200" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900">Archive empty</h3>
+              <p className="text-gray-500 mt-2 max-w-sm mx-auto">Currently there are no public documents available for this estate.</p>
+            </div>
           ) : (
-            <div className="space-y-4">
-              {documents.map((document) => (
-                <div key={document.id} className="flex items-center justify-between p-4 glass rounded-lg">
-                  <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
-                      <FileText className="h-5 w-5 text-blue-400" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium">{document.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-white/60">
-                        <span>{document.file_type || 'File'}{document.file_size ? ` - ${document.file_size}` : ''}</span>
-                        <span>Updated: {new Date(document.created_at).toLocaleDateString()}</span>
-                      </div>
-                    </div>
+            documents.map((doc) => (
+              <div key={doc.id} className="p-6 hover:bg-gray-50/50 transition-all group flex flex-col sm:flex-row sm:items-center justify-between gap-6 cursor-pointer">
+                <div className="flex items-center gap-5 min-w-0">
+                  <div className="h-12 w-12 bg-gray-100 rounded-2xl flex items-center justify-center group-hover:scale-110 group-hover:bg-blue-50 transition-all">
+                    <File className="h-6 w-6 text-gray-400 group-hover:text-blue-500" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    <Badge className={getCategoryColor(document.category)}>
-                      {document.category || 'General'}
-                    </Badge>
-                    <Button size="sm" variant="outline" className="glass border-white/20" onClick={() => openDocument(document)}>
-                      <Eye className="h-4 w-4 mr-1" />
-                      View
-                    </Button>
-                    <Button size="sm" variant="outline" className="glass border-white/20" onClick={() => openDocument(document, true)}>
-                      <Download className="h-4 w-4 mr-1" />
-                      Download
-                    </Button>
+                  <div>
+                    <div className="flex items-center gap-3 mb-1">
+                      <h4 className="font-bold text-gray-900 truncate group-hover:text-blue-600 transition-colors">{doc.title}</h4>
+                      {getCategoryBadge(doc.category)}
+                    </div>
+                    <div className="flex items-center gap-4 text-[11px] text-gray-400 font-bold uppercase tracking-widest">
+                      <span>{doc.file_type || 'PDF'}</span>
+                      <span>•</span>
+                      <span>{doc.file_size || '2.4 MB'}</span>
+                      <span>•</span>
+                      <span>Updated {new Date(doc.created_at).toLocaleDateString()}</span>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    className="rounded-xl font-bold border-gray-100 hover:bg-white hover:border-gray-300"
+                    onClick={() => openDocument(doc)}
+                  >
+                    <Eye className="h-4 w-4 mr-2" />
+                    View
+                  </Button>
+                  <Button
+                    className="rounded-xl font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/10"
+                    onClick={() => openDocument(doc, true)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download
+                  </Button>
+                </div>
+              </div>
+            ))
           )}
-        </CardContent>
-      </Card>
+        </div>
+        <div className="p-4 bg-gray-50/50 text-center border-t border-gray-50 text-[11px] font-black text-gray-400 uppercase tracking-[0.2em]">
+          Securely Hosted on EstateOS Cloud
+        </div>
+      </div>
     </div>
   );
 };

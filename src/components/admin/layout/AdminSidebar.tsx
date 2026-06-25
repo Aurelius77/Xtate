@@ -1,8 +1,11 @@
 import React from 'react';
-import { LayoutDashboard, Users, DollarSign, Calendar, MessageSquare, FileText, Plus, Menu, Megaphone, Shield, UserCheck, Database, Settings, Lock } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useFeatureGate } from '@/hooks/useFeatureGate';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  LayoutDashboard, Users, UserRound, Home, BookOpen, ShieldCheck,
+  Car, UserPlus, Wallet, Receipt, Calculator, Wrench, Trash2,
+  Megaphone, MessageSquare, Bell, Calendar, ScrollText,
+  FileBarChart, PieChart, Settings, UserCog, Lock, Puzzle,
+  LogOut, HelpCircle, ChevronRight
+} from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
 interface AdminSidebarProps {
@@ -14,116 +17,134 @@ interface AdminSidebarProps {
 }
 
 const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage, onLogout }: AdminSidebarProps) => {
-  const { hasFeature, plan, loading } = useFeatureGate();
   const { branding } = useTenant();
-  const brandName = branding?.name || 'XTATE';
+  const brandName = branding?.name || 'EstateOS';
 
-  const menuItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', page: 'dashboard', feature: null },
-    { icon: Users, label: 'Residents', page: 'residents', feature: 'residents' },
-    { icon: DollarSign, label: 'Dues & Payments', page: 'dues', feature: 'dues' },
-    { icon: Calendar, label: 'Meetings', page: 'meetings', feature: 'meetings' },
-    { icon: MessageSquare, label: 'Complaints', page: 'complaints', feature: 'complaints' },
-    { icon: FileText, label: 'Documents', page: 'documents', feature: 'documents' },
-    { icon: DollarSign, label: 'Expenses', page: 'expenses', feature: 'expenses' },
-    { icon: Megaphone, label: 'Broadcast', page: 'broadcast', feature: 'broadcast' },
-    { icon: Shield, label: 'Access Codes', page: 'access-codes', feature: 'access-codes' },
-    { icon: UserCheck, label: 'Security Management', page: 'security-management', feature: 'security-management' },
-    { icon: Database, label: 'Data Import', page: 'data-import', feature: 'data-import' },
-    { icon: Settings, label: 'Settings', page: 'settings', feature: null }
+  const menuSections = [
+    {
+      title: 'MANAGEMENT',
+      items: [
+        { icon: Users, label: 'Residents', page: 'residents' },
+        { icon: UserRound, label: 'Tenants', page: 'tenants' },
+        { icon: Home, label: 'Properties', page: 'properties' },
+        { icon: BookOpen, label: 'Directory', page: 'directory' },
+        { icon: ShieldCheck, label: 'Access & Security', page: 'access', hasSubmenu: true },
+        { icon: Car, label: 'Vehicles', page: 'vehicles' },
+        { icon: UserPlus, label: 'Visitors', page: 'visitors' },
+      ]
+    },
+    {
+      title: 'OPERATIONS',
+      items: [
+        { icon: Wallet, label: 'Finance', page: 'finance', hasSubmenu: true },
+        { icon: Wallet, label: 'Wallets', page: 'wallets' },
+        { icon: Receipt, label: 'Invoices & Dues', page: 'dues' },
+        { icon: Calculator, label: 'Expenses', page: 'expenses' },
+        { icon: Wrench, label: 'Maintenance', page: 'maintenance' },
+        { icon: Trash2, label: 'Waste Management', page: 'waste' },
+        { icon: Megaphone, label: 'Announcements', page: 'announcements' },
+      ]
+    },
+    {
+      title: 'COMMUNICATION',
+      items: [
+        { icon: MessageSquare, label: 'Messages', page: 'messages', badge: 12 },
+        { icon: Bell, label: 'Notifications', page: 'notifications' },
+        { icon: Calendar, label: 'Meetings & Polls', page: 'meetings' },
+        { icon: ScrollText, label: 'Document Center', page: 'documents' },
+      ]
+    },
+    {
+      title: 'REPORTS & ANALYTICS',
+      items: [
+        { icon: FileBarChart, label: 'Reports', page: 'reports' },
+        { icon: PieChart, label: 'Analytics', page: 'analytics' },
+      ]
+    },
+    {
+      title: 'SETTINGS',
+      items: [
+        { icon: Settings, label: 'Estate Settings', page: 'estate-settings' },
+        { icon: UserCog, label: 'User Management', page: 'settings' },
+        { icon: Lock, label: 'Roles & Permissions', page: 'permissions' },
+        { icon: Puzzle, label: 'Integrations', page: 'integrations' },
+      ]
+    }
   ];
 
   return (
-    <TooltipProvider>
-      <>
+    <aside className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out h-full bg-white border-r border-gray-100 flex flex-col overflow-hidden`}>
+      {/* Brand */}
+      <div className="px-6 py-6 flex items-center gap-3">
+        <div className="h-9 w-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+          <Home className="h-5 w-5 text-white" />
+        </div>
+        <div>
+          <h2 className="text-sm font-black text-gray-900 leading-tight">{brandName}</h2>
+          <p className="text-[10px] font-bold text-gray-400 mt-0.5 whitespace-nowrap overflow-hidden text-ellipsis">Greenwood Estate ⌄</p>
+        </div>
+      </div>
+
+      <div className="px-4 py-2">
         <button
-          onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="lg:hidden fixed top-4 left-4 z-50 p-2 glass rounded-lg"
+          onClick={() => setCurrentPage('dashboard')}
+          className={`flex items-center gap-3 w-full px-4 py-2.5 rounded-xl transition-all duration-200 ${currentPage === 'dashboard' ? 'bg-blue-600 text-white shadow-xl shadow-blue-600/20 font-bold' : 'text-gray-500 hover:bg-gray-50'}`}
         >
-          <Menu className="h-5 w-5" />
+          <LayoutDashboard className="h-4 w-4" />
+          <span className="text-sm">Dashboard</span>
         </button>
+      </div>
 
-        <aside className={`fixed lg:relative inset-y-0 left-0 z-40 w-64 transform ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out flex flex-col gap-6 sidebar-glass p-6`}>
-          <div className="flex items-center gap-3">
-            {branding?.logoUrl ? (
-              <img src={branding.logoUrl} alt={`${brandName} logo`} className="h-8 w-8 rounded-lg object-cover" />
-            ) : (
-              <div className="h-8 w-8 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-lg grid place-content-center">
-                <LayoutDashboard className="h-5 w-5" />
-              </div>
-            )}
-            <span className="text-lg font-semibold tracking-tight text-cyan-50">{brandName}</span>
-          </div>
-
-          <Button className="flex items-center justify-between gap-3 text-sm font-medium bg-blue-600/20 hover:bg-blue-600/30 transition p-3 rounded-lg w-full text-cyan-100">
-            <span className="flex items-center gap-3">
-              <Plus className="h-4 w-4" />
-              Quick Action
-            </span>
-          </Button>
-
-          <nav className="flex flex-col gap-1 text-sm">
-            {menuItems.map((item, index) => {
-              const allowed = item.feature === null || loading || hasFeature(item.feature);
-              const btn = (
-                <button
-                  key={index}
-                  onClick={() => allowed && setCurrentPage(item.page)}
-                  disabled={!allowed}
-                  className={`flex items-center gap-3 px-3 py-2 rounded-lg transition text-left w-full ${
-                    !allowed
-                      ? 'opacity-40 cursor-not-allowed text-cyan-400'
-                      : currentPage === item.page
-                      ? 'bg-white/10 text-cyan-50'
-                      : 'hover:bg-white/10 text-cyan-200 hover:text-cyan-50'
-                  }`}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                  {!allowed && <Lock className="h-3 w-3 ml-auto" />}
-                </button>
-              );
-              if (!allowed) {
+      {/* Navigation Area */}
+      <div className="flex-1 overflow-y-auto px-4 space-y-7 py-4 custom-scrollbar">
+        {menuSections.map((section) => (
+          <div key={section.title} className="space-y-1.5">
+            <h3 className="text-[10px] font-black text-gray-400 px-4 mb-2 tracking-[0.15em] uppercase">
+              {section.title}
+            </h3>
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const isActive = currentPage === item.page;
                 return (
-                  <Tooltip key={index}>
-                    <TooltipTrigger asChild>{btn}</TooltipTrigger>
-                    <TooltipContent side="right">
-                      <p>Upgrade your XTATE plan to unlock this feature</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  <button
+                    key={item.label}
+                    onClick={() => setCurrentPage(item.page)}
+                    className={`flex items-center justify-between w-full px-4 py-2.5 rounded-xl transition-all duration-200 ${isActive
+                      ? 'bg-blue-50 text-blue-600 font-bold'
+                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900 group'
+                      }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className={`h-4 w-4 transition-colors ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
+                      <span className="text-xs">{item.label}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {item.badge && (
+                        <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded-full shadow-lg shadow-red-500/20">
+                          {item.badge}
+                        </span>
+                      )}
+                      {item.hasSubmenu && <ChevronRight className="h-3 w-3 opacity-30" />}
+                    </div>
+                  </button>
                 );
-              }
-              return btn;
-            })}
-          </nav>
-
-          <div className="mt-auto glass-card p-4">
-            <p className="text-sm leading-snug text-cyan-100">
-              {plan === 'enterprise' || plan === 'custom' ? 'All enabled XTATE features are available.' :
-               plan === 'pro' || plan === 'standard' ? 'Standard plan active' :
-               'Upgrade XTATE to unlock advanced tools and higher limits.'}
-            </p>
-            <div className="flex items-center justify-between mt-4 text-sm">
-              <button className="hover:underline text-cyan-200" onClick={onLogout}>
-                Sign Out
-              </button>
-              {(plan === 'basic' || plan === 'free') && (
-                <Button size="sm" className="bg-white/10 hover:bg-white/20 transition text-cyan-100">
-                  Upgrade
-                </Button>
-              )}
+              })}
             </div>
           </div>
-        </aside>
+        ))}
+      </div>
 
-        {sidebarOpen && (
-          <div
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-30 lg:hidden"
-            onClick={() => setSidebarOpen(false)}
-          />
-        )}
-      </>
-    </TooltipProvider>
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-50 bg-gray-50/30">
+        <button
+          className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-gray-100 rounded-xl text-gray-500 hover:text-blue-600 hover:shadow-md transition-all shadow-sm text-xs font-bold"
+        >
+          <HelpCircle className="h-4 w-4" />
+          <span>Need Help?</span>
+          <ChevronRight className="h-3 w-3 ml-auto opacity-30" />
+        </button>
+      </div>
+    </aside>
   );
 };
 

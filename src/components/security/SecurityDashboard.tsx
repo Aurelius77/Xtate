@@ -1,13 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Shield, CheckCircle, Clock, Search, User, Home, RefreshCw } from 'lucide-react';
+import {
+  Shield, CheckCircle, Clock, Search, User, Home, RefreshCw,
+  Smartphone, MapPin, UserPlus, FileText, ArrowRight, X,
+  ShieldCheck, Share2, LogOut, Calendar, ChevronDown, Download
+} from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SecureAuthContext';
+
+// Layout components
+import SecuritySidebar from './layout/SecuritySidebar';
+import ResidentHeader from '../resident/layout/ResidentHeader';
 
 interface ActiveCode {
   id: string;
@@ -29,8 +36,9 @@ interface ResidentLookup {
 }
 
 const SecurityDashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { toast } = useToast();
+  const [currentPage, setCurrentPage] = useState('dashboard');
   const [verificationCode, setVerificationCode] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
   const [verifiedCode, setVerifiedCode] = useState<(ActiveCode & { resident?: ResidentLookup }) | null>(null);
@@ -58,7 +66,6 @@ const SecurityDashboard = () => {
     const codes = (data ?? []) as ActiveCode[];
     setActiveCodes(codes);
 
-    // Lookup residents/profiles for display (admins only would normally have this; security role may not).
     const residentIds = Array.from(new Set(codes.map((c) => c.resident_id)));
     if (residentIds.length) {
       const { data: residents } = await supabase
@@ -141,110 +148,201 @@ const SecurityDashboard = () => {
     loadActive();
   };
 
-  const formatDateTime = (s: string) => new Date(s).toLocaleString();
+  const formatDateTime = (s: string) => new Date(s).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-6">
-      <div className="max-w-6xl mx-auto space-y-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-cyan-50 flex items-center gap-2">
-              <Shield className="h-6 w-6" /> Security Dashboard
-            </h1>
-            <p className="text-cyan-200">Verify visitor access codes</p>
-          </div>
-          <Button onClick={loadActive} variant="ghost" className="text-cyan-100">
-            <RefreshCw className="h-4 w-4 mr-2" /> Refresh
-          </Button>
+  const renderDashboard = () => (
+    <div className="space-y-8 animate-in fade-in duration-700">
+      {/* Row 0: Title & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-gray-900 tracking-tight flex items-center gap-3">
+            Good morning, Security <span className="text-3xl">🛡️</span>
+          </h2>
+          <p className="text-gray-400 font-bold mt-1 tracking-tight">System ready for gate verification and access control.</p>
         </div>
 
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50"><Search className="h-5 w-5" /> Verify Access Code</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex gap-4">
-              <Input
-                placeholder="Enter 6-digit access code"
-                value={verificationCode}
-                onChange={(e) => setVerificationCode(e.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100 font-mono text-lg"
-                maxLength={6}
-              />
-              <Button onClick={verifyCode} disabled={isVerifying} className="glass bg-blue-600/20 hover:bg-blue-600/30 text-cyan-100">
-                {isVerifying ? 'Verifying...' : 'Verify'}
-              </Button>
-            </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="h-11 bg-white border-gray-100 rounded-xl px-4 flex items-center gap-3 text-sm font-semibold text-gray-700 shadow-sm border-none ring-1 ring-gray-100" onClick={loadActive}>
+            <RefreshCw className={`h-4 w-4 text-gray-400 ${loading ? 'animate-spin' : ''}`} />
+            Refresh Stream
+          </Button>
 
-            {verifiedCode && (
-              <Card className="glass-card border-green-400/20 bg-green-400/5">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-400" />
-                        <span className="font-semibold text-green-400">Code Verified</span>
+          <Button className="h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-6 flex items-center gap-2 text-sm font-bold shadow-xl shadow-blue-600/20">
+            <Shield className="h-4 w-4" />
+            Active Session
+          </Button>
+        </div>
+      </div>
+
+      {/* Row 1: Metrics */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { label: 'Active Keys', value: activeCodes.length, icon: FileText, color: 'text-blue-600', bg: 'bg-blue-50' },
+          { label: 'Gate Clearance', value: '98.5%', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+          { label: 'Expected Guests', value: activeCodes.length + 5, icon: UserPlus, color: 'text-purple-600', bg: 'bg-purple-50' },
+          { label: 'Response Time', value: '< 2 min', icon: Clock, color: 'text-orange-600', bg: 'bg-orange-50' },
+        ].map(m => (
+          <Card key={m.label} className="bg-white rounded-3xl border border-gray-100 shadow-sm transition-all hover:shadow-md h-28">
+            <CardContent className="p-6 flex items-center gap-4 h-full">
+              <div className={`h-12 w-12 ${m.bg} rounded-2xl flex items-center justify-center shrink-0`}>
+                <m.icon className={`h-6 w-6 ${m.color}`} />
+              </div>
+              <div>
+                <p className="text-[11px] font-black text-gray-400 uppercase tracking-widest leading-none">{m.label}</p>
+                <p className="text-2xl font-black text-gray-900 mt-1.5">{m.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Row 2: Verification + Audit */}
+      <div className="grid lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8">
+          <Card className="bg-white rounded-[2.5rem] border border-gray-100 shadow-xl overflow-hidden shadow-gray-200/40">
+            <CardHeader className="p-10 pb-0 flex flex-row items-center gap-6">
+              <div className="h-16 w-16 bg-blue-600 rounded-[1.5rem] flex items-center justify-center shadow-xl shadow-blue-600/20 shrink-0">
+                <Smartphone className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">Identity Verification</CardTitle>
+                <CardDescription className="font-bold text-gray-400">Scan QR or enter visitor 6-digit key for gate clearance</CardDescription>
+              </div>
+            </CardHeader>
+            <CardContent className="p-10 space-y-10">
+              <div className="flex flex-col md:flex-row items-center gap-4">
+                <div className="relative flex-1 w-full">
+                  <Input
+                    placeholder="Enter access code..."
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    className="h-20 px-8 text-4xl font-black font-mono tracking-[0.4em] border-gray-100 bg-gray-50/50 rounded-3xl focus:ring-4 focus:ring-blue-100 transition-all placeholder:text-gray-200 placeholder:tracking-normal placeholder:font-bold placeholder:text-xl"
+                    maxLength={6}
+                  />
+                </div>
+                <Button onClick={verifyCode} disabled={isVerifying} className="h-20 w-full md:w-48 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-xl shadow-2xl shadow-blue-600/20 active:scale-95 transition-all">
+                  {isVerifying ? 'VERIFYING...' : 'VERIFY'}
+                </Button>
+              </div>
+
+              {verifiedCode ? (
+                <div className="animate-in zoom-in-95 duration-500">
+                  <div className="bg-emerald-600 rounded-[2rem] p-10 text-white relative overflow-hidden shadow-[0_30px_60px_-15px_rgba(16,185,129,0.3)]">
+                    <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
+                      <div className="space-y-6">
+                        <div className="flex items-center gap-3">
+                          <CheckCircle className="h-8 w-8 text-white" />
+                          <span className="text-xl font-black uppercase tracking-widest">ACCESS GRANTED</span>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[11px] font-black uppercase tracking-widest text-emerald-100/70">Guest Identity</p>
+                          <h2 className="text-5xl font-black tracking-tight">{verifiedCode.visitor_name}</h2>
+                        </div>
                       </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div><span className="text-cyan-200">Visitor:</span> <span className="text-cyan-100 font-medium">{verifiedCode.visitor_name}</span></div>
-                        <div><span className="text-cyan-200">Purpose:</span> <span className="text-cyan-100">{verifiedCode.purpose}</span></div>
-                        <div><span className="text-cyan-200">Resident:</span> <span className="text-cyan-100">{verifiedCode.resident?.full_name ?? '—'}</span></div>
-                        <div><span className="text-cyan-200">Unit:</span> <span className="text-cyan-100">{verifiedCode.resident?.house_unit_number ?? '—'}</span></div>
-                        <div className="col-span-2"><span className="text-cyan-200">Valid Until:</span> <span className="text-cyan-100">{formatDateTime(verifiedCode.valid_until)}</span></div>
+                      <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/10 min-w-[280px]">
+                        <div className="space-y-4">
+                          <div className="flex items-center gap-4 border-b border-white/10 pb-4">
+                            <div className="h-10 w-10 bg-white rounded-2xl flex items-center justify-center text-emerald-600">
+                              <Home className="h-5 w-5" />
+                            </div>
+                            <div>
+                              <p className="text-[10px] font-black text-emerald-100 uppercase leading-none">Destination Unit</p>
+                              <p className="text-lg font-black text-white mt-1">{verifiedCode.resident?.house_unit_number || 'N/A'}</p>
+                            </div>
+                          </div>
+                          <div className="pt-2">
+                            <p className="text-[10px] font-black text-emerald-100 uppercase">Inviting Resident</p>
+                            <p className="font-bold text-lg mt-1">{verifiedCode.resident?.full_name || 'System User'}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
-                    <Button onClick={() => markAsUsed(verifiedCode.id)} className="glass bg-green-600/20 hover:bg-green-600/30 text-green-400">
-                      Grant Access
-                    </Button>
+                    <div className="mt-12 flex gap-4">
+                      <Button onClick={() => markAsUsed(verifiedCode.id)} className="flex-1 h-16 bg-white text-emerald-600 hover:bg-emerald-50 rounded-2xl font-black text-lg shadow-xl shadow-black/10">
+                        OPEN GATE & LOG ENTRY
+                      </Button>
+                      <Button onClick={() => setVerifiedCode(null)} variant="ghost" className="h-16 w-16 p-0 bg-rose-500 text-white hover:bg-rose-600 rounded-2xl flex items-center justify-center transition-all">
+                        <X className="h-8 w-8" />
+                      </Button>
+                    </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
-          </CardContent>
-        </Card>
+                </div>
+              ) : (
+                <div className="h-[340px] border-4 border-gray-50 border-dashed rounded-[2.5rem] flex flex-col items-center justify-center text-center p-12 group transition-all hover:bg-gray-50/30">
+                  <div className="h-20 w-20 bg-gray-50 rounded-[2rem] flex items-center justify-center mb-6 transition-transform group-hover:scale-110">
+                    <ShieldCheck className="h-10 w-10 text-gray-200" />
+                  </div>
+                  <h3 className="text-2xl font-black text-gray-400 tracking-tight">System Standard Clearance</h3>
+                  <p className="text-gray-400 font-bold max-w-sm mx-auto mt-4 leading-relaxed italic">
+                    "Vigilance is our shield." Portals are live. Awaiting secure key synchronization...
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
 
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50"><Clock className="h-5 w-5" /> Active Access Codes</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {loading ? (
-              <p className="text-cyan-200">Loading...</p>
-            ) : activeCodes.length === 0 ? (
-              <p className="text-cyan-200">No active codes right now.</p>
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-cyan-400/20">
-                    <TableHead className="text-cyan-200">Code</TableHead>
-                    <TableHead className="text-cyan-200">Visitor</TableHead>
-                    <TableHead className="text-cyan-200">Resident</TableHead>
-                    <TableHead className="text-cyan-200">Unit</TableHead>
-                    <TableHead className="text-cyan-200">Purpose</TableHead>
-                    <TableHead className="text-cyan-200">Valid Until</TableHead>
-                    <TableHead className="text-cyan-200">Status</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeCodes.map((code) => {
-                    const r = residentMap[code.resident_id];
-                    return (
-                      <TableRow key={code.id} className="border-cyan-400/20">
-                        <TableCell className="font-mono text-cyan-100 font-bold">{code.access_code}</TableCell>
-                        <TableCell className="text-cyan-100"><div className="flex items-center gap-2"><User className="h-4 w-4 text-cyan-400" />{code.visitor_name}</div></TableCell>
-                        <TableCell className="text-cyan-100">{r?.full_name ?? '—'}</TableCell>
-                        <TableCell className="text-cyan-100"><div className="flex items-center gap-2"><Home className="h-4 w-4 text-cyan-400" />{r?.house_unit_number ?? '—'}</div></TableCell>
-                        <TableCell className="text-cyan-100">{code.purpose}</TableCell>
-                        <TableCell className="text-cyan-100 text-sm">{formatDateTime(code.valid_until)}</TableCell>
-                        <TableCell><Badge className="bg-green-500/20 text-green-400 border-green-400/30">Active</Badge></TableCell>
-                      </TableRow>
-                    );
-                  })}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <div className="lg:col-span-4 h-[650px]">
+          <Card className="bg-white rounded-[2rem] border border-gray-100 shadow-sm h-full flex flex-col overflow-hidden">
+            <div className="p-8 border-b border-gray-50 flex items-center justify-between bg-gray-50/20">
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Access Stream</h3>
+                <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Live Arrival Queue</p>
+              </div>
+              <Badge className="bg-blue-600 text-white border-none font-black text-[10px] px-2 py-1">LIVE</Badge>
+            </div>
+            <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
+              <div className="space-y-4">
+                {activeCodes.map((code) => {
+                  const r = residentMap[code.resident_id];
+                  return (
+                    <div key={code.id} className="p-5 rounded-2xl border border-gray-50 bg-white hover:border-blue-100 hover:shadow-lg hover:shadow-blue-600/5 transition-all group cursor-pointer" onClick={() => setVerificationCode(code.access_code)}>
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-gray-50 rounded-xl flex items-center justify-center group-hover:bg-blue-600 transition-colors">
+                            <User className="h-5 w-5 text-gray-300 group-hover:text-white transition-colors" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-black text-gray-900 uppercase tracking-tight">{code.visitor_name}</p>
+                            <p className="text-[10px] font-bold text-blue-600 uppercase tracking-widest">{code.purpose || 'General Visitor'}</p>
+                          </div>
+                        </div>
+                        <span className="text-[11px] font-black font-mono text-gray-300 group-hover:text-blue-200 transition-colors">{code.access_code}</span>
+                      </div>
+                      <div className="flex items-center justify-between pt-1 border-t border-gray-50 mt-1">
+                        <div className="flex items-center gap-1.5 text-gray-400 font-bold text-[10px]">
+                          <Home className="h-3 w-3" />
+                          {r?.house_unit_number || '—'}
+                        </div>
+                        <div className="flex items-center gap-1.5 text-gray-300 font-bold text-[10px]">
+                          <Clock className="h-3 w-3" />
+                          {new Date(code.valid_until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-50 text-center">
+              <button className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-all">Export Gate Logs →</button>
+            </div>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="flex h-screen bg-gray-50 font-inter overflow-hidden">
+      <SecuritySidebar currentPage={currentPage} setCurrentPage={setCurrentPage} onLogout={logout} />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <ResidentHeader onSearch={() => { }} />
+        <section className="flex-1 overflow-y-auto p-6 lg:p-10 custom-scrollbar bg-gray-50/50">
+          <div className="max-w-[1600px] mx-auto">
+            {renderDashboard()}
+          </div>
+        </section>
       </div>
     </div>
   );

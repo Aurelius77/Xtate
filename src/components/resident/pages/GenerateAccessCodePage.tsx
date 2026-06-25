@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Plus, QrCode, Share2, Ban } from 'lucide-react';
+import { Plus, QrCode, Share2, Ban, User, Phone, ClipboardList, Calendar as CalendarIcon, Clock, ShieldCheck, ArrowRight, ChevronRight, Copy } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ACCESS_CODE_PURPOSES, GenerateCodeForm } from '@/types/visitor-access';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,7 +74,7 @@ const GenerateAccessCodePage = () => {
       .select('id, access_code, visitor_name, purpose, valid_from, valid_until, is_used, status, created_at')
       .eq('resident_id', residentId)
       .order('created_at', { ascending: false })
-      .limit(20);
+      .limit(10);
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
     } else {
@@ -97,7 +97,6 @@ const GenerateAccessCodePage = () => {
 
     setIsGenerating(true);
     try {
-      // Try insert with retry on rare collision (unique-like behavior)
       let inserted: AccessCodeRow | null = null;
       for (let attempt = 0; attempt < 3 && !inserted; attempt++) {
         const code = generate6DigitCode();
@@ -158,126 +157,187 @@ const GenerateAccessCodePage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-cyan-50">Generate Access Code</h1>
-        <p className="text-cyan-200">Create temporary access codes for your visitors</p>
+    <div className="space-y-8 max-w-6xl mx-auto pb-12 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Access Control</h1>
+          <p className="text-gray-500 font-medium mt-1">Generate temporary digital keys for guest entry</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-xl border-gray-200 font-bold px-6 h-12">
+            History
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-6 h-12 shadow-lg shadow-blue-600/20">
+            <Plus className="h-4 w-4 mr-2" />
+            Quick Access
+          </Button>
+        </div>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
-              <Plus className="h-5 w-5" /> Create New Code
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField control={form.control} name="visitor_name" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-cyan-200">Visitor Name</FormLabel>
-                    <FormControl><Input placeholder="Enter visitor's full name" className="glass border-cyan-400/30 text-cyan-100" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="visitor_phone" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-cyan-200">Phone Number (Optional)</FormLabel>
-                    <FormControl><Input placeholder="Enter visitor's phone number" className="glass border-cyan-400/30 text-cyan-100" {...field} /></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <FormField control={form.control} name="purpose" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-cyan-200">Purpose of Visit</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl><SelectTrigger className="glass border-cyan-400/30 text-cyan-100"><SelectValue placeholder="Select purpose" /></SelectTrigger></FormControl>
-                      <SelectContent className="glass border-cyan-400/30">
-                        {ACCESS_CODE_PURPOSES.map((p) => (<SelectItem key={p} value={p} className="text-cyan-100">{p}</SelectItem>))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )} />
-                <div className="grid grid-cols-2 gap-4">
-                  <FormField control={form.control} name="valid_from" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-cyan-200">Valid From</FormLabel>
-                      <FormControl><Input type="datetime-local" className="glass border-cyan-400/30 text-cyan-100" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name="valid_until" render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-cyan-200">Valid Until</FormLabel>
-                      <FormControl><Input type="datetime-local" className="glass border-cyan-400/30 text-cyan-100" {...field} /></FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                </div>
-                <Button type="submit" className="w-full glass bg-blue-600/20 hover:bg-blue-600/30 text-cyan-100" disabled={isGenerating || !residentId}>
-                  {isGenerating ? 'Generating...' : 'Generate Access Code'}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        {generatedCode && (
-          <Card className="glass-card border-green-400/20">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-green-400"><QrCode className="h-5 w-5" /> Generated Code</CardTitle>
+      <div className="grid lg:grid-cols-5 gap-8">
+        <div className="lg:col-span-3 space-y-8">
+          <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <CardHeader className="bg-gray-50/50 p-8 border-b border-gray-50">
+              <CardTitle className="text-xl font-black text-gray-900 flex items-center gap-3">
+                <ShieldCheck className="h-6 w-6 text-blue-600" />
+                Request Guest Entry
+              </CardTitle>
+              <CardDescription className="text-gray-500 font-medium">Generate a secure 6-digit code for your visitor</CardDescription>
             </CardHeader>
-            <CardContent className="text-center space-y-4">
-              <div className="text-4xl font-mono font-bold text-green-400 bg-green-400/10 p-4 rounded-lg">{generatedCode}</div>
-              <p className="text-cyan-200">Share this code with your visitor. They'll need to present it to security.</p>
-              <Button onClick={shareCode} className="w-full glass bg-green-600/20 hover:bg-green-600/30 text-green-400">
-                <Share2 className="h-4 w-4 mr-2" /> Share Code
-              </Button>
+            <CardContent className="p-8">
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <FormField control={form.control} name="visitor_name" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Visitor Name</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <User className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input placeholder="Enter guest name" className="h-12 pl-12 border-gray-100 bg-gray-50 rounded-xl font-semibold focus:ring-2 focus:ring-blue-100 transition-all" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="visitor_phone" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Phone Number</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Phone className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                            <Input placeholder="+234..." className="h-12 pl-12 border-gray-100 bg-gray-50 rounded-xl font-semibold focus:ring-2 focus:ring-blue-100 transition-all" {...field} />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+
+                  <FormField control={form.control} name="purpose" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Purpose of Visit</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold focus:ring-2 focus:ring-blue-100">
+                            <div className="flex items-center gap-3">
+                              <ClipboardList className="h-4 w-4 text-gray-400" />
+                              <SelectValue placeholder="Why is this guest visiting?" />
+                            </div>
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent className="rounded-xl border-gray-100 shadow-xl">
+                          {ACCESS_CODE_PURPOSES.map((p) => (<SelectItem key={p} value={p} className="text-gray-700 font-medium py-3 px-4 focus:bg-blue-50 focus:text-blue-700">{p}</SelectItem>))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+
+                  <div className="grid grid-cols-2 gap-6">
+                    <FormField control={form.control} name="valid_from" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Arrival Date/Time</FormLabel>
+                        <FormControl><Input type="datetime-local" className="h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold focus:ring-2 focus:ring-blue-100" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                    <FormField control={form.control} name="valid_until" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Expiry Date/Time</FormLabel>
+                        <FormControl><Input type="datetime-local" className="h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold focus:ring-2 focus:ring-blue-100" {...field} /></FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )} />
+                  </div>
+
+                  <Button type="submit" className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-black text-lg shadow-xl shadow-blue-600/20 transition-all hover:scale-[1.01] active:scale-[0.99]" disabled={isGenerating || !residentId}>
+                    {isGenerating ? 'Securing Access...' : 'Generate Entry Code'}
+                  </Button>
+                </form>
+              </Form>
             </CardContent>
           </Card>
-        )}
-      </div>
+        </div>
 
-      <Card className="glass-card border-cyan-400/20">
-        <CardHeader>
-          <CardTitle className="text-cyan-50">My Recent Codes</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {loadingCodes ? (
-            <p className="text-cyan-200">Loading...</p>
-          ) : myCodes.length === 0 ? (
-            <p className="text-cyan-200">No access codes yet.</p>
-          ) : (
-            <div className="space-y-2">
-              {myCodes.map((c) => {
-                const now = new Date();
-                const isActive = !c.is_used && c.status === 'active' && new Date(c.valid_until) > now;
-                return (
-                  <div key={c.id} className="flex items-center justify-between p-3 rounded-lg border border-cyan-400/20">
-                    <div>
-                      <div className="font-mono text-cyan-100 font-bold">{c.access_code}</div>
-                      <div className="text-sm text-cyan-200">{c.visitor_name} • {c.purpose}</div>
-                      <div className="text-xs text-cyan-300/70">Until {new Date(c.valid_until).toLocaleString()}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Badge className={isActive ? 'bg-green-500/20 text-green-400 border-green-400/30' : 'bg-slate-500/20 text-slate-300 border-slate-400/30'}>
-                        {c.status === 'cancelled' ? 'Revoked' : c.is_used ? 'Used' : isActive ? 'Active' : 'Expired'}
-                      </Badge>
-                      {isActive && (
-                        <Button size="sm" variant="ghost" onClick={() => revokeCode(c.id)} className="text-red-300 hover:text-red-400">
-                          <Ban className="h-4 w-4 mr-1" /> Revoke
-                        </Button>
-                      )}
-                    </div>
+        <div className="lg:col-span-2 space-y-8">
+          {generatedCode ? (
+            <Card className="bg-emerald-600 rounded-3xl border-none shadow-2xl shadow-emerald-600/20 text-white overflow-hidden animate-in zoom-in-95 duration-300">
+              <div className="p-8 text-center space-y-6">
+                <div className="flex justify-center">
+                  <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
+                    <QrCode className="h-8 w-8 text-white" />
                   </div>
-                );
-              })}
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-100 mb-2">Guest Digital Key</p>
+                  <div className="text-6xl font-black tracking-tighter tabular-nums drop-shadow-lg">{generatedCode}</div>
+                </div>
+                <p className="text-sm font-medium text-emerald-50 max-w-[240px] mx-auto opacity-80">Share this code with your visitor. They will need it at the estate gate.</p>
+                <div className="flex gap-3">
+                  <Button onClick={shareCode} className="flex-1 h-12 bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl font-black shadow-lg">
+                    <Share2 className="h-4 w-4 mr-2" /> Share Key
+                  </Button>
+                </div>
+              </div>
+              <div className="bg-emerald-700/50 p-4 text-center text-[10px] font-bold uppercase tracking-widest">
+                Valid for ONE-TIME entry
+              </div>
+            </Card>
+          ) : (
+            <div className="bg-blue-50 rounded-3xl p-8 border border-blue-100 border-dashed flex flex-col items-center justify-center text-center space-y-4 h-full min-h-[300px]">
+              <div className="h-14 w-14 bg-white rounded-2xl shadow-sm flex items-center justify-center">
+                <QrCode className="h-7 w-7 text-blue-300" />
+              </div>
+              <h4 className="font-bold text-blue-900">No active code</h4>
+              <p className="text-xs text-blue-500 max-w-[200px] leading-relaxed font-medium">Fill out the guest details on the left to generate a secure access code.</p>
             </div>
           )}
-        </CardContent>
-      </Card>
+
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden mt-8">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900">Recent Guest Access</h3>
+              <ChevronRight className="h-4 w-4 text-gray-300" />
+            </div>
+            <div className="divide-y divide-gray-50">
+              {loadingCodes ? (
+                <div className="p-8 text-center text-gray-400 font-medium">Loading keys...</div>
+              ) : myCodes.length === 0 ? (
+                <div className="p-8 text-center text-gray-400 italic text-sm">No visitor history yet.</div>
+              ) : (
+                myCodes.map((c) => {
+                  const now = new Date();
+                  const isActive = !c.is_used && c.status === 'active' && new Date(c.valid_until) > now;
+                  return (
+                    <div key={c.id} className="p-5 flex items-center justify-between hover:bg-gray-50/50 transition-colors group">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-black text-gray-900 text-sm group-hover:text-blue-600 transition-colors">{c.access_code}</span>
+                          <Badge className={`text-[9px] font-black px-1.5 py-0 rounded-md ${isActive ? 'bg-blue-50 text-blue-600 border-blue-100' : 'bg-gray-50 text-gray-400 border-gray-100'}`}>
+                            {c.status === 'cancelled' ? 'REVOKED' : c.is_used ? 'USED' : isActive ? 'ACTIVE' : 'EXPIRED'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs font-bold text-gray-700 truncate">{c.visitor_name}</p>
+                        <p className="text-[10px] text-gray-400 font-medium mt-0.5">{new Date(c.valid_until).toLocaleDateString()} • {c.purpose}</p>
+                      </div>
+                      {isActive && (
+                        <button onClick={() => revokeCode(c.id)} className="h-8 w-8 rounded-lg flex items-center justify-center text-rose-300 hover:text-rose-600 hover:bg-rose-50 transition-all">
+                          <Ban className="h-4 w-4" />
+                        </button>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+            <div className="p-4 bg-gray-50/50 text-center">
+              <button className="text-[10px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-colors">
+                Manage All Codes
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { DollarSign, CreditCard, Clock, CheckCircle, AlertTriangle, Download } from 'lucide-react';
+import { DollarSign, CreditCard, Clock, CheckCircle, AlertTriangle, Download, ArrowRight, Wallet } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -120,13 +120,13 @@ const MyDuesPage = () => {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'paid':
-        return <Badge className="bg-green-500/20 text-green-300"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
+        return <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 hover:bg-emerald-50"><CheckCircle className="h-3 w-3 mr-1" />Paid</Badge>;
       case 'pending_confirmation':
-        return <Badge className="bg-blue-500/20 text-blue-300"><Clock className="h-3 w-3 mr-1" />Pending Confirmation</Badge>;
+        return <Badge className="bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-50"><Clock className="h-3 w-3 mr-1" />Confirming</Badge>;
       case 'overdue':
-        return <Badge className="bg-red-500/20 text-red-300"><AlertTriangle className="h-3 w-3 mr-1" />Overdue</Badge>;
+        return <Badge className="bg-red-50 text-red-600 border-red-100 hover:bg-red-50"><AlertTriangle className="h-3 w-3 mr-1" />Overdue</Badge>;
       default:
-        return <Badge className="bg-yellow-500/20 text-yellow-300"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
+        return <Badge className="bg-amber-50 text-amber-600 border-amber-100 hover:bg-amber-50"><Clock className="h-3 w-3 mr-1" />Pending</Badge>;
     }
   };
 
@@ -155,116 +155,179 @@ const MyDuesPage = () => {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-cyan-50">My Dues</h1>
-        <p className="text-cyan-200">View and pay your estate dues</p>
+    <div className="space-y-8 max-w-6xl mx-auto pb-12 animate-in fade-in duration-500">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900 tracking-tight">Financial Overview</h1>
+          <p className="text-gray-500 font-medium mt-1">Manage your dues, levies, and estate payments</p>
+        </div>
+        <div className="flex items-center gap-3">
+          <Button variant="outline" className="rounded-xl border-gray-200 font-bold px-6 h-12">
+            <Download className="h-4 w-4 mr-2" />
+            Tax Report
+          </Button>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-6 h-12 shadow-lg shadow-blue-600/20">
+            <Wallet className="h-4 w-4 mr-2" />
+            Fund Wallet
+          </Button>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Stats row with premium cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {[
-          { label: 'Outstanding Dues', value: `NGN ${outstandingAmount.toLocaleString()}`, icon: Clock, color: 'text-orange-400', bg: 'bg-orange-600/20' },
-          { label: 'Paid This Year', value: `NGN ${paidThisYear.toLocaleString()}`, icon: CheckCircle, color: 'text-green-400', bg: 'bg-green-600/20' },
-          { label: 'Next Due Date', value: nextDue?.due?.due_date ? new Date(nextDue.due.due_date).toLocaleDateString() : 'N/A', icon: DollarSign, color: 'text-blue-400', bg: 'bg-blue-600/20' },
-          { label: 'Total Dues', value: loading ? '...' : dues.length, icon: CreditCard, color: 'text-purple-400', bg: 'bg-purple-600/20' },
+          { label: 'Outstanding Dues', value: `₦${outstandingAmount.toLocaleString()}`, icon: Clock, color: 'text-rose-500', bg: 'bg-rose-50' },
+          { label: 'Paid This Year', value: `₦${paidThisYear.toLocaleString()}`, icon: CheckCircle, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+          { label: 'Next Due Date', value: nextDue?.due?.due_date ? new Date(nextDue.due.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A', icon: DollarSign, color: 'text-blue-500', bg: 'bg-blue-50' },
+          { label: 'Total Invoices', value: loading ? '...' : dues.length, icon: CreditCard, color: 'text-purple-500', bg: 'bg-purple-50' },
         ].map((item) => (
-          <Card key={item.label} className="glass-card border-cyan-400/20">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-cyan-300">{item.label}</p>
-                  <p className={`text-xl font-semibold ${item.color}`}>{item.value}</p>
-                </div>
-                <div className={`h-10 w-10 ${item.bg} rounded-lg flex items-center justify-center`}>
-                  <item.icon className={`h-5 w-5 ${item.color}`} />
-                </div>
+          <div key={item.label} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
+              <div className={`h-11 w-11 ${item.bg} rounded-xl flex items-center justify-center transition-transform group-hover:scale-105`}>
+                <item.icon className={`h-5 w-5 ${item.color}`} />
               </div>
-            </CardContent>
-          </Card>
+              <ArrowRight className="h-4 w-4 text-gray-200 group-hover:text-gray-400 transition-colors" />
+            </div>
+            <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">{item.label}</p>
+            <p className="text-xl font-black text-gray-900 mt-1">{item.value}</p>
+          </div>
         ))}
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="text-cyan-50">Current Dues</CardTitle>
-            <CardDescription className="text-cyan-200">Your assigned dues and payment status</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {loading ? (
-              <p className="text-cyan-200">Loading dues...</p>
-            ) : payableDues.length === 0 ? (
-              <p className="text-cyan-200">No outstanding dues.</p>
-            ) : (
-              payableDues.map((due) => (
-                <div key={due.id} className="p-4 glass rounded-lg border-cyan-400/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm text-cyan-50">{due.due?.title || 'Untitled Due'}</h4>
-                      <p className="text-xs text-cyan-200">Due: {due.due?.due_date ? new Date(due.due.due_date).toLocaleDateString() : 'N/A'}</p>
+      <div className="grid lg:grid-cols-3 gap-8">
+        {/* Left Column: List of dues */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-50 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Current Invoices</h3>
+                <p className="text-sm text-gray-500">Dues and levies awaiting payment</p>
+              </div>
+              <Badge variant="outline" className="bg-rose-50 text-rose-600 border-rose-100 font-bold px-3">
+                {payableDues.length} Pending
+              </Badge>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {loading ? (
+                <div className="p-12 text-center text-gray-400">Loading your dues...</div>
+              ) : payableDues.length === 0 ? (
+                <div className="p-12 text-center space-y-4">
+                  <div className="h-16 w-16 bg-emerald-50 rounded-full flex items-center justify-center mx-auto">
+                    <CheckCircle className="h-8 w-8 text-emerald-500" />
+                  </div>
+                  <p className="font-bold text-gray-900 text-lg">No outstanding dues!</p>
+                  <p className="text-gray-500 max-w-xs mx-auto">You've cleared all your current estate obligations. Great job!</p>
+                </div>
+              ) : (
+                payableDues.map((due) => (
+                  <div key={due.id} className="p-6 hover:bg-gray-50/50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-4">
+                      <div className="h-12 w-12 bg-gray-100 rounded-xl flex items-center justify-center">
+                        <Receipt className="h-6 w-6 text-gray-500" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900">{due.due?.title || 'Untitled Due'}</h4>
+                        <div className="flex items-center gap-3 mt-1">
+                          <p className="text-xs text-gray-400 flex items-center gap-1 font-medium">
+                            <Clock className="h-3 w-3" />
+                            Due: {due.due?.due_date ? new Date(due.due.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'N/A'}
+                          </p>
+                          {getStatusBadge(due.status)}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-cyan-100">NGN {Number(due.amount).toLocaleString()}</p>
-                      {getStatusBadge(due.status)}
+                    <div className="flex items-center gap-6">
+                      <div className="text-right">
+                        <p className="text-lg font-black text-gray-900">₦{Number(due.amount).toLocaleString()}</p>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Amount Owed</p>
+                      </div>
+                      <Button
+                        className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-6 py-2 shadow-lg shadow-blue-600/10"
+                        onClick={() => {
+                          setSelectedDue(due);
+                          setShowPaymentForm(true);
+                        }}
+                      >
+                        Pay Now
+                      </Button>
                     </div>
                   </div>
-                  <Button
-                    size="sm"
-                    className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
-                    onClick={() => {
-                      setSelectedDue(due);
-                      setShowPaymentForm(true);
-                    }}
-                  >
-                    <CreditCard className="h-4 w-4 mr-2" />
-                    Pay Now
-                  </Button>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
 
-        <Card className="glass-card border-cyan-400/20">
-          <CardHeader>
-            <CardTitle className="text-cyan-50">Payment History</CardTitle>
-            <CardDescription className="text-cyan-200">Confirmed and submitted payments</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {loading ? (
-              <p className="text-cyan-200">Loading history...</p>
-            ) : paidDues.length === 0 ? (
-              <p className="text-cyan-200">No payment history yet.</p>
-            ) : (
-              paidDues.map((due) => (
-                <div key={due.id} className="flex items-center justify-between p-3 glass rounded-lg border-cyan-400/20">
-                  <div>
-                    <h4 className="font-medium text-sm text-cyan-50">{due.due?.title || 'Untitled Due'}</h4>
-                    <p className="text-xs text-cyan-200">Paid: {due.paid_at ? new Date(due.paid_at).toLocaleDateString() : 'Awaiting confirmation'}</p>
-                    <p className="text-xs text-cyan-300">Ref: {due.payment_reference || 'N/A'}</p>
-                  </div>
-                  <div className="text-right flex items-center gap-2">
-                    <div>
-                      <p className="font-semibold text-cyan-100">NGN {Number(due.amount).toLocaleString()}</p>
-                      {getStatusBadge(due.status)}
+        {/* Right Column: Recent Payments / History */}
+        <div className="space-y-6">
+          <div className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-50">
+              <h3 className="text-lg font-bold text-gray-900">Payment History</h3>
+              <p className="text-sm text-gray-500">Confirmed and submitted payments</p>
+            </div>
+            <div className="divide-y divide-gray-50">
+              {loading ? (
+                <div className="p-8 text-center text-gray-400 font-medium">Loading history...</div>
+              ) : paidDues.length === 0 ? (
+                <div className="p-8 text-center text-gray-400 font-medium italic">No payments recorded yet.</div>
+              ) : (
+                paidDues.map((due) => (
+                  <div key={due.id} className="p-5 hover:bg-gray-50/50 transition-colors group">
+                    <div className="flex items-center justify-between mb-3">
+                      <div>
+                        <h4 className="font-bold text-sm text-gray-900 group-hover:text-blue-600 transition-colors uppercase tracking-tight">{due.due?.title || 'Untitled Due'}</h4>
+                        <p className="text-[11px] text-gray-400 mt-1 font-medium">
+                          {due.paid_at ? new Date(due.paid_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Awaiting confirmation'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-black text-gray-900 text-sm">₦{Number(due.amount).toLocaleString()}</p>
+                        <div className="mt-1">{getStatusBadge(due.status)}</div>
+                      </div>
                     </div>
-                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20" onClick={() => downloadReceipt(due)}>
-                      <Download className="h-3 w-3" />
-                    </Button>
+                    <div className="flex items-center justify-between mt-4">
+                      <p className="text-[10px] text-gray-400 font-mono">Ref: {due.payment_reference || 'N/A'}</p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-blue-600 font-bold hover:bg-blue-50 rounded-lg group-hover:translate-x-1 transition-transform"
+                        onClick={() => downloadReceipt(due)}
+                      >
+                        Receipt <Download className="h-3 w-3 ml-2" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              ))
-            )}
-          </CardContent>
-        </Card>
+                ))
+              )}
+            </div>
+            <div className="p-4 bg-gray-50 text-center">
+              <button className="text-[11px] font-black text-gray-400 uppercase tracking-widest hover:text-blue-600 transition-colors">
+                View Full Statement
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {showPaymentForm && selectedDue && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-slate-900 p-6 rounded-lg max-w-md w-full mx-4">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-cyan-50">Pay {selectedDue.due?.title || 'Due'}</h3>
-              <Button variant="ghost" size="sm" onClick={() => setShowPaymentForm(false)} className="text-cyan-300 hover:text-cyan-100">x</Button>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in duration-200">
+          <div className="bg-white p-8 rounded-3xl max-w-md w-full shadow-2xl border border-gray-100">
+            <div className="flex justify-between items-center mb-6">
+              <div>
+                <h3 className="text-xl font-black text-gray-900 tracking-tight">Complete Payment</h3>
+                <p className="text-sm text-gray-500 font-medium mt-1">Paying for {selectedDue.due?.title || 'Due'}</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => setShowPaymentForm(false)} className="rounded-full h-8 w-8 p-0 text-gray-400 hover:text-gray-900">✕</Button>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-2xl mb-8 flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-blue-400 uppercase tracking-wider leading-none">Amount to Pay</p>
+                <p className="text-2xl font-black text-blue-700 mt-1">₦{Number(selectedDue.amount).toLocaleString()}</p>
+              </div>
+              <div className="h-10 w-10 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                <Receipt className="h-5 w-5 text-blue-600" />
+              </div>
             </div>
 
             <SecurePaymentForm
@@ -281,4 +344,5 @@ const MyDuesPage = () => {
   );
 };
 
+import { Receipt } from 'lucide-react';
 export default MyDuesPage;

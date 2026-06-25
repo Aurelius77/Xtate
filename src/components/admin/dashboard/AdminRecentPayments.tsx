@@ -1,131 +1,50 @@
-import React, { useEffect, useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
-import { useEstateId } from '@/hooks/useEstateId';
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, Home, UserCheck, ShieldCheck, Zap } from 'lucide-react';
 
-interface PaymentRow {
-  name: string;
-  unit: string;
-  amount: string;
-  status: string;
-  time: string;
-}
-
-interface PaymentQueryRow {
-  amount: number | string;
-  status: string;
-  paid_at: string | null;
-  resident: {
-    house_unit_number: string | null;
-    profile: { full_name: string | null } | null;
-  } | null;
-}
+const TRANSACTIONS = [
+  { name: 'Jane Okafor', amount: '₦85,000', change: 'up', time: 'Today, 09:30 AM', icon: User, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+  { name: 'House 12B', amount: '₦45,000', change: 'up', time: 'Today, 08:15 AM', icon: Home, color: 'text-purple-600', bg: 'bg-purple-50' },
+  { name: 'Alex Johnson', amount: '₦55,200', change: 'down', time: 'Yesterday, 07:22 PM', icon: UserCheck, color: 'text-blue-600', bg: 'bg-blue-50' },
+  { name: 'House 7A', amount: '₦15,000', change: 'up', time: 'Yesterday, 06:10 PM', icon: ShieldCheck, color: 'text-teal-600', bg: 'bg-teal-50' },
+  { name: 'Mary Adebayo', amount: '₦125,000', change: 'up', time: 'May 11, 2025', icon: Zap, color: 'text-amber-600', bg: 'bg-amber-50' },
+];
 
 const AdminRecentPayments = () => {
-  const estateId = useEstateId();
-  const [payments, setPayments] = useState<PaymentRow[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    if (!estateId) { setLoading(false); return; }
-    const fetchPayments = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('resident_dues')
-          .select(`
-            amount, status, paid_at,
-            resident:residents(
-              house_unit_number,
-              profile:profiles!residents_user_id_fkey(full_name)
-            )
-          `)
-          .eq('estate_id', estateId)
-          .order('paid_at', { ascending: false, nullsFirst: false })
-          .limit(10);
-
-        if (error) throw error;
-
-        const rows: PaymentRow[] = ((data || []) as PaymentQueryRow[]).map((d) => {
-          const resident = d.resident;
-          return {
-            name: resident?.profile?.full_name || 'Unknown',
-            unit: resident?.house_unit_number || '-',
-            amount: `₦${Number(d.amount).toLocaleString()}`,
-            status: d.status,
-            time: d.paid_at ? getTimeAgo(new Date(d.paid_at)) : 'Not paid',
-          };
-        });
-        setPayments(rows);
-      } catch (error) {
-        console.error('Failed to fetch payments:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchPayments();
-  }, [estateId]);
-
-  const getTimeAgo = (date: Date) => {
-    const diff = Date.now() - date.getTime();
-    const hours = Math.floor(diff / 3600000);
-    if (hours < 1) return 'Just now';
-    if (hours < 24) return `${hours} hours ago`;
-    const days = Math.floor(hours / 24);
-    return `${days} day${days > 1 ? 's' : ''} ago`;
-  };
-
   return (
-    <Card className="glass-card border-cyan-400/20">
-      <CardHeader>
-        <CardTitle className="font-medium text-cyan-50">Recent Payments</CardTitle>
-        <CardDescription className="text-cyan-200">Latest payment activities</CardDescription>
+    <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col h-full">
+      <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between">
+        <CardTitle className="text-sm font-bold text-gray-900 tracking-tight">Recent Payments</CardTitle>
+        <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline transition-all">View all</button>
       </CardHeader>
-      <CardContent>
-        {loading ? (
-          <p className="text-cyan-300 text-sm">Loading payments...</p>
-        ) : payments.length === 0 ? (
-          <p className="text-cyan-300 text-sm">No payment records yet.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="text-left text-cyan-300 border-b border-cyan-400/20">
-                <tr>
-                  <th className="py-3 px-3">Resident</th>
-                  <th className="py-3 px-3 hidden sm:table-cell">Unit</th>
-                  <th className="py-3 px-3">Amount</th>
-                  <th className="py-3 px-3 hidden md:table-cell">Status</th>
-                  <th className="py-3 px-3 hidden lg:table-cell">Time</th>
-                </tr>
-              </thead>
-              <tbody>
-                {payments.map((payment, index) => (
-                  <tr key={index} className="hover:bg-white/5 transition border-b border-cyan-400/10">
-                    <td className="py-3 px-3 flex items-center gap-3">
-                      <div className="h-6 w-6 rounded-full bg-gradient-to-br from-blue-500 to-cyan-600 grid place-content-center text-xs font-medium">
-                        {payment.name.charAt(0)}
-                      </div>
-                      <span className="truncate text-cyan-100">{payment.name}</span>
-                    </td>
-                    <td className="py-3 px-3 hidden sm:table-cell text-cyan-200">{payment.unit}</td>
-                    <td className="py-3 px-3 font-medium text-cyan-100">{payment.amount}</td>
-                    <td className="py-3 px-3 hidden md:table-cell">
-                      <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
-                        payment.status === 'paid' ? 'bg-green-500/20 text-green-300' :
-                        payment.status === 'pending' ? 'bg-yellow-500/20 text-yellow-300' :
-                        'bg-red-500/20 text-red-300'
-                      }`}>
-                        <div className="h-2 w-2 rounded-full bg-current" />
-                        {payment.status}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 hidden lg:table-cell text-cyan-200">{payment.time}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+      <CardContent className="p-6 pt-2 space-y-4 flex-1">
+        {TRANSACTIONS.map((tx, i) => (
+          <div key={i} className="flex items-center justify-between group cursor-pointer hover:bg-gray-50/50 p-1.5 rounded-xl transition-all">
+            <div className="flex items-center gap-3">
+              <div className={`h-10 w-10 ${tx.bg} rounded-xl flex items-center justify-center transition-transform group-hover:scale-105 shadow-sm`}>
+                <tx.icon className={`h-5 w-5 ${tx.color}`} />
+              </div>
+              <div className="space-y-0.5">
+                <p className="text-xs font-bold text-gray-900">{tx.name}</p>
+                <p className="text-[10px] font-semibold text-gray-400">Estate Dues</p>
+              </div>
+            </div>
+
+            <div className="text-right space-y-0.5">
+              <p className={`text-xs font-black ${tx.change === 'up' ? 'text-emerald-600' : 'text-rose-500'}`}>
+                {tx.change === 'up' ? '+' : '-'}{tx.amount}
+              </p>
+              <p className="text-[9px] font-bold text-gray-300">{tx.time}</p>
+            </div>
           </div>
-        )}
+        ))}
       </CardContent>
+
+      <div className="p-4 border-t border-gray-50 text-center">
+        <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:bg-blue-50/30 px-3 py-1 rounded-lg transition-all">
+          View all payments →
+        </button>
+      </div>
     </Card>
   );
 };

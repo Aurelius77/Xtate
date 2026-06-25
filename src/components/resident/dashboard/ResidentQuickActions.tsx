@@ -1,78 +1,42 @@
-
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Plus, FileText, Calendar, MessageSquare, Key } from 'lucide-react';
+import { Key, CreditCard, MessageSquare, Plus, Bell, ScrollText, HelpCircle } from 'lucide-react';
 
 interface ResidentQuickActionsProps {
   onNavigate: (page: string) => void;
 }
 
-const ResidentQuickActions = ({ onNavigate }: ResidentQuickActionsProps) => {
-  const quickActions = [
-    {
-      title: 'Generate Access Code',
-      description: 'Create visitor access codes',
-      icon: Key,
-      color: 'text-blue-400',
-      bgColor: 'bg-blue-400/10',
-      page: 'generate-access-code'
-    },
-    {
-      title: 'Report Issue',
-      description: 'Submit a new complaint',
-      icon: MessageSquare,
-      color: 'text-yellow-400',
-      bgColor: 'bg-yellow-400/10',
-      page: 'complaints'
-    },
-    {
-      title: 'View Documents',
-      description: 'Access estate documents',
-      icon: FileText,
-      color: 'text-green-400',
-      bgColor: 'bg-green-400/10',
-      page: 'documents'
-    },
-    {
-      title: 'Check Meetings',
-      description: 'View upcoming meetings',
-      icon: Calendar,
-      color: 'text-purple-400',
-      bgColor: 'bg-purple-400/10',
-      page: 'meetings'
-    }
-  ];
+const ACTIONS = [
+  { label: 'Generate Access Code', icon: Key, page: 'generate-access-code' },
+  { label: 'Pay My Dues', icon: CreditCard, page: 'dues' },
+  { label: 'File a Complaint', icon: MessageSquare, page: 'complaints' },
+  { label: 'Request Maintenance', icon: Plus, page: 'support' },
+  { label: 'Clear Notifications', icon: Bell, page: 'notifications' },
+  { label: 'View Documents', icon: ScrollText, page: 'documents' },
+  { label: 'Contact Support', icon: HelpCircle, page: 'support' },
+];
 
+const ResidentQuickActions = ({ onNavigate }: ResidentQuickActionsProps) => {
   return (
-    <Card className="glass-card border-cyan-400/20 lg:col-span-2">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-cyan-50">
-          <Plus className="h-5 w-5" />
-          Quick Actions
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="grid grid-cols-2 gap-4">
-          {quickActions.map((action, index) => (
-            <Button
-              key={index}
-              variant="outline"
-              className="h-auto p-4 glass border-cyan-400/30 text-left flex flex-col items-start gap-2 hover:bg-white/5"
-              onClick={() => onNavigate(action.page)}
-            >
-              <div className={`h-8 w-8 ${action.bgColor} rounded-lg grid place-content-center`}>
-                <action.icon className={`h-4 w-4 ${action.color}`} />
-              </div>
-              <div>
-                <p className="font-medium text-cyan-100">{action.title}</p>
-                <p className="text-xs text-cyan-300">{action.description}</p>
-              </div>
-            </Button>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="bg-white rounded-[2rem] border border-gray-100 shadow-sm p-4 flex items-center justify-between gap-4 w-full xl:col-span-12 mt-6">
+      <div className="flex items-center gap-2 px-4 border-r border-gray-100 mr-2">
+        <p className="text-xs font-black text-gray-900 uppercase tracking-widest whitespace-nowrap">Resident Actions</p>
+      </div>
+
+      <div className="flex-1 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+        {ACTIONS.map((action, i) => (
+          <button
+            key={i}
+            onClick={() => onNavigate(action.page)}
+            className="flex items-center gap-2.5 px-4 py-2.5 bg-gray-50/50 hover:bg-blue-50 rounded-xl transition-all group whitespace-nowrap"
+          >
+            <div className="h-7 w-7 bg-white rounded-lg flex items-center justify-center shadow-sm group-hover:bg-blue-600 transition-all">
+              <action.icon className="h-3.5 w-3.5 text-gray-400 group-hover:text-white transition-all" />
+            </div>
+            <span className="text-[11px] font-bold text-gray-600 group-hover:text-blue-700 transition-all">{action.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 

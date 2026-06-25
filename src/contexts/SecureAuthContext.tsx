@@ -107,38 +107,38 @@ export const SecureAuthProvider = ({ children }: AuthProviderProps) => {
   useEffect(() => {
     let mounted = true;
 
-    const loadSessionProfile = async (userId: string) => {
-      const profile = await fetchUserProfile(userId);
-      if (mounted) setUser(profile);
-    };
-
-    const initAuth = async () => {
+    const loadAndFinish = async (userId: string) => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && mounted) {
-          await loadSessionProfile(session.user.id);
-        }
-      } catch (error) {
-        console.error('Auth init failed:', error);
+        const profile = await fetchUserProfile(userId);
+        if (mounted) setUser(profile);
       } finally {
         if (mounted) setIsLoading(false);
       }
     };
 
-    initAuth();
-
+    // onAuthStateChange fires INITIAL_SESSION synchronously on subscribe,
+    // covering both fresh loads and page refreshes. No separate getSession() needed.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        if (mounted) setIsLoading(false);
-        setTimeout(() => {
-          loadSessionProfile(session.user.id).catch((error) => {
-            console.error('Auth profile refresh failed:', error);
-          });
-        }, 0);
-      } else if (event === 'SIGNED_OUT') {
-        if (mounted) setUser(null);
-        if (mounted) setIsLoading(false);
-      } else if (mounted) {
+      if (!mounted) return;
+
+      if (event === 'SIGNED_OUT') {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      if (event === 'TOKEN_REFRESHED') {
+        // Silent background refresh — user state unchanged, just unblock loading
+        setIsLoading(false);
+        return;
+      }
+
+      if (session?.user) {
+        // INITIAL_SESSION (page refresh/load) or SIGNED_IN (login)
+        // Use setTimeout to avoid Supabase internal deadlocks on SIGNED_IN
+        setTimeout(() => loadAndFinish(session.user.id), 0);
+      } else {
+        // INITIAL_SESSION with no session — not logged in
         setIsLoading(false);
       }
     });
