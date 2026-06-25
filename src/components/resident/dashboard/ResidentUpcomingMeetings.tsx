@@ -50,7 +50,7 @@ const ResidentUpcomingMeetings = () => {
     };
 
     return (
-        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-[280px]">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm overflow-hidden flex flex-col h-full">
             <CardHeader className="p-5 pb-0 flex flex-row items-center justify-between">
                 <CardTitle className="text-sm font-bold text-gray-900 tracking-tight">Upcoming Meetings</CardTitle>
                 <div className="h-8 w-8 bg-blue-50 rounded-xl flex items-center justify-center">

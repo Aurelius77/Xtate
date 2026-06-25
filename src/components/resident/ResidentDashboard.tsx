@@ -78,65 +78,58 @@ const ResidentDashboard = () => {
   };
 
   const renderDashboard = () => (
-    <div className="space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-10">
-      {/* Row 0: Greeting & Date Action Bar */}
+    <div className="space-y-6 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-10">
+
+      {/* Greeting */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="min-w-0">
-          <h2 className="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2 flex-wrap">
+          <h2 className="text-2xl lg:text-3xl font-black text-gray-900 tracking-tight flex items-center gap-2">
             Good morning, {user?.full_name?.split(' ')[0] || 'Resident'} <span>👋</span>
           </h2>
-          <p className="text-gray-400 font-bold mt-1 tracking-tight text-sm">Here's what's happening in your estate today.</p>
+          <p className="text-gray-400 font-bold mt-1 text-sm">Here's what's happening in your estate today.</p>
         </div>
-
         <div className="flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="hidden sm:flex h-10 bg-white border-gray-100 rounded-xl px-3 items-center gap-2 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 border-none ring-1 ring-gray-100">
+          <Button variant="outline" className="hidden sm:flex h-10 bg-white rounded-xl px-3 items-center gap-2 text-sm font-semibold text-gray-700 border-none ring-1 ring-gray-100 hover:bg-gray-50">
             <Calendar className="h-4 w-4 text-gray-400" />
             <span className="hidden lg:inline">May 13 – May 19, 2025</span>
             <ChevronDown className="h-4 w-4 text-gray-400" />
           </Button>
-
-          <Button className="h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-3 flex items-center gap-2 text-sm font-bold shadow-xl shadow-blue-600/20 active:scale-95 transition-all">
+          <Button className="h-10 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 flex items-center gap-2 text-sm font-bold shadow-lg shadow-blue-600/20 active:scale-95 transition-all">
             <Download className="h-4 w-4" />
             <span className="hidden sm:inline">Export Report</span>
-            <div className="hidden sm:block h-4 w-px bg-white/20 mx-1" />
-            <ChevronDown className="h-4 w-4 opacity-50" />
           </Button>
         </div>
       </div>
 
-      {/* Row 1: 5 Stat Cards with Sparklines */}
+      {/* 5 Stat Cards */}
       <ResidentDashboardStats />
 
-      {/* Row 2: Grid Layout */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-12 gap-6">
-        {/* Payment chart – full width on tablet, 4 cols on desktop */}
-        <div className="md:col-span-2 xl:col-span-4">
+      {/* Chart + Dues Breakdown — 60/40 split */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+        <div className="lg:col-span-3">
           <ResidentPaymentChart />
         </div>
-        {/* Dues donut */}
-        <div className="xl:col-span-3">
+        <div className="lg:col-span-2">
           <ResidentDuesOverview />
-        </div>
-        {/* Recent payments */}
-        <div className="xl:col-span-3">
-          <ResidentRecentTransactions />
-        </div>
-        {/* Wallet + Meetings: side-by-side on tablet, stacked on xl */}
-        <div className="md:col-span-2 xl:col-span-2 grid grid-cols-2 xl:grid-cols-1 gap-6">
-          <ResidentWalletCard label="My Wallet Balance" />
-          <ResidentUpcomingMeetings />
         </div>
       </div>
 
-      {/* Row 3: Detail Lists + System Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      {/* Transactions + Wallet + Upcoming Meetings — equal thirds */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <ResidentRecentTransactions />
+        <ResidentWalletCard label="My Wallet Balance" />
+        <ResidentUpcomingMeetings />
+      </div>
+
+      {/* 4-card info row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <ResidentPendingApprovals />
         <ResidentMaintenanceTickets />
         <ResidentAnnouncements />
         <ResidentSystemOverview />
       </div>
 
-      {/* Row 4: Quick Actions */}
+      {/* Quick Actions */}
       <ResidentQuickActions onNavigate={setCurrentPage} />
     </div>
   );

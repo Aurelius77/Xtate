@@ -79,8 +79,8 @@ const ResidentDuesOverview = () => {
                 <CardTitle className="text-sm font-bold text-gray-900 tracking-tight">My Dues Breakdown</CardTitle>
                 <button className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline transition-all">This Year ⌄</button>
             </CardHeader>
-            <CardContent className="p-6 pt-2 flex flex-col gap-6">
-                <div className="h-44 relative">
+            <CardContent className="p-6 pt-2 flex flex-col gap-4 flex-1">
+                <div className="h-48 relative">
                     {loading ? (
                         <div className="h-full bg-gray-50 rounded-2xl animate-pulse" />
                     ) : (
