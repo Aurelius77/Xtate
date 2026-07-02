@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Shield, CheckCircle, Clock, Search, User, Home, RefreshCw,
   Smartphone, MapPin, UserPlus, FileText, ArrowRight, X,
-  ShieldCheck, Share2, LogOut, Calendar, ChevronDown, Download
+  ShieldCheck, Share2, LogOut, Calendar, ChevronDown, Download, Camera
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -28,6 +29,14 @@ interface ActiveCode {
   resident_id: string;
 }
 
+interface InsideCode {
+  id: string;
+  access_code: string;
+  visitor_name: string;
+  resident_id: string;
+  used_at: string | null;
+}
+
 interface ResidentLookup {
   id: string;
   house_unit_number: string;
@@ -45,6 +54,9 @@ const SecurityDashboard = () => {
   const [activeCodes, setActiveCodes] = useState<ActiveCode[]>([]);
   const [residentMap, setResidentMap] = useState<Record<string, ResidentLookup>>({});
   const [loading, setLoading] = useState(false);
+  const [insideCodes, setInsideCodes] = useState<InsideCode[]>([]);
+  const [scannerActive, setScannerActive] = useState(false);
+  const scannerRef = useRef<Html5Qrcode | null>(null);
 
   const loadActive = async () => {
     setLoading(true);
@@ -95,7 +107,64 @@ const SecurityDashboard = () => {
     setLoading(false);
   };
 
-  useEffect(() => { loadActive(); }, []);
+  const loadInside = async () => {
+    const { data, error } = await supabase
+      .from('access_codes')
+      .select('id, access_code, visitor_name, resident_id, used_at')
+      .eq('is_used', true)
+      .eq('exit_logged', false)
+      .order('used_at', { ascending: false });
+
+    if (error) {
+      toast({ title: 'Error loading visitors', description: error.message, variant: 'destructive' });
+      return;
+    }
+    setInsideCodes((data ?? []) as InsideCode[]);
+  };
+
+  useEffect(() => { loadActive(); loadInside(); }, []);
+
+  useEffect(() => {
+    if (!scannerActive) return;
+
+    const scanner = new Html5Qrcode('qr-reader');
+    scannerRef.current = scanner;
+
+    scanner
+      .start(
+        { facingMode: 'environment' },
+        { fps: 10, qrbox: 220 },
+        (decodedText) => {
+          setVerificationCode(decodedText.trim());
+          setScannerActive(false);
+        },
+        () => { /* ignore per-frame scan misses */ },
+      )
+      .catch((err) => {
+        toast({ title: 'Camera Error', description: err instanceof Error ? err.message : 'Could not start camera', variant: 'destructive' });
+        setScannerActive(false);
+      });
+
+    return () => {
+      scanner.stop().then(() => scanner.clear()).catch(() => {});
+      scannerRef.current = null;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [scannerActive]);
+
+  const logExit = async (codeId: string) => {
+    const { error } = await supabase
+      .from('access_codes')
+      .update({ exit_logged: true, exited_at: new Date().toISOString() })
+      .eq('id', codeId);
+
+    if (error) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Exit Logged', description: 'Visitor exit has been recorded.' });
+    loadInside();
+  };
 
   const verifyCode = async () => {
     const code = verificationCode.trim();
@@ -146,6 +215,7 @@ const SecurityDashboard = () => {
     setVerifiedCode(null);
     setVerificationCode('');
     loadActive();
+    loadInside();
   };
 
   const formatDateTime = (s: string) => new Date(s).toLocaleString('en-US', { hour: '2-digit', minute: '2-digit', month: 'short', day: 'numeric' });
@@ -223,7 +293,22 @@ const SecurityDashboard = () => {
                 <Button onClick={verifyCode} disabled={isVerifying} className="h-20 w-full md:w-48 bg-blue-600 hover:bg-blue-700 text-white rounded-3xl font-black text-xl shadow-2xl shadow-blue-600/20 active:scale-95 transition-all">
                   {isVerifying ? 'VERIFYING...' : 'VERIFY'}
                 </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setScannerActive((prev) => !prev)}
+                  className="h-20 w-full md:w-48 rounded-3xl font-black text-lg border-gray-100"
+                >
+                  <Camera className="h-5 w-5 mr-2" />
+                  {scannerActive ? 'Stop Scan' : 'Scan QR'}
+                </Button>
               </div>
+
+              {scannerActive && (
+                <div className="rounded-3xl overflow-hidden border-4 border-gray-50 max-w-sm mx-auto">
+                  <div id="qr-reader" className="w-full" />
+                </div>
+              )}
 
               {verifiedCode ? (
                 <div className="animate-in zoom-in-95 duration-500">
@@ -330,6 +415,35 @@ const SecurityDashboard = () => {
           </Card>
         </div>
       </div>
+
+      {/* Row 3: Visitors currently inside, awaiting exit */}
+      <Card className="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+        <div className="p-8 border-b border-gray-50 flex items-center justify-between">
+          <div>
+            <h3 className="text-xl font-black text-gray-900 tracking-tight">Visitors On Site</h3>
+            <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mt-1">Log exit when a visitor leaves</p>
+          </div>
+          <Badge className="bg-orange-50 text-orange-600 border-orange-100 font-black text-[10px] px-2 py-1">{insideCodes.length} INSIDE</Badge>
+        </div>
+        <div className="divide-y divide-gray-50">
+          {insideCodes.length === 0 ? (
+            <div className="p-8 text-center text-gray-400 font-medium">No visitors currently on site.</div>
+          ) : (
+            insideCodes.map((code) => (
+              <div key={code.id} className="p-5 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
+                <div>
+                  <p className="font-black text-gray-900 text-sm">{code.visitor_name}</p>
+                  <p className="text-[11px] font-bold text-gray-400 font-mono">{code.access_code} • entered {code.used_at ? new Date(code.used_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</p>
+                </div>
+                <Button size="sm" onClick={() => logExit(code.id)} className="bg-orange-600 hover:bg-orange-700 text-white rounded-xl font-bold">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Log Exit
+                </Button>
+              </div>
+            ))
+          )}
+        </div>
+      </Card>
     </div>
   );
 

@@ -7,6 +7,9 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
+import { useTenant } from '@/contexts/TenantContext';
+
+const FREE_RETENTION_DAYS = 7;
 
 interface AccessCodeRow {
   id: string;
@@ -22,6 +25,8 @@ interface AccessCodeRow {
   isUsed: boolean;
   usedAt: string | null;
   createdAt: string;
+  exitLogged: boolean;
+  exitedAt: string | null;
 }
 
 interface AccessCodeQueryRow {
@@ -40,25 +45,35 @@ interface AccessCodeQueryRow {
   is_used: boolean;
   used_at: string | null;
   created_at: string;
+  exit_logged: boolean;
+  exited_at: string | null;
 }
 
 const AccessCodeManagementPage = () => {
   const estateId = useEstateId();
+  const { plan } = useTenant();
   const [accessCodes, setAccessCodes] = useState<AccessCodeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
 
+  const isFreePlan = plan === 'free';
+
   useEffect(() => {
     if (!estateId) return;
     const fetch = async () => {
       setLoading(true);
-      const { data, error } = await supabase
+      let query = supabase
         .from('access_codes')
         .select('*, resident:residents(house_unit_number, profile:profiles!residents_user_id_fkey(full_name))')
-        .eq('estate_id', estateId)
-        .order('created_at', { ascending: false })
-        .limit(100);
+        .eq('estate_id', estateId);
+
+      if (isFreePlan) {
+        const cutoff = new Date(Date.now() - FREE_RETENTION_DAYS * 24 * 60 * 60 * 1000).toISOString();
+        query = query.gte('created_at', cutoff);
+      }
+
+      const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
       if (error) { console.error(error); setLoading(false); return; }
       setAccessCodes(((data || []) as AccessCodeQueryRow[]).map((c) => ({
         id: c.id,
@@ -74,11 +89,13 @@ const AccessCodeManagementPage = () => {
         isUsed: c.is_used,
         usedAt: c.used_at,
         createdAt: c.created_at,
+        exitLogged: c.exit_logged,
+        exitedAt: c.exited_at,
       })));
       setLoading(false);
     };
     fetch();
-  }, [estateId]);
+  }, [estateId, isFreePlan]);
 
   const filteredCodes = accessCodes.filter(code => {
     const matchesSearch =
@@ -169,6 +186,7 @@ const AccessCodeManagementPage = () => {
                     <th className="py-3 px-3">Visitor</th>
                     <th className="py-3 px-3 hidden md:table-cell">Purpose</th>
                     <th className="py-3 px-3">Status</th>
+                    <th className="py-3 px-3 hidden md:table-cell">Exit</th>
                     <th className="py-3 px-3">Actions</th>
                   </tr>
                 </thead>
@@ -180,6 +198,15 @@ const AccessCodeManagementPage = () => {
                       <td className="py-3 px-3 text-cyan-100">{code.visitorName}</td>
                       <td className="py-3 px-3 hidden md:table-cell text-cyan-200">{code.purpose}</td>
                       <td className="py-3 px-3"><div className="flex items-center gap-2">{getStatusIcon(code.status)}<Badge className={getStatusColor(code.status)}>{code.status}</Badge></div></td>
+                      <td className="py-3 px-3 hidden md:table-cell">
+                        {code.exitLogged ? (
+                          <Badge className="bg-orange-500/20 text-orange-300">{code.exitedAt ? new Date(code.exitedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Exited'}</Badge>
+                        ) : code.isUsed ? (
+                          <Badge className="bg-blue-500/20 text-blue-300">On site</Badge>
+                        ) : (
+                          <span className="text-cyan-400/40">-</span>
+                        )}
+                      </td>
                       <td className="py-3 px-3">
                         <Dialog>
                           <DialogTrigger asChild><Button size="sm" variant="ghost" className="hover:bg-cyan-500/20 text-cyan-200"><Eye className="h-3 w-3" /></Button></DialogTrigger>

@@ -31,12 +31,14 @@ interface DueSummary {
 interface PaymentRow {
   id: string;
   resident: string;
+  residentEmail: string | null;
   unit: string;
   amount: number;
   status: DueStatus;
   paidAt: string | null;
   reference: string | null;
   dueTitle: string;
+  dueDate: string | null;
 }
 
 interface DueQueryRow {
@@ -55,10 +57,10 @@ interface PaymentQueryRow {
   status: DueStatus;
   paid_at: string | null;
   payment_reference: string | null;
-  due: { title: string | null } | null;
+  due: { title: string | null; due_date: string | null } | null;
   resident: {
     house_unit_number: string | null;
-    profile: { full_name: string | null } | null;
+    profile: { full_name: string | null; email: string | null } | null;
   } | null;
 }
 
@@ -120,10 +122,10 @@ const DuesPaymentsPage = () => {
           .from('resident_dues')
           .select(`
             id, amount, status, paid_at, payment_reference,
-            due:dues(title),
+            due:dues(title, due_date),
             resident:residents(
               house_unit_number,
-              profile:profiles!residents_user_id_fkey(full_name)
+              profile:profiles!residents_user_id_fkey(full_name, email)
             )
           `)
           .eq('estate_id', estateId)
@@ -155,12 +157,14 @@ const DuesPaymentsPage = () => {
       setRecentPayments(paymentRows.map((payment) => ({
         id: payment.id,
         resident: payment.resident?.profile?.full_name || 'Unknown resident',
+        residentEmail: payment.resident?.profile?.email || null,
         unit: payment.resident?.house_unit_number || '-',
         amount: Number(payment.amount),
         status: payment.status,
         paidAt: payment.paid_at,
         reference: payment.payment_reference,
         dueTitle: payment.due?.title || 'Estate due',
+        dueDate: payment.due?.due_date || null,
       })));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not load dues and payments.';
@@ -174,8 +178,8 @@ const DuesPaymentsPage = () => {
     void loadDuesAndPayments();
   }, [loadDuesAndPayments]);
 
-  const handleConfirmPayment = async (id: string) => {
-    setSavingPaymentId(id);
+  const handleConfirmPayment = async (payment: PaymentRow) => {
+    setSavingPaymentId(payment.id);
     const { error } = await supabase
       .from('resident_dues')
       .update({
@@ -183,7 +187,7 @@ const DuesPaymentsPage = () => {
         confirmed_at: new Date().toISOString(),
         confirmed_by: user?.id || null,
       })
-      .eq('id', id);
+      .eq('id', payment.id);
 
     setSavingPaymentId(null);
     if (error) {
@@ -193,6 +197,84 @@ const DuesPaymentsPage = () => {
 
     toast({ title: 'Payment Confirmed', description: 'The resident payment is now marked as paid.' });
     await loadDuesAndPayments();
+
+    // Receipt + email are best-effort; a missing RESEND_API_KEY or receipt failure
+    // must never undo the payment confirmation that already succeeded above.
+    void (async () => {
+      let receiptUrl: string | undefined;
+      try {
+        const { data } = await supabase.functions.invoke<{ ok: boolean; signedUrl?: string }>(
+          'generate-payment-receipt',
+          { body: { dueId: payment.id } },
+        );
+        receiptUrl = data?.signedUrl;
+      } catch (receiptError) {
+        console.error('generate-payment-receipt failed', receiptError);
+      }
+
+      if (payment.residentEmail) {
+        try {
+          await supabase.functions.invoke('send-notification-email', {
+            body: {
+              type: 'payment_confirmation',
+              to: payment.residentEmail,
+              estateId,
+              data: {
+                residentName: payment.resident,
+                dueTitle: payment.dueTitle,
+                amount: payment.amount,
+                receiptUrl,
+              },
+            },
+          });
+        } catch (emailError) {
+          console.error('send-notification-email failed', emailError);
+        }
+      }
+    })();
+  };
+
+  const handleSendReminder = async (due: DueSummary) => {
+    if (!estateId) return;
+    try {
+      const { data: pendingResidents, error } = await supabase
+        .from('resident_dues')
+        .select('resident:residents(profile:profiles!residents_user_id_fkey(full_name, email))')
+        .eq('due_id', due.id)
+        .in('status', ['pending', 'overdue']);
+
+      if (error) throw error;
+
+      const recipients = ((pendingResidents ?? []) as Array<{ resident: { profile: { full_name: string | null; email: string | null } | null } | null }>)
+        .map((row) => row.resident?.profile)
+        .filter((profile): profile is { full_name: string | null; email: string | null } => !!profile?.email);
+
+      if (recipients.length === 0) {
+        toast({ title: 'No Recipients', description: 'No outstanding residents with an email on file for this due.' });
+        return;
+      }
+
+      await Promise.all(recipients.map((profile) =>
+        supabase.functions.invoke('send-notification-email', {
+          body: {
+            type: 'dues_reminder',
+            to: profile.email,
+            estateId,
+            data: {
+              residentName: profile.full_name || 'Resident',
+              dueTitle: due.title,
+              amount: due.amount,
+              dueDate: new Date(due.dueDate).toLocaleDateString(),
+            },
+          },
+        }),
+      ));
+
+      toast({ title: 'Reminders Sent', description: `Reminder queued for ${recipients.length} resident(s).` });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not send reminders.';
+      toast({ title: 'Reminder Failed', description: message, variant: 'destructive' });
+    }
   };
 
   const handleRejectPayment = async (id: string) => {
@@ -557,7 +639,7 @@ const DuesPaymentsPage = () => {
                         <p className="text-xs text-blue-300">{due.pendingConfirmation} pending confirmation</p>
                       )}
                     </div>
-                    <div className="text-right">
+                    <div className="text-right space-y-2">
                       <p className="font-semibold text-cyan-100">{formatCurrency(due.amount)}</p>
                       <Badge variant="outline" className="text-xs bg-cyan-500/20 text-cyan-300">
                         {percentCollected}% collected
@@ -565,6 +647,16 @@ const DuesPaymentsPage = () => {
                       <div className="w-16 bg-slate-700 rounded-full h-2 mt-1">
                         <div className="bg-cyan-400 h-2 rounded-full" style={{ width: `${percentCollected}%` }} />
                       </div>
+                      {due.paidBy < due.assignedTo && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20 text-[10px] h-7 px-2"
+                          onClick={() => handleSendReminder(due)}
+                        >
+                          Send Reminder
+                        </Button>
+                      )}
                     </div>
                   </div>
                 );
@@ -619,7 +711,7 @@ const DuesPaymentsPage = () => {
                       <Button
                         size="sm"
                         className="bg-green-600 hover:bg-green-700 text-white"
-                        onClick={() => handleConfirmPayment(payment.id)}
+                        onClick={() => handleConfirmPayment(payment)}
                         disabled={savingPaymentId === payment.id}
                       >
                         Confirm

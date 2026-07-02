@@ -148,6 +148,7 @@ const MeetingsPage = () => {
       created_by: user?.id || null,
     };
 
+    const isNewMeeting = !editingMeetingId;
     const { error } = editingMeetingId
       ? await supabase.from('meetings').update(payload).eq('id', editingMeetingId)
       : await supabase.from('meetings').insert(payload);
@@ -164,6 +165,44 @@ const MeetingsPage = () => {
     });
     setDialogOpen(false);
     await loadMeetings();
+
+    if (isNewMeeting) {
+      void sendMeetingInvites(payload.title, payload.meeting_date, payload.description);
+    }
+  };
+
+  const sendMeetingInvites = async (title: string, meetingDate: string, description: string | null) => {
+    if (!estateId) return;
+    try {
+      const { data: residents, error } = await supabase
+        .from('residents')
+        .select('profile:profiles!residents_user_id_fkey(full_name, email)')
+        .eq('estate_id', estateId)
+        .eq('is_active', true);
+
+      if (error) throw error;
+
+      const recipients = ((residents ?? []) as Array<{ profile: { email: string | null } | null }>)
+        .map((row) => row.profile?.email)
+        .filter((email): email is string => !!email);
+
+      if (recipients.length === 0) return;
+
+      await supabase.functions.invoke('send-notification-email', {
+        body: {
+          type: 'meeting_invite',
+          to: recipients,
+          estateId,
+          data: {
+            meetingTitle: title,
+            meetingDate: new Date(meetingDate).toLocaleString(),
+            description,
+          },
+        },
+      });
+    } catch (error) {
+      console.error('send-notification-email (meeting_invite) failed', error);
+    }
   };
 
   const handleDeleteMeeting = async (id: string) => {

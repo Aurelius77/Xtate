@@ -11,6 +11,7 @@ import { Eye, EyeOff, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/SecureAuthContext";
 import { useTenant } from "@/contexts/TenantContext";
+import ForgotPasswordDialog from "./ForgotPasswordDialog";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ interface AuthModalProps {
 const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [forgotPasswordOpen, setForgotPasswordOpen] = useState(false);
   const { toast } = useToast();
   const { login, register } = useAuth();
   const { tenantId, tenantSlug } = useTenant();
@@ -157,7 +159,12 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
               </Button>
 
               <div className="text-center">
-                <Button variant="link" className="text-sm text-muted-foreground">
+                <Button
+                  type="button"
+                  variant="link"
+                  className="text-sm text-muted-foreground"
+                  onClick={() => setForgotPasswordOpen(true)}
+                >
                   Forgot password?
                 </Button>
               </div>
@@ -267,6 +274,8 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
           </TabsContent>
         </Tabs>
       </DialogContent>
+
+      <ForgotPasswordDialog isOpen={forgotPasswordOpen} onClose={() => setForgotPasswordOpen(false)} />
     </Dialog>
   );
 };

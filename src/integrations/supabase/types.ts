@@ -19,6 +19,8 @@ export type Database = {
           access_code: string
           created_at: string
           estate_id: string | null
+          exit_logged: boolean
+          exited_at: string | null
           id: string
           is_used: boolean
           purpose: string | null
@@ -35,6 +37,8 @@ export type Database = {
           access_code: string
           created_at?: string
           estate_id?: string | null
+          exit_logged?: boolean
+          exited_at?: string | null
           id?: string
           is_used?: boolean
           purpose?: string | null
@@ -51,6 +55,8 @@ export type Database = {
           access_code?: string
           created_at?: string
           estate_id?: string | null
+          exit_logged?: boolean
+          exited_at?: string | null
           id?: string
           is_used?: boolean
           purpose?: string | null
@@ -572,6 +578,7 @@ export type Database = {
           estate_id: string | null
           full_name: string
           id: string
+          inactivity_pin_hash: string | null
           phone: string | null
           profile_image_url: string | null
           updated_at: string
@@ -582,6 +589,7 @@ export type Database = {
           estate_id?: string | null
           full_name: string
           id: string
+          inactivity_pin_hash?: string | null
           phone?: string | null
           profile_image_url?: string | null
           updated_at?: string
@@ -592,6 +600,7 @@ export type Database = {
           estate_id?: string | null
           full_name?: string
           id?: string
+          inactivity_pin_hash?: string | null
           phone?: string | null
           profile_image_url?: string | null
           updated_at?: string
@@ -616,6 +625,7 @@ export type Database = {
           id: string
           paid_at: string | null
           payment_reference: string | null
+          receipt_url: string | null
           resident_id: string
           status: Database["public"]["Enums"]["due_status"]
         }
@@ -628,6 +638,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payment_reference?: string | null
+          receipt_url?: string | null
           resident_id: string
           status?: Database["public"]["Enums"]["due_status"]
         }
@@ -640,6 +651,7 @@ export type Database = {
           id?: string
           paid_at?: string | null
           payment_reference?: string | null
+          receipt_url?: string | null
           resident_id?: string
           status?: Database["public"]["Enums"]["due_status"]
         }

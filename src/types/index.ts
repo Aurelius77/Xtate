@@ -8,6 +8,7 @@ export interface User {
   phone: string;
   profile_image_url?: string;
   estate_id?: string;
+  inactivity_pin_hash?: string | null;
   created_at: string;
   updated_at: string;
 }

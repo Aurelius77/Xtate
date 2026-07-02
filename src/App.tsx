@@ -11,6 +11,7 @@ import { EstateProvider } from "@/contexts/EstateContext";
 import { InactivityProvider } from "@/components/security/InactivityProvider";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import Index from "./pages/Index";
+import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import AdminDashboard from "./components/admin/AdminDashboard";
 import ResidentDashboard from "./components/resident/ResidentDashboard";
@@ -84,8 +85,9 @@ const App = () => (
                 <BrowserRouter>
                   <Routes>
                     <Route path="/" element={<Index />} />
-                    <Route 
-                      path="/dashboard" 
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route
+                      path="/dashboard"
                       element={
                         <ProtectedRoute>
                           <DashboardRouter />

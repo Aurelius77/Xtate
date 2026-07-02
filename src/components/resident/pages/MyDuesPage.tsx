@@ -130,28 +130,31 @@ const MyDuesPage = () => {
     }
   };
 
-  const downloadReceipt = (due: DueRow) => {
-    if (!due.payment_reference) {
-      toast({ title: 'No Receipt Available', description: 'This due has no payment reference yet.' });
+  const [downloadingReceiptId, setDownloadingReceiptId] = useState<string | null>(null);
+
+  const downloadReceipt = async (due: DueRow) => {
+    if (due.status !== 'paid') {
+      toast({ title: 'No Receipt Available', description: 'This due has not been confirmed as paid yet.' });
       return;
     }
 
-    const receipt = [
-      'XTATE Payment Receipt',
-      `Due: ${due.due?.title || 'Untitled Due'}`,
-      `Amount: NGN ${Number(due.amount).toLocaleString()}`,
-      `Status: ${due.status}`,
-      `Reference: ${due.payment_reference}`,
-      `Paid At: ${due.paid_at ? new Date(due.paid_at).toLocaleString() : 'N/A'}`,
-    ].join('\n');
+    setDownloadingReceiptId(due.id);
+    try {
+      const { data, error } = await supabase.functions.invoke<{ ok: boolean; signedUrl?: string; error?: string }>(
+        'generate-payment-receipt',
+        { body: { dueId: due.id } },
+      );
 
-    const blob = new Blob([receipt], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
-    anchor.href = url;
-    anchor.download = `receipt-${due.payment_reference}.txt`;
-    anchor.click();
-    URL.revokeObjectURL(url);
+      if (error) throw new Error(error.message);
+      if (!data?.ok || !data.signedUrl) throw new Error(data?.error || 'Could not generate receipt');
+
+      window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Could not download receipt.';
+      toast({ title: 'Receipt Failed', description: message, variant: 'destructive' });
+    } finally {
+      setDownloadingReceiptId(null);
+    }
   };
 
   return (
@@ -292,8 +295,9 @@ const MyDuesPage = () => {
                         variant="ghost"
                         className="h-8 text-blue-600 font-bold hover:bg-blue-50 rounded-lg group-hover:translate-x-1 transition-transform"
                         onClick={() => downloadReceipt(due)}
+                        disabled={downloadingReceiptId === due.id}
                       >
-                        Receipt <Download className="h-3 w-3 ml-2" />
+                        {downloadingReceiptId === due.id ? 'Preparing...' : 'Receipt'} <Download className="h-3 w-3 ml-2" />
                       </Button>
                     </div>
                   </div>

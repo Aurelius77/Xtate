@@ -65,6 +65,7 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     phone: profile.phone || '',
     profile_image_url: profile.profile_image_url || undefined,
     estate_id: profile.estate_id || undefined,
+    inactivity_pin_hash: profile.inactivity_pin_hash || null,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
   };

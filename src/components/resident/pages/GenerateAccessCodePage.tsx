@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { QRCodeSVG } from 'qrcode.react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -265,15 +266,15 @@ const GenerateAccessCodePage = () => {
             <Card className="bg-emerald-600 rounded-3xl border-none shadow-2xl shadow-emerald-600/20 text-white overflow-hidden animate-in zoom-in-95 duration-300">
               <div className="p-8 text-center space-y-6">
                 <div className="flex justify-center">
-                  <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center animate-pulse">
-                    <QrCode className="h-8 w-8 text-white" />
+                  <div className="bg-white rounded-2xl p-3 shadow-lg">
+                    <QRCodeSVG value={generatedCode} size={140} />
                   </div>
                 </div>
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.3em] text-emerald-100 mb-2">Guest Digital Key</p>
                   <div className="text-6xl font-black tracking-tighter tabular-nums drop-shadow-lg">{generatedCode}</div>
                 </div>
-                <p className="text-sm font-medium text-emerald-50 max-w-[240px] mx-auto opacity-80">Share this code with your visitor. They will need it at the estate gate.</p>
+                <p className="text-sm font-medium text-emerald-50 max-w-[240px] mx-auto opacity-80">Share this code or QR with your visitor. They will need it at the estate gate.</p>
                 <div className="flex gap-3">
                   <Button onClick={shareCode} className="flex-1 h-12 bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl font-black shadow-lg">
                     <Share2 className="h-4 w-4 mr-2" /> Share Key

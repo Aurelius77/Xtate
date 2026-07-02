@@ -83,6 +83,8 @@ const ComplaintsPage = () => {
     setNewComplaint(prev => ({ ...prev, media: null }));
   };
 
+  const [submitting, setSubmitting] = useState(false);
+
   const handleSubmitComplaint = async () => {
     if (!resident?.id) {
       toast({ title: 'Error', description: 'Resident profile not found.', variant: 'destructive' });
@@ -90,24 +92,54 @@ const ComplaintsPage = () => {
     }
     if (!newComplaint.title.trim() || !newComplaint.description.trim()) return;
 
-    const { error } = await supabase.from('complaints').insert({
-      resident_id: resident.id,
-      estate_id: resident.estate_id,
-      title: newComplaint.title.trim(),
-      description: newComplaint.description.trim(),
-      photo_url: null,
-      status: 'open',
-    });
+    setSubmitting(true);
+    try {
+      const { data: created, error } = await supabase
+        .from('complaints')
+        .insert({
+          resident_id: resident.id,
+          estate_id: resident.estate_id,
+          title: newComplaint.title.trim(),
+          description: newComplaint.description.trim(),
+          photo_url: null,
+          status: 'open',
+        })
+        .select('id')
+        .single();
 
-    if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
-      return;
+      if (error) throw error;
+
+      if (newComplaint.media) {
+        const safeName = newComplaint.media.name.replace(/[^a-zA-Z0-9._-]/g, '-');
+        const filePath = `${resident.estate_id}/${created.id}/${Date.now()}-${safeName}`;
+        const { error: uploadError } = await supabase.storage
+          .from('complaint-media')
+          .upload(filePath, newComplaint.media, {
+            cacheControl: '3600',
+            upsert: false,
+            contentType: newComplaint.media.type || undefined,
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { error: photoUpdateError } = await supabase
+          .from('complaints')
+          .update({ photo_url: filePath })
+          .eq('id', created.id);
+
+        if (photoUpdateError) throw photoUpdateError;
+      }
+
+      toast({ title: 'Complaint Submitted', description: 'Estate management can now review your complaint.' });
+      setNewComplaint({ title: '', description: '', media: null });
+      setShowNewComplaint(false);
+      await fetchComplaints(resident.id);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not submit complaint.';
+      toast({ title: 'Error', description: message, variant: 'destructive' });
+    } finally {
+      setSubmitting(false);
     }
-
-    toast({ title: 'Complaint Submitted', description: 'Estate management can now review your complaint.' });
-    setNewComplaint({ title: '', description: '', media: null });
-    setShowNewComplaint(false);
-    await fetchComplaints(resident.id);
   };
 
   const getStatusBadge = (status: string) => {
@@ -224,9 +256,9 @@ const ComplaintsPage = () => {
               <Button variant="ghost" className="rounded-xl font-bold px-6 text-gray-500" onClick={() => setShowNewComplaint(false)}>
                 Discard
               </Button>
-              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-8 shadow-lg shadow-blue-600/20" onClick={handleSubmitComplaint}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-bold px-8 shadow-lg shadow-blue-600/20" onClick={handleSubmitComplaint} disabled={submitting}>
                 <Send className="h-4 w-4 mr-2" />
-                Submit Ticket
+                {submitting ? 'Submitting...' : 'Submit Ticket'}
               </Button>
             </div>
           </CardContent>

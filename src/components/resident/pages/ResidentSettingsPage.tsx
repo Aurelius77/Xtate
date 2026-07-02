@@ -8,6 +8,8 @@ import { Switch } from '@/components/ui/switch';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import AvatarUpload from '@/components/shared/AvatarUpload';
+import SetPinDialog from '@/components/security/SetPinDialog';
 
 type SettingValue = string | boolean;
 
@@ -16,6 +18,8 @@ const ResidentSettingsPage = () => {
   const { toast } = useToast();
   const [residentId, setResidentId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
   const [settings, setSettings] = useState({
     fullName: '',
     email: '',
@@ -43,6 +47,7 @@ const ResidentSettingsPage = () => {
         email: user.email || '',
         phone: user.phone || '',
       }));
+      setAvatarUrl(user.profile_image_url || null);
 
       const { data, error } = await supabase
         .from('residents')
@@ -157,6 +162,13 @@ const ResidentSettingsPage = () => {
               </div>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
+              {user && (
+                <AvatarUpload
+                  userId={user.id}
+                  currentImageUrl={avatarUrl}
+                  onUploaded={(url) => setAvatarUrl(url)}
+                />
+              )}
               <div className="grid md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <Label htmlFor="fullName" className="text-[11px] font-bold text-gray-400 uppercase tracking-widest pl-1">Full Name</Label>
@@ -252,6 +264,10 @@ const ResidentSettingsPage = () => {
                 <Key className="h-4 w-4 mr-2 text-rose-400" />
                 Rotate Password
               </Button>
+              <Button variant="outline" className="w-full h-11 border-gray-100 bg-gray-50 hover:bg-white hover:border-gray-300 rounded-xl font-bold text-sm text-gray-700 transition-all" onClick={() => setPinDialogOpen(true)}>
+                <Lock className="h-4 w-4 mr-2 text-rose-400" />
+                Change Session PIN
+              </Button>
             </CardContent>
           </Card>
 
@@ -298,6 +314,8 @@ const ResidentSettingsPage = () => {
           </Card>
         </div>
       </div>
+
+      <SetPinDialog isOpen={pinDialogOpen} onClose={() => setPinDialogOpen(false)} />
     </div>
   );
 };

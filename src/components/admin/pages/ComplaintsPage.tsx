@@ -23,7 +23,7 @@ interface ComplaintRow {
   assigned_to: string | null;
   resident: {
     house_unit_number: string | null;
-    profile: { full_name: string | null } | null;
+    profile: { full_name: string | null; email: string | null } | null;
   } | null;
 }
 
@@ -82,7 +82,7 @@ const ComplaintsPage = () => {
         id, title, description, status, created_at, updated_at, photo_url, assigned_to,
         resident:residents(
           house_unit_number,
-          profile:profiles!residents_user_id_fkey(full_name)
+          profile:profiles!residents_user_id_fkey(full_name, email)
         )
       `)
       .eq('estate_id', estateId)
@@ -102,6 +102,8 @@ const ComplaintsPage = () => {
   }, [loadComplaints]);
 
   const handleStatusUpdate = async (complaintId: string, status: ComplaintStatus) => {
+    const complaint = complaints.find((c) => c.id === complaintId);
+
     setSavingComplaintId(complaintId);
     const { error } = await supabase
       .from('complaints')
@@ -120,6 +122,33 @@ const ComplaintsPage = () => {
 
     toast({ title: 'Complaint Updated', description: `Status changed to ${status.replace('_', ' ')}.` });
     await loadComplaints();
+
+    if (status === 'resolved' && complaint?.resident?.profile?.email) {
+      supabase.functions.invoke('send-notification-email', {
+        body: {
+          type: 'complaint_resolved',
+          to: complaint.resident.profile.email,
+          estateId,
+          data: {
+            residentName: complaint.resident.profile.full_name || 'Resident',
+            complaintTitle: complaint.title,
+          },
+        },
+      }).catch((emailError) => console.error('send-notification-email failed', emailError));
+    }
+  };
+
+  const openAttachment = async (photoUrl: string | null) => {
+    if (!photoUrl) return;
+    const { data, error } = await supabase.storage
+      .from('complaint-media')
+      .createSignedUrl(photoUrl, 60 * 5);
+
+    if (error) {
+      toast({ title: 'Unable to Open Attachment', description: error.message, variant: 'destructive' });
+      return;
+    }
+    window.open(data.signedUrl, '_blank', 'noopener,noreferrer');
   };
 
   const stats = useMemo(() => {
@@ -277,7 +306,7 @@ const ComplaintsPage = () => {
                 <div>
                   <span className="text-cyan-300 text-sm">Attachment:</span>
                   <div className="mt-2">
-                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => window.open(selectedComplaint.photo_url || '', '_blank', 'noopener,noreferrer')}>
+                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => openAttachment(selectedComplaint.photo_url)}>
                       Open Attachment
                     </Button>
                   </div>
