@@ -38,26 +38,31 @@ const ForgotPasswordDialog = ({ isOpen, onClose }: ForgotPasswordDialogProps) =>
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-sm">
+      <DialogContent className="sm:max-w-sm bg-white border-none rounded-3xl shadow-2xl p-8">
         <DialogHeader>
-          <DialogTitle>Reset Your Password</DialogTitle>
-          <DialogDescription>Enter your email and we'll send you a link to reset your password.</DialogDescription>
+          <DialogTitle className="font-display text-xl font-bold text-slate-900 tracking-tight">Reset Your Password</DialogTitle>
+          <DialogDescription className="text-slate-500">Enter your email and we'll send you a link to reset your password.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="reset-email">Email Address</Label>
+            <Label htmlFor="reset-email" className="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Email Address</Label>
             <Input
               id="reset-email"
               type="email"
               placeholder="Enter your email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className="h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-100 focus-visible:ring-offset-0"
               required
             />
           </div>
 
-          <Button type="submit" className="w-full" disabled={isSending}>
+          <Button
+            type="submit"
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20"
+            disabled={isSending}
+          >
             {isSending ? 'Sending...' : 'Send Reset Link'}
           </Button>
         </form>

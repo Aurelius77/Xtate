@@ -40,8 +40,8 @@ const DemoLoginButtons = () => {
   };
 
   return (
-    <div className="mt-10 flex flex-col items-center gap-3">
-      <p className="text-sm text-cyan-300/80">Or explore instantly with a demo account</p>
+    <div className="flex flex-col items-center gap-3">
+      <p className="text-sm text-slate-400 font-medium">Or explore instantly with a demo account</p>
       <div className="flex flex-wrap justify-center gap-3">
         {(Object.keys(DEMO_ACCOUNTS) as DemoRole[]).map((role) => {
           const { label, icon: Icon } = DEMO_ACCOUNTS[role];
@@ -52,7 +52,7 @@ const DemoLoginButtons = () => {
               variant="outline"
               onClick={() => handleDemoLogin(role)}
               disabled={loadingRole !== null}
-              className="border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10"
+              className="border-gray-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 font-semibold rounded-xl"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />}
               {label}

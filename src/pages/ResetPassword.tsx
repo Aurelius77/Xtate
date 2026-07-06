@@ -60,41 +60,50 @@ const ResetPassword = () => {
     navigate('/dashboard');
   };
 
+  const inputClass = "h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold text-slate-900 focus-visible:ring-2 focus-visible:ring-blue-100 focus-visible:ring-offset-0";
+  const labelClass = "text-[11px] font-bold text-gray-400 uppercase tracking-wider";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader>
-          <CardTitle>Set a New Password</CardTitle>
-          <CardDescription>Choose a new password for your XTATE account.</CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
+      <Card className="w-full max-w-sm bg-white border border-gray-100 rounded-3xl shadow-xl shadow-slate-200/50">
+        <CardHeader className="p-8 pb-4">
+          <CardTitle className="font-display text-2xl font-bold text-slate-900 tracking-tight">Set a New Password</CardTitle>
+          <CardDescription className="text-slate-500">Choose a new password for your XTATE account.</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-8 pt-0">
           {hasRecoverySession === false ? (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-slate-500">
               This reset link is invalid or has expired. Please request a new one from the sign-in screen.
             </p>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="new-password">New Password</Label>
+                <Label htmlFor="new-password" className={labelClass}>New Password</Label>
                 <Input
                   id="new-password"
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className={inputClass}
                   required
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="confirm-new-password">Confirm Password</Label>
+                <Label htmlFor="confirm-new-password" className={labelClass}>Confirm Password</Label>
                 <Input
                   id="confirm-new-password"
                   type="password"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
+                  className={inputClass}
                   required
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={isSaving || hasRecoverySession === null}>
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20"
+                disabled={isSaving || hasRecoverySession === null}
+              >
                 {isSaving ? 'Updating...' : 'Update Password'}
               </Button>
             </form>

@@ -23,6 +23,8 @@ export default {
 			fontFamily: {
 				'inter': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 				'sans': ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+				'display': ['Syne', 'sans-serif'],
+				'body': ['"DM Sans"', 'sans-serif'],
 			},
 			colors: {
 				border: 'hsl(var(--border))',

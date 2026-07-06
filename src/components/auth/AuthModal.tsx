@@ -101,37 +101,56 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
     }
   };
 
+  const inputClass = "h-12 border-gray-100 bg-gray-50 rounded-xl font-semibold text-slate-900 placeholder:text-slate-400 focus-visible:ring-2 focus-visible:ring-blue-100 focus-visible:ring-offset-0";
+  const labelClass = "text-[11px] font-bold text-gray-400 uppercase tracking-wider";
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md bg-white border-none rounded-3xl shadow-2xl p-8">
         <DialogHeader>
-          <DialogTitle className="text-center text-2xl font-bold">
+          <div className="flex justify-center mb-2">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-600/20">
+              <Shield className="text-white h-6 w-6" />
+            </div>
+          </div>
+          <DialogTitle className="text-center font-display text-2xl font-bold text-slate-900 tracking-tight">
             Welcome to XTATE
           </DialogTitle>
         </DialogHeader>
 
         <Tabs value={mode} onValueChange={(value) => onModeChange(value as 'login' | 'register')}>
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="login">Sign In</TabsTrigger>
-            <TabsTrigger value="register">Register</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-gray-50 rounded-xl h-12 p-1">
+            <TabsTrigger
+              value="login"
+              className="rounded-lg font-bold text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+            >
+              Sign In
+            </TabsTrigger>
+            <TabsTrigger
+              value="register"
+              className="rounded-lg font-bold text-slate-400 data-[state=active]:bg-white data-[state=active]:text-slate-900 data-[state=active]:shadow-sm"
+            >
+              Register
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="login" className="mt-6">
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email" className={labelClass}>Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={loginForm.email}
                   onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
-              
+
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className={labelClass}>Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -139,13 +158,14 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                     placeholder="Enter your password"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                    className={inputClass}
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2 text-slate-400 hover:bg-transparent hover:text-slate-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -153,8 +173,11 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 </div>
               </div>
 
-
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20"
+                disabled={isLoading}
+              >
                 {isLoading ? "Signing in..." : "Sign In"}
               </Button>
 
@@ -162,7 +185,7 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                 <Button
                   type="button"
                   variant="link"
-                  className="text-sm text-muted-foreground"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-semibold"
                   onClick={() => setForgotPasswordOpen(true)}
                 >
                   Forgot password?
@@ -174,53 +197,57 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
           <TabsContent value="register" className="mt-6">
             <form onSubmit={handleRegister} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName" className={labelClass}>Full Name</Label>
                 <Input
                   id="fullName"
                   placeholder="Enter your full name"
                   value={registerForm.fullName}
                   onChange={(e) => setRegisterForm({ ...registerForm, fullName: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email Address</Label>
+                <Label htmlFor="email" className={labelClass}>Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={registerForm.email}
                   onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
+                <Label htmlFor="phone" className={labelClass}>Phone Number</Label>
                 <Input
                   id="phone"
                   type="tel"
                   placeholder="Enter your phone number"
                   value={registerForm.phone}
                   onChange={(e) => setRegisterForm({ ...registerForm, phone: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="houseUnit">House/Unit Number</Label>
+                <Label htmlFor="houseUnit" className={labelClass}>House/Unit Number</Label>
                 <Input
                   id="houseUnit"
                   placeholder="e.g., Block A, Flat 3"
                   value={registerForm.houseUnit}
                   onChange={(e) => setRegisterForm({ ...registerForm, houseUnit: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className={labelClass}>Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -228,13 +255,14 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
                     placeholder="Create a strong password"
                     value={registerForm.password}
                     onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                    className={inputClass}
                     required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-0 top-0 h-full px-3 py-2 text-slate-400 hover:bg-transparent hover:text-slate-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -243,26 +271,31 @@ const AuthModal = ({ isOpen, onClose, mode, onModeChange }: AuthModalProps) => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="confirmPassword">Confirm Password</Label>
+                <Label htmlFor="confirmPassword" className={labelClass}>Confirm Password</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="Confirm your password"
                   value={registerForm.confirmPassword}
                   onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                  className={inputClass}
                   required
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
+              <Button
+                type="submit"
+                className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-600/20"
+                disabled={isLoading}
+              >
                 {isLoading ? "Creating account..." : "Create Account"}
               </Button>
 
-              <Card className="border-amber-200 bg-amber-50">
+              <Card className="border-amber-100 bg-amber-50 rounded-2xl">
                 <CardContent className="pt-4">
                   <div className="flex items-center space-x-2 text-amber-800">
                     <Shield className="h-4 w-4" />
-                    <span className="text-sm font-medium">Resident Account</span>
+                    <span className="text-sm font-bold">Resident Account</span>
                   </div>
                   <p className="text-xs text-amber-700 mt-1">
                     All public registrations create resident accounts. Admin and security roles are
