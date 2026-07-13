@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, UserRound, Home, BookOpen, ShieldCheck,
+  LayoutDashboard, Users, Home, BookOpen, ShieldCheck,
   Car, UserPlus, Wallet, Receipt, Calculator, Wrench, Trash2,
   Megaphone, MessageSquare, Bell, Calendar, ScrollText,
-  FileBarChart, PieChart, Settings, UserCog, Lock, Puzzle,
+  FileBarChart, PieChart, Settings, UserCog, Lock,
   LogOut, HelpCircle, ChevronRight, MessageCircle, ShoppingBag,
   KeyRound, Upload, AlertCircle
 } from 'lucide-react';
@@ -26,7 +26,6 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       title: 'MANAGEMENT',
       items: [
         { icon: Users, label: 'Residents', page: 'residents' },
-        { icon: UserRound, label: 'Tenants', page: 'tenants' },
         { icon: Home, label: 'Properties', page: 'properties' },
         { icon: BookOpen, label: 'Directory', page: 'directory' },
         { icon: KeyRound, label: 'Access Codes', page: 'access-codes' },
@@ -80,7 +79,6 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
         { icon: UserCog, label: 'User Management', page: 'settings' },
         { icon: Upload, label: 'Data Import', page: 'data-import' },
         { icon: Lock, label: 'Roles & Permissions', page: 'permissions' },
-        { icon: Puzzle, label: 'Integrations', page: 'integrations' },
       ]
     }
   ];
