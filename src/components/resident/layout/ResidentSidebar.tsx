@@ -2,7 +2,8 @@ import React from 'react';
 import {
   LayoutDashboard, Key, ShieldCheck, Wallet, Receipt,
   MessageSquare, Bell, Calendar, ScrollText,
-  Settings, HelpCircle, LogOut, ChevronRight, Home, X
+  Settings, HelpCircle, LogOut, ChevronRight, Home, X,
+  MessageCircle, ShoppingBag, Wrench
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
@@ -40,6 +41,14 @@ const ResidentSidebar = ({ currentPage, setCurrentPage, onLogout, mobileOpen, on
         { icon: MessageSquare, label: 'Complaints', page: 'complaints' },
         { icon: Calendar, label: 'Meetings', page: 'meetings' },
         { icon: ScrollText, label: 'Documents', page: 'documents' },
+      ]
+    },
+    {
+      title: 'COMMUNITY',
+      items: [
+        { icon: MessageCircle, label: 'Forum', page: 'forum' },
+        { icon: ShoppingBag, label: 'Marketplace', page: 'marketplace' },
+        { icon: Wrench, label: 'Hire a Technician', page: 'technicians' },
       ]
     },
     {

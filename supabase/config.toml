@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.create-resident-account]
 verify_jwt = false
+
+[functions.generate-recurring-dues]
+verify_jwt = false

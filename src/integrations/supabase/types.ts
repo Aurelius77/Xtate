@@ -326,6 +326,8 @@ export type Database = {
           frequency: Database["public"]["Enums"]["due_frequency"]
           id: string
           is_active: boolean
+          last_generated_at: string | null
+          next_run_date: string | null
           title: string
         }
         Insert: {
@@ -338,6 +340,8 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["due_frequency"]
           id?: string
           is_active?: boolean
+          last_generated_at?: string | null
+          next_run_date?: string | null
           title: string
         }
         Update: {
@@ -350,6 +354,8 @@ export type Database = {
           frequency?: Database["public"]["Enums"]["due_frequency"]
           id?: string
           is_active?: boolean
+          last_generated_at?: string | null
+          next_run_date?: string | null
           title?: string
         }
         Relationships: [
@@ -441,6 +447,157 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      forum_replies: {
+        Row: {
+          body: string
+          created_at: string
+          estate_id: string
+          id: string
+          resident_id: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          estate_id: string
+          id?: string
+          resident_id: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          estate_id?: string
+          id?: string
+          resident_id?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_replies_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_replies_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "forum_threads"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_replies_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      forum_threads: {
+        Row: {
+          body: string
+          created_at: string
+          estate_id: string
+          id: string
+          is_locked: boolean
+          resident_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          body?: string
+          created_at?: string
+          estate_id: string
+          id?: string
+          is_locked?: boolean
+          resident_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          estate_id?: string
+          id?: string
+          is_locked?: boolean
+          resident_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "forum_threads_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "forum_threads_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_listings: {
+        Row: {
+          created_at: string
+          description: string
+          estate_id: string
+          id: string
+          photo_url: string | null
+          price: number
+          resident_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          estate_id: string
+          id?: string
+          photo_url?: string | null
+          price?: number
+          resident_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          estate_id?: string
+          id?: string
+          photo_url?: string | null
+          price?: number
+          resident_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_listings_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_listings_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       meetings: {
         Row: {
@@ -570,6 +727,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      platform_settings: {
+        Row: {
+          allow_new_registrations: boolean
+          id: string
+          maintenance_mode: boolean
+          platform_name: string
+          primary_color: string
+          support_email: string
+          trial_mode_enabled: boolean
+          updated_at: string
+        }
+        Insert: {
+          allow_new_registrations?: boolean
+          id?: string
+          maintenance_mode?: boolean
+          platform_name?: string
+          primary_color?: string
+          support_email?: string
+          trial_mode_enabled?: boolean
+          updated_at?: string
+        }
+        Update: {
+          allow_new_registrations?: boolean
+          id?: string
+          maintenance_mode?: boolean
+          platform_name?: string
+          primary_color?: string
+          support_email?: string
+          trial_mode_enabled?: boolean
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -837,6 +1027,108 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technician_bookings: {
+        Row: {
+          created_at: string
+          estate_id: string
+          id: string
+          notes: string | null
+          requested_date: string
+          resident_id: string
+          status: string
+          technician_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          estate_id: string
+          id?: string
+          notes?: string | null
+          requested_date: string
+          resident_id: string
+          status?: string
+          technician_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          estate_id?: string
+          id?: string
+          notes?: string | null
+          requested_date?: string
+          resident_id?: string
+          status?: string
+          technician_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technician_bookings_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technician_bookings_technician_id_fkey"
+            columns: ["technician_id"]
+            isOneToOne: false
+            referencedRelation: "technicians"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technician_bookings_resident_id_fkey"
+            columns: ["resident_id"]
+            isOneToOne: false
+            referencedRelation: "residents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technicians: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          estate_id: string
+          id: string
+          is_active: boolean
+          name: string
+          phone: string
+          rate_info: string | null
+          trade: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          estate_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          phone: string
+          rate_info?: string | null
+          trade: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          estate_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          phone?: string
+          rate_info?: string | null
+          trade?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technicians_estate_id_fkey"
+            columns: ["estate_id"]
+            isOneToOne: false
+            referencedRelation: "estates"
             referencedColumns: ["id"]
           },
         ]

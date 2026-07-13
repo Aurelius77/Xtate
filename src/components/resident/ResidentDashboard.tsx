@@ -31,7 +31,11 @@ import ResidentSettingsPage from './pages/ResidentSettingsPage';
 import SupportPage from './pages/SupportPage';
 import NotificationsPage from './pages/NotificationsPage';
 import ComingSoonPage from './pages/ComingSoonPage';
+import ForumPage from './pages/ForumPage';
+import MarketplacePage from './pages/MarketplacePage';
+import TechniciansPage from './pages/TechniciansPage';
 import ResidentSearchDialog from './ResidentSearchDialog';
+import FeatureGate from '@/components/features/FeatureGate';
 
 const ResidentDashboard = () => {
   const { user, logout } = useAuth();
@@ -51,6 +55,9 @@ const ResidentDashboard = () => {
       case 'settings': return <ResidentSettingsPage />;
       case 'support': return <SupportPage />;
       case 'notifications': return <NotificationsPage />;
+      case 'forum': return <FeatureGate feature="forum"><ForumPage /></FeatureGate>;
+      case 'marketplace': return <FeatureGate feature="marketplace"><MarketplacePage /></FeatureGate>;
+      case 'technicians': return <FeatureGate feature="technicians"><TechniciansPage /></FeatureGate>;
 
       // Handle missing pages with Coming Soon component
       case 'residents': return <ComingSoonPage title="Residents" onBack={() => setCurrentPage('dashboard')} />;

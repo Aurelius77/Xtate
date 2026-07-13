@@ -82,6 +82,19 @@ const createEmptyDueForm = (): DueFormState => ({
 
 const formatCurrency = (amount: number) => `₦${amount.toLocaleString()}`;
 
+// Mirrors the interval logic in the generate-recurring-dues edge function so a
+// newly created recurring due is immediately eligible for the next scheduled run.
+const addInterval = (dateStr: string, frequency: DueFrequency) => {
+  const date = new Date(`${dateStr}T00:00:00Z`);
+  switch (frequency) {
+    case 'monthly': date.setUTCMonth(date.getUTCMonth() + 1); break;
+    case 'quarterly': date.setUTCMonth(date.getUTCMonth() + 3); break;
+    case 'annually': date.setUTCFullYear(date.getUTCFullYear() + 1); break;
+    default: return null;
+  }
+  return date.toISOString().slice(0, 10);
+};
+
 const getTimeAgo = (date: Date) => {
   const diff = Date.now() - date.getTime();
   const hours = Math.floor(diff / 3600000);
@@ -337,6 +350,7 @@ const DuesPaymentsPage = () => {
           created_by: user?.id || null,
           frequency: dueForm.frequency,
           is_active: true,
+          next_run_date: addInterval(dueForm.dueDate, dueForm.frequency),
         })
         .select('id')
         .single();

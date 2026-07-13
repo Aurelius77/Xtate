@@ -4,7 +4,7 @@ import {
   Car, UserPlus, Wallet, Receipt, Calculator, Wrench, Trash2,
   Megaphone, MessageSquare, Bell, Calendar, ScrollText,
   FileBarChart, PieChart, Settings, UserCog, Lock, Puzzle,
-  LogOut, HelpCircle, ChevronRight
+  LogOut, HelpCircle, ChevronRight, MessageCircle, ShoppingBag
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
@@ -43,6 +43,14 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
         { icon: Wrench, label: 'Maintenance', page: 'maintenance' },
         { icon: Trash2, label: 'Waste Management', page: 'waste' },
         { icon: Megaphone, label: 'Announcements', page: 'announcements' },
+      ]
+    },
+    {
+      title: 'COMMUNITY',
+      items: [
+        { icon: MessageCircle, label: 'Forum Moderation', page: 'forum-moderation' },
+        { icon: ShoppingBag, label: 'Marketplace', page: 'marketplace-moderation' },
+        { icon: Wrench, label: 'Technicians', page: 'technicians' },
       ]
     },
     {

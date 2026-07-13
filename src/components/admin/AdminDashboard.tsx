@@ -32,6 +32,10 @@ import AccessCodeManagementPage from './pages/AccessCodeManagementPage';
 import SecurityManagementPage from './pages/SecurityManagementPage';
 import DataImportPage from './pages/DataImportPage';
 import AdminSettingsPage from './pages/AdminSettingsPage';
+import ForumModerationPage from './pages/ForumModerationPage';
+import MarketplaceModerationPage from './pages/MarketplaceModerationPage';
+import TechnicianManagementPage from './pages/TechnicianManagementPage';
+import FeatureGate from '@/components/features/FeatureGate';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -51,6 +55,9 @@ const AdminDashboard = () => {
       case 'security-management': return <SecurityManagementPage />;
       case 'data-import': return <DataImportPage />;
       case 'settings': return <AdminSettingsPage />;
+      case 'forum-moderation': return <FeatureGate feature="forum"><ForumModerationPage /></FeatureGate>;
+      case 'marketplace-moderation': return <FeatureGate feature="marketplace"><MarketplaceModerationPage /></FeatureGate>;
+      case 'technicians': return <FeatureGate feature="technicians"><TechnicianManagementPage /></FeatureGate>;
       default: return renderDashboard();
     }
   };
