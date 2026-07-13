@@ -1,9 +1,20 @@
-import { useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { logAuditEvent } from '@/lib/auditLog';
 
-export const useImpersonation = () => {
+interface ImpersonationContextValue {
+  isImpersonating: boolean;
+  impersonatedEstateId: string | null;
+  impersonatedEstateName: string | null;
+  startImpersonation: (estateId: string, estateName: string, tenantId?: string) => void;
+  stopImpersonation: () => void;
+  isSuperAdmin: boolean;
+}
+
+const ImpersonationContext = createContext<ImpersonationContextValue | undefined>(undefined);
+
+export const ImpersonationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [impersonatedEstateId, setImpersonatedEstateId] = useState<string | null>(
@@ -42,12 +53,26 @@ export const useImpersonation = () => {
     }
   }, [toast, user, impersonatedEstateName]);
 
-  return {
-    isImpersonating: isSuperAdmin && !!impersonatedEstateId,
-    impersonatedEstateId,
-    impersonatedEstateName,
-    startImpersonation,
-    stopImpersonation,
-    isSuperAdmin,
-  };
+  return (
+    <ImpersonationContext.Provider
+      value={{
+        isImpersonating: isSuperAdmin && !!impersonatedEstateId,
+        impersonatedEstateId,
+        impersonatedEstateName,
+        startImpersonation,
+        stopImpersonation,
+        isSuperAdmin,
+      }}
+    >
+      {children}
+    </ImpersonationContext.Provider>
+  );
+};
+
+export const useImpersonation = () => {
+  const context = useContext(ImpersonationContext);
+  if (!context) {
+    throw new Error('useImpersonation must be used within an ImpersonationProvider');
+  }
+  return context;
 };

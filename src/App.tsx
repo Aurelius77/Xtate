@@ -8,6 +8,7 @@ import { SecureAuthProvider, useAuth } from "@/contexts/SecureAuthContext";
 import { TenantProvider } from "@/contexts/TenantContext";
 import { FeatureFlagProvider } from "@/contexts/FeatureFlagContext";
 import { EstateProvider } from "@/contexts/EstateContext";
+import { ImpersonationProvider } from "@/hooks/useImpersonation";
 import { InactivityProvider } from "@/components/security/InactivityProvider";
 import PWAInstallPrompt from "@/components/pwa/PWAInstallPrompt";
 import Index from "./pages/Index";
@@ -81,6 +82,7 @@ const App = () => (
         <TenantProvider>
           <FeatureFlagProvider>
             <EstateProvider>
+              <ImpersonationProvider>
               <InactivityProvider>
                 <BrowserRouter>
                   <Routes>
@@ -140,6 +142,7 @@ const App = () => (
                   <PWAInstallPrompt />
                 </BrowserRouter>
               </InactivityProvider>
+              </ImpersonationProvider>
             </EstateProvider>
           </FeatureFlagProvider>
         </TenantProvider>

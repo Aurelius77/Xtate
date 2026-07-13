@@ -7,17 +7,17 @@ import { Calendar, ChevronDown, Download } from 'lucide-react';
 import AdminSidebar from './layout/AdminSidebar';
 import AdminHeader from './layout/AdminHeader';
 
-// Import high-fidelity dashboard components
+// Import high-fidelity dashboard components — all estate-scoped, real data
 import AdminDashboardStats from './dashboard/AdminDashboardStats';
 import AdminPaymentChart from './dashboard/AdminPaymentChart';
 import AdminQuickActions from './dashboard/AdminQuickActions';
 import AdminRecentPayments from './dashboard/AdminRecentPayments';
-import AdminDuesOverview from '../resident/dashboard/ResidentDuesOverview'; // Reusing premium styled components
-import AdminWalletCard from '../resident/dashboard/ResidentWalletCard';
-import AdminSystemOverview from '../resident/dashboard/ResidentSystemOverview';
-import ResidentsByOccupancy from '../resident/dashboard/ResidentsByOccupancy';
-import AdminPendingApprovals from '../resident/dashboard/ResidentPendingApprovals';
-import AdminMaintenanceTickets from '../resident/dashboard/ResidentMaintenanceTickets';
+import AdminDuesOverview from './dashboard/AdminDuesOverview';
+import AdminFinanceSnapshot from './dashboard/AdminFinanceSnapshot';
+import AdminEstateSnapshot from './dashboard/AdminEstateSnapshot';
+import AdminResidentStatus from './dashboard/AdminResidentStatus';
+import AdminAttentionQueue from './dashboard/AdminAttentionQueue';
+import AdminMaintenanceTickets from './dashboard/AdminMaintenanceTickets';
 import AdminAnnouncements from '../resident/dashboard/ResidentAnnouncements';
 
 // Import page components
@@ -83,6 +83,16 @@ const AdminDashboard = () => {
     }
   };
 
+  const weekRangeLabel = (() => {
+    const now = new Date();
+    const start = new Date(now);
+    start.setDate(now.getDate() - now.getDay());
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return `${fmt(start)} - ${fmt(end)}, ${now.getFullYear()}`;
+  })();
+
   const renderDashboard = () => (
     <div className="space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-500 pb-10">
       {/* Row 0: Greeting & Date Action Bar */}
@@ -97,7 +107,7 @@ const AdminDashboard = () => {
         <div className="flex items-center gap-3">
           <Button variant="outline" className="h-11 bg-white border-gray-100 rounded-xl px-4 flex items-center gap-3 text-sm font-semibold text-gray-700 shadow-sm hover:bg-gray-50 border-none ring-1 ring-gray-100">
             <Calendar className="h-4 w-4 text-gray-400" />
-            May 13 - May 19, 2025
+            {weekRangeLabel}
             <ChevronDown className="h-4 w-4 text-gray-400 ml-1" />
           </Button>
 
@@ -125,17 +135,17 @@ const AdminDashboard = () => {
           <AdminRecentPayments />
         </div>
         <div className="xl:col-span-2 space-y-6">
-          <AdminWalletCard />
-          <ResidentsByOccupancy />
+          <AdminFinanceSnapshot onNavigate={setCurrentPage} />
+          <AdminResidentStatus />
         </div>
       </div>
 
-      {/* Row 3: Detail Lists + System Overview */}
+      {/* Row 3: Detail Lists + Estate Snapshot */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <AdminPendingApprovals />
+        <AdminAttentionQueue />
         <AdminMaintenanceTickets />
         <AdminAnnouncements />
-        <AdminSystemOverview />
+        <AdminEstateSnapshot onNavigate={setCurrentPage} />
       </div>
 
       {/* Row 4: Quick Actions */}

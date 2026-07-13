@@ -1,83 +1,131 @@
 import React, { useEffect, useState } from 'react';
-import { AreaChart, Area, ResponsiveContainer } from 'recharts';
 import {
-  Users, DollarSign, Clock, AlertCircle,
-  ChevronUp, ChevronDown
+  Users, DollarSign, Clock, AlertCircle, TrendingUp, ChevronUp, ChevronDown
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
 
-const SPARKLINE_DATA = [
-  { value: 30 }, { value: 40 }, { value: 35 }, { value: 50 },
-  { value: 45 }, { value: 60 }, { value: 55 }, { value: 70 }
-];
+interface DuesRecord { amount: number; status: string; paid_at: string | null }
 
 const AdminDashboardStats = () => {
   const estateId = useEstateId();
+  const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
-    totalResidents: 512,
-    totalCollected: 12842600,
-    outstandingDues: 3955200,
-    activeTickets: 23,
-    collectionRate: 76.4
+    totalCollected: 0,
+    collectedChangePct: 0,
+    collectionRate: 0,
+    outstandingDues: 0,
+    totalResidents: 0,
+    newResidentsThisMonth: 0,
+    activeTickets: 0,
   });
-  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!estateId) { setLoading(false); return; }
+    (async () => {
+      setLoading(true);
+      const [duesRes, complaintsRes, residentsRes] = await Promise.all([
+        supabase.from('resident_dues').select('amount, status, paid_at').eq('estate_id', estateId),
+        supabase.from('complaints').select('status').eq('estate_id', estateId),
+        supabase.from('residents').select('is_active, created_at').eq('estate_id', estateId),
+      ]);
+
+      const dues = (duesRes.data ?? []) as DuesRecord[];
+      const complaints = complaintsRes.data ?? [];
+      const residents = residentsRes.data ?? [];
+
+      const paid = dues.filter((d) => d.status === 'paid');
+      const outstanding = dues.filter((d) => d.status === 'pending' || d.status === 'overdue');
+      const totalCollected = paid.reduce((sum, d) => sum + Number(d.amount), 0);
+      const outstandingDues = outstanding.reduce((sum, d) => sum + Number(d.amount), 0);
+      const collectible = totalCollected + outstandingDues;
+      const collectionRate = collectible > 0 ? (totalCollected / collectible) * 100 : 0;
+
+      const now = new Date();
+      const thisMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
+      const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const lastMonthKey = `${lastMonthDate.getFullYear()}-${lastMonthDate.getMonth()}`;
+
+      const collectedThisMonth = paid
+        .filter((d) => d.paid_at && `${new Date(d.paid_at).getFullYear()}-${new Date(d.paid_at).getMonth()}` === thisMonthKey)
+        .reduce((sum, d) => sum + Number(d.amount), 0);
+      const collectedLastMonth = paid
+        .filter((d) => d.paid_at && `${new Date(d.paid_at).getFullYear()}-${new Date(d.paid_at).getMonth()}` === lastMonthKey)
+        .reduce((sum, d) => sum + Number(d.amount), 0);
+      const collectedChangePct = collectedLastMonth > 0
+        ? ((collectedThisMonth - collectedLastMonth) / collectedLastMonth) * 100
+        : (collectedThisMonth > 0 ? 100 : 0);
+
+      const activeTickets = complaints.filter((c) => c.status === 'open' || c.status === 'in_progress').length;
+      const totalResidents = residents.filter((r) => r.is_active).length;
+      const newResidentsThisMonth = residents.filter((r) => {
+        const created = new Date(r.created_at);
+        return created.getMonth() === now.getMonth() && created.getFullYear() === now.getFullYear();
+      }).length;
+
+      setStats({
+        totalCollected,
+        collectedChangePct,
+        collectionRate,
+        outstandingDues,
+        totalResidents,
+        newResidentsThisMonth,
+        activeTickets,
+      });
+      setLoading(false);
+    })();
+  }, [estateId]);
 
   const statCards = [
     {
       title: 'Total Collections',
       value: `₦${stats.totalCollected.toLocaleString()}`,
-      change: '+ 18.6%',
-      changeType: 'up',
+      change: `${stats.collectedChangePct >= 0 ? '+' : ''}${stats.collectedChangePct.toFixed(1)}%`,
+      changeType: stats.collectedChangePct >= 0 ? 'up' : 'down',
       icon: DollarSign,
       color: '#22c55e',
       bgColor: 'bg-emerald-50',
-      sparkColor: '#22c55e',
-      trendText: 'vs last month'
+      trendText: 'vs last month',
     },
     {
       title: 'Collection Rate',
-      value: `${stats.collectionRate}%`,
-      change: '+ 6.3%',
+      value: `${stats.collectionRate.toFixed(1)}%`,
+      change: null,
       changeType: 'up',
       icon: TrendingUp,
       color: '#a855f7',
       bgColor: 'bg-purple-50',
-      sparkColor: '#a855f7',
-      trendText: 'vs last month'
+      trendText: 'estate-wide',
     },
     {
       title: 'Outstanding Dues',
       value: `₦${stats.outstandingDues.toLocaleString()}`,
-      change: '↓ 8.4%',
+      change: null,
       changeType: 'down',
       icon: Clock,
       color: '#f59e0b',
       bgColor: 'bg-orange-50',
-      sparkColor: '#f59e0b',
-      trendText: 'vs last month'
+      trendText: 'needs collection',
     },
     {
       title: 'Total Residents',
       value: stats.totalResidents.toString(),
-      change: '+ 4 new',
+      change: stats.newResidentsThisMonth > 0 ? `+${stats.newResidentsThisMonth} new` : null,
       changeType: 'up',
       icon: Users,
       color: '#3b82f6',
       bgColor: 'bg-blue-50',
-      sparkColor: '#3b82f6',
-      trendText: 'this month'
+      trendText: 'this month',
     },
     {
       title: 'Active Tickets',
       value: stats.activeTickets.toString(),
-      change: '↓ 5 resolved',
+      change: null,
       changeType: 'down',
       icon: AlertCircle,
       color: '#ef4444',
       bgColor: 'bg-red-50',
-      sparkColor: '#ef4444',
-      trendText: 'this week'
+      trendText: 'needs attention',
     },
   ];
 
@@ -94,40 +142,18 @@ const AdminDashboardStats = () => {
             </div>
             <div className="space-y-0.5">
               <p className="text-xs font-semibold text-gray-500 tracking-tight">{stat.title}</p>
-              <h3 className="text-2xl font-black text-gray-900 tracking-tight leading-none mt-1">{stat.value}</h3>
+              <h3 className="text-2xl font-black text-gray-900 tracking-tight leading-none mt-1">{loading ? '...' : stat.value}</h3>
             </div>
           </div>
 
-          <div className="flex items-end justify-between gap-2">
-            <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
+            {stat.change && (
               <div className={`flex items-center font-bold text-[11px] whitespace-nowrap ${stat.changeType === 'up' ? 'text-emerald-600' : 'text-rose-500'}`}>
                 {stat.changeType === 'up' ? <ChevronUp className="h-3 w-3 stroke-[3px]" /> : <ChevronDown className="h-3 w-3 stroke-[3px]" />}
                 {stat.change}
               </div>
-              <p className="text-[10px] font-medium text-gray-400 whitespace-nowrap">{stat.trendText}</p>
-            </div>
-
-            <div className="h-8 w-20 flex-shrink-0">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={SPARKLINE_DATA}>
-                  <defs>
-                    <linearGradient id={`grad-${index}`} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={stat.sparkColor} stopOpacity={0.15} />
-                      <stop offset="95%" stopColor={stat.sparkColor} stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <Area
-                    type="monotone"
-                    dataKey="value"
-                    stroke={stat.sparkColor}
-                    strokeWidth={2}
-                    fillOpacity={1}
-                    fill={`url(#grad-${index})`}
-                    isAnimationActive={true}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
+            )}
+            <p className="text-[10px] font-medium text-gray-400 whitespace-nowrap">{stat.trendText}</p>
           </div>
         </div>
       ))}
@@ -135,5 +161,4 @@ const AdminDashboardStats = () => {
   );
 };
 
-import { TrendingUp } from 'lucide-react';
 export default AdminDashboardStats;
