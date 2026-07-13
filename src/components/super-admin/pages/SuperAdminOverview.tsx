@@ -41,7 +41,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
   }, []);
 
   const statCards = [
-    { title: 'Total Tenants', value: stats.tenants, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-500/10' },
+    { title: 'Total Estates', value: stats.tenants, icon: Building2, color: 'text-violet-400', bg: 'bg-violet-500/10' },
     { title: 'Total Users', value: stats.users, icon: Users, color: 'text-blue-400', bg: 'bg-blue-500/10' },
     { title: 'Active Billing', value: stats.activeBilling, icon: CreditCard, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
     { title: 'Platform Health', value: '99.9%', icon: Activity, color: 'text-amber-400', bg: 'bg-amber-500/10' },
@@ -51,7 +51,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Platform Overview</h1>
-        <p className="text-muted-foreground">Monitor and manage all tenants from one place</p>
+        <p className="text-muted-foreground">Monitor and manage all estates from one place</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -74,7 +74,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <Card className="bg-card border-border">
           <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="text-lg">Recent Tenants</CardTitle>
+            <CardTitle className="text-lg">Recent Estates</CardTitle>
             <Button variant="ghost" size="sm" onClick={() => onNavigate('estates')}>
               View All <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
@@ -83,7 +83,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
             {loading ? (
               <p className="text-muted-foreground text-sm">Loading...</p>
             ) : recentTenants.length === 0 ? (
-              <p className="text-muted-foreground text-sm">No tenants found</p>
+              <p className="text-muted-foreground text-sm">No estates found</p>
             ) : (
               <div className="space-y-3">
                 {recentTenants.map((tenant) => (
@@ -113,7 +113,7 @@ const SuperAdminOverview = ({ onNavigate }: OverviewProps) => {
           </CardHeader>
           <CardContent className="space-y-3">
             <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('estates')}>
-              <Building2 className="h-4 w-4 mr-2" /> Manage Tenants
+              <Building2 className="h-4 w-4 mr-2" /> Manage Estates
             </Button>
             <Button className="w-full justify-start" variant="outline" onClick={() => onNavigate('billing')}>
               <CreditCard className="h-4 w-4 mr-2" /> Manage Billing

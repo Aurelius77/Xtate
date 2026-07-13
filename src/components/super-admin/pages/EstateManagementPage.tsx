@@ -73,7 +73,7 @@ const EstateManagementPage = () => {
     await supabase.from('tenants').delete().eq('id', tenant.id);
     if (tenant.estate_id) await supabase.from('estates').delete().eq('id', tenant.estate_id);
     fetchTenants();
-    toast({ title: 'Tenant Deleted' });
+    toast({ title: 'Estate Deleted' });
   };
 
   const filtered = tenants.filter(t => t.name.toLowerCase().includes(search.toLowerCase()) || t.slug.toLowerCase().includes(search.toLowerCase()));
@@ -82,11 +82,11 @@ const EstateManagementPage = () => {
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Tenant Management</h1>
-          <p className="text-muted-foreground">Create and manage all tenant estates on XTATE</p>
+          <h1 className="text-2xl font-bold text-foreground">Estate Management</h1>
+          <p className="text-muted-foreground">Create and manage all estates on XTATE</p>
         </div>
         <Button className="bg-gradient-to-r from-violet-600 to-purple-600 text-white" onClick={() => setShowCreate(true)}>
-          <Plus className="h-4 w-4 mr-2" /> New Tenant
+          <Plus className="h-4 w-4 mr-2" /> New Estate
         </Button>
       </div>
 
@@ -95,11 +95,11 @@ const EstateManagementPage = () => {
 
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-        <Input className="pl-10" placeholder="Search tenants..." value={search} onChange={e => setSearch(e.target.value)} />
+        <Input className="pl-10" placeholder="Search estates..." value={search} onChange={e => setSearch(e.target.value)} />
       </div>
 
       {loading ? (
-        <p className="text-muted-foreground">Loading tenants...</p>
+        <p className="text-muted-foreground">Loading estates...</p>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filtered.map((tenant) => (

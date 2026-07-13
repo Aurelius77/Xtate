@@ -35,13 +35,13 @@ const SubscriptionManagementPage = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Billing Overview</h1>
-        <p className="text-muted-foreground">Manage tenant plans, billing cycles, and renewal status</p>
+        <p className="text-muted-foreground">Manage estate plans, billing cycles, and renewal status</p>
       </div>
 
       {loading ? (
         <p className="text-muted-foreground">Loading...</p>
       ) : rows.length === 0 ? (
-        <p className="text-muted-foreground">No tenant billing records yet.</p>
+        <p className="text-muted-foreground">No estate billing records yet.</p>
       ) : (
         <div className="space-y-4">
           {rows.map((row) => (
@@ -53,17 +53,14 @@ const SubscriptionManagementPage = () => {
                       <CreditCard className="h-5 w-5 text-emerald-400" />
                     </div>
                     <div>
-                      <p className="font-medium text-foreground">{row.tenants?.name || 'Unknown Tenant'}</p>
-                      <p className="text-xs text-muted-foreground">/{row.tenants?.slug || 'tenant'} • Since {new Date(row.created_at).toLocaleDateString()}</p>
+                      <p className="font-medium text-foreground">{row.tenants?.name || 'Unknown Estate'}</p>
+                      <p className="text-xs text-muted-foreground">/{row.tenants?.slug || 'estate'} • Since {new Date(row.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3 flex-wrap">
                     <Select value={row.plan} onValueChange={v => updateBilling(row, 'plan', v)}>
                       <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="basic">Basic</SelectItem>
-                        <SelectItem value="pro">Pro</SelectItem>
-                        <SelectItem value="enterprise">Enterprise</SelectItem>
                         <SelectItem value="free">Free</SelectItem>
                         <SelectItem value="standard">Standard</SelectItem>
                         <SelectItem value="custom">Custom</SelectItem>

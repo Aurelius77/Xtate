@@ -13,7 +13,7 @@ const SuperAdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurren
   const menuItems = [
     { label: 'Overview', icon: LayoutDashboard, page: 'dashboard' },
     { label: 'Analytics', icon: BarChart3, page: 'analytics' },
-    { label: 'Tenants', icon: Building2, page: 'estates' },
+    { label: 'Estates', icon: Building2, page: 'estates' },
     { label: 'Billing', icon: CreditCard, page: 'billing' },
     { label: 'Audit Logs', icon: ScrollText, page: 'audit-logs' },
     { label: 'Support', icon: LifeBuoy, page: 'support' },

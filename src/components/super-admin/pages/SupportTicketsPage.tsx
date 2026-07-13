@@ -35,7 +35,7 @@ const SupportTicketsPage = () => {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Support Tickets</h1>
-        <p className="text-muted-foreground">Track tenant support requests and platform issues</p>
+        <p className="text-muted-foreground">Track estate support requests and platform issues</p>
       </div>
 
       {loading ? (
@@ -60,7 +60,7 @@ const SupportTicketsPage = () => {
                     </div>
                     <p className="text-sm text-muted-foreground mb-2">{ticket.message}</p>
                     <p className="text-xs text-muted-foreground">
-                      {ticket.tenants?.name || 'Unknown Tenant'} • {new Date(ticket.created_at).toLocaleString()}
+                      {ticket.tenants?.name || 'Unknown Estate'} • {new Date(ticket.created_at).toLocaleString()}
                     </p>
                   </div>
                   <Select value={ticket.status} onValueChange={v => updateStatus(ticket.id, v)}>

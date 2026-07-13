@@ -132,12 +132,16 @@ const NewTenantWizard = ({ isOpen, onClose, onCreated }: NewTenantWizardProps) =
         });
       }
 
-      toast({ title: 'Tenant Created', description: `${form.name} is live with an admin account for ${form.adminEmail}.` });
+      toast({ title: 'Estate Created', description: `${form.name} is live with an admin account for ${form.adminEmail}.` });
       handleClose();
       onCreated();
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Could not create tenant.';
-      toast({ title: 'Tenant Creation Failed', description: message, variant: 'destructive' });
+      const message = error instanceof Error
+        ? error.message
+        : (error && typeof error === 'object' && 'message' in error)
+          ? String((error as { message: unknown }).message)
+          : 'Could not create estate.';
+      toast({ title: 'Estate Creation Failed', description: message, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
@@ -147,7 +151,7 @@ const NewTenantWizard = ({ isOpen, onClose, onCreated }: NewTenantWizardProps) =
     <Dialog open={isOpen} onOpenChange={(open) => !open && handleClose()}>
       <DialogContent className="bg-card border-border sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>New Tenant Wizard</DialogTitle>
+          <DialogTitle>New Estate Wizard</DialogTitle>
           <DialogDescription>Step {step + 1} of {STEPS.length}: {STEPS[step]}</DialogDescription>
         </DialogHeader>
 
@@ -240,7 +244,7 @@ const NewTenantWizard = ({ isOpen, onClose, onCreated }: NewTenantWizardProps) =
             <Button onClick={handleNext}>Next</Button>
           ) : (
             <Button onClick={handleSubmit} disabled={isSubmitting}>
-              {isSubmitting ? 'Creating Tenant...' : 'Create Tenant'}
+              {isSubmitting ? 'Creating Estate...' : 'Create Estate'}
             </Button>
           )}
         </div>
