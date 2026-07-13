@@ -24,42 +24,42 @@ interface ResidentRowProps {
 
 const ResidentRow = ({ resident, onStatusToggle, onDeactivate, onEdit, onView }: ResidentRowProps) => {
   return (
-    <tr className="hover:bg-cyan-500/10 transition border-b border-cyan-400/10">
+    <tr className="hover:bg-gray-50 transition border-b border-gray-50">
       <td className="py-3 px-3">
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 grid place-content-center text-sm font-medium text-white">
             {resident.name.charAt(0)}
           </div>
           <div>
-            <span className="font-medium text-cyan-50">{resident.name}</span>
-            <p className="text-xs text-cyan-300 hidden sm:block">{resident.email}</p>
+            <span className="font-medium text-gray-900">{resident.name}</span>
+            <p className="text-xs text-gray-400 hidden sm:block">{resident.email}</p>
           </div>
         </div>
       </td>
-      <td className="py-3 px-3 font-medium text-cyan-100">{resident.unit}</td>
-      <td className="py-3 px-3 hidden md:table-cell text-cyan-200">{resident.phone}</td>
+      <td className="py-3 px-3 font-medium text-gray-700">{resident.unit}</td>
+      <td className="py-3 px-3 hidden md:table-cell text-gray-500">{resident.phone}</td>
       <td className="py-3 px-3 hidden sm:table-cell">
         <Badge 
           variant={resident.status === 'active' ? 'default' : 'secondary'}
-          className={`cursor-pointer ${resident.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-gray-500/20 text-gray-300'}`}
+          className={`cursor-pointer ${resident.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}
           onClick={() => onStatusToggle(resident.id)}
         >
           {resident.status}
         </Badge>
       </td>
-      <td className="py-3 px-3 font-medium text-cyan-100">{resident.dues}</td>
+      <td className="py-3 px-3 font-medium text-gray-700">{resident.dues}</td>
       <td className="py-3 px-3">
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="ghost" className="hover:bg-cyan-500/20 text-cyan-200 hover:text-cyan-50" onClick={() => onView(resident.id)}>
+          <Button size="sm" variant="ghost" className="hover:bg-blue-50 text-gray-500 hover:text-gray-900" onClick={() => onView(resident.id)}>
             <Eye className="h-3 w-3" />
           </Button>
-          <Button size="sm" variant="ghost" className="hover:bg-blue-500/20 text-blue-300 hover:text-blue-100" onClick={() => onEdit(resident.id)}>
+          <Button size="sm" variant="ghost" className="hover:bg-blue-50 text-blue-600 hover:text-blue-700" onClick={() => onEdit(resident.id)}>
             <Edit className="h-3 w-3" />
           </Button>
           <Button 
             size="sm" 
             variant="ghost" 
-            className="hover:bg-red-500/20 text-red-300 hover:text-red-100"
+            className="hover:bg-rose-50 text-rose-600 hover:text-rose-700"
             onClick={() => onDeactivate(resident.id)}
           >
             <Trash2 className="h-3 w-3" />

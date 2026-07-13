@@ -29,7 +29,10 @@ const ResidentWalletCard = ({ label = 'Estate Wallet Balance' }: ResidentWalletC
                 {/* Balance */}
                 <div className="flex-1">
                     <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{label}</p>
-                    <h3 className="text-[1.6rem] font-black text-gray-900 mt-1 leading-tight tracking-tight">
+                    <h3
+                        className="text-xl xl:text-[1.6rem] font-black text-gray-900 mt-1 leading-tight tracking-tight truncate"
+                        title={showBalance ? '₦1,245,800.00' : undefined}
+                    >
                         {showBalance ? '₦1,245,800.00' : '₦ ••••••••'}
                     </h3>
                     <p className="text-xs text-gray-400 mt-1 font-medium">Available Balance</p>

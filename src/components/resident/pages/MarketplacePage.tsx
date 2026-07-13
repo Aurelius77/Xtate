@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 
 interface ListingRow {
   id: string;
@@ -37,18 +38,25 @@ const MarketplacePage = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('marketplace_listings')
-      .select('id, title, description, price, photo_url, status, resident_id, resident:residents(profile:profiles!residents_user_id_fkey(full_name, phone))')
+      .select('id, title, description, price, photo_url, status, resident_id, resident:residents(user_id)')
       .eq('estate_id', estateId)
       .order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      type Row = {
-        id: string; title: string; description: string; price: number; photo_url: string | null; status: string; resident_id: string;
-        resident: { profile: { full_name: string | null; phone: string | null } | null } | null;
-      };
-      setListings(((data ?? []) as Row[]).map((row) => ({
+      setLoading(false);
+      return;
+    }
+
+    type Row = {
+      id: string; title: string; description: string; price: number; photo_url: string | null; status: string; resident_id: string;
+      resident: { user_id: string } | null;
+    };
+    const rows = (data ?? []) as Row[];
+    const profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
+    setListings(rows.map((row) => {
+      const profile = row.resident ? profileMap[row.resident.user_id] : undefined;
+      return {
         id: row.id,
         title: row.title,
         description: row.description,
@@ -56,10 +64,10 @@ const MarketplacePage = () => {
         photo_url: row.photo_url,
         status: row.status,
         resident_id: row.resident_id,
-        seller: row.resident?.profile?.full_name || 'Resident',
-        sellerPhone: row.resident?.profile?.phone || null,
-      })));
-    }
+        seller: profile?.full_name || 'Resident',
+        sellerPhone: profile?.phone || null,
+      };
+    }));
     setLoading(false);
   }, [toast]);
 

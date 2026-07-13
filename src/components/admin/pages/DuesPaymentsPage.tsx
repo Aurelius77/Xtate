@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEstateId } from '@/hooks/useEstateId';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 import type { Database } from '@/integrations/supabase/types';
 
 type DueStatus = Database['public']['Enums']['due_status'];
@@ -58,10 +59,7 @@ interface PaymentQueryRow {
   paid_at: string | null;
   payment_reference: string | null;
   due: { title: string | null; due_date: string | null } | null;
-  resident: {
-    house_unit_number: string | null;
-    profile: { full_name: string | null; email: string | null } | null;
-  } | null;
+  resident: { house_unit_number: string | null; user_id: string } | null;
 }
 
 interface DueFormState {
@@ -136,10 +134,7 @@ const DuesPaymentsPage = () => {
           .select(`
             id, amount, status, paid_at, payment_reference,
             due:dues(title, due_date),
-            resident:residents(
-              house_unit_number,
-              profile:profiles!residents_user_id_fkey(full_name, email)
-            )
+            resident:residents(house_unit_number, user_id)
           `)
           .eq('estate_id', estateId)
           .not('paid_at', 'is', null)
@@ -167,18 +162,22 @@ const DuesPaymentsPage = () => {
       }));
 
       const paymentRows = (paymentsResponse.data || []) as PaymentQueryRow[];
-      setRecentPayments(paymentRows.map((payment) => ({
-        id: payment.id,
-        resident: payment.resident?.profile?.full_name || 'Unknown resident',
-        residentEmail: payment.resident?.profile?.email || null,
-        unit: payment.resident?.house_unit_number || '-',
-        amount: Number(payment.amount),
-        status: payment.status,
-        paidAt: payment.paid_at,
-        reference: payment.payment_reference,
-        dueTitle: payment.due?.title || 'Estate due',
-        dueDate: payment.due?.due_date || null,
-      })));
+      const paymentProfileMap = await fetchProfilesByUserIds(paymentRows.map((p) => p.resident?.user_id).filter((id): id is string => !!id));
+      setRecentPayments(paymentRows.map((payment) => {
+        const profile = payment.resident ? paymentProfileMap[payment.resident.user_id] : undefined;
+        return {
+          id: payment.id,
+          resident: profile?.full_name || 'Unknown resident',
+          residentEmail: profile?.email || null,
+          unit: payment.resident?.house_unit_number || '-',
+          amount: Number(payment.amount),
+          status: payment.status,
+          paidAt: payment.paid_at,
+          reference: payment.payment_reference,
+          dueTitle: payment.due?.title || 'Estate due',
+          dueDate: payment.due?.due_date || null,
+        };
+      }));
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Could not load dues and payments.';
       toast({ title: 'Error', description: message, variant: 'destructive' });
@@ -252,15 +251,18 @@ const DuesPaymentsPage = () => {
     try {
       const { data: pendingResidents, error } = await supabase
         .from('resident_dues')
-        .select('resident:residents(profile:profiles!residents_user_id_fkey(full_name, email))')
+        .select('resident:residents(user_id)')
         .eq('due_id', due.id)
         .in('status', ['pending', 'overdue']);
 
       if (error) throw error;
 
-      const recipients = ((pendingResidents ?? []) as Array<{ resident: { profile: { full_name: string | null; email: string | null } | null } | null }>)
-        .map((row) => row.resident?.profile)
-        .filter((profile): profile is { full_name: string | null; email: string | null } => !!profile?.email);
+      const pendingUserIds = ((pendingResidents ?? []) as Array<{ resident: { user_id: string } | null }>)
+        .map((row) => row.resident?.user_id)
+        .filter((id): id is string => !!id);
+      const pendingProfileMap = await fetchProfilesByUserIds(pendingUserIds);
+      const recipients = Object.values(pendingProfileMap)
+        .filter((profile): profile is { full_name: string | null; email: string | null; phone: string | null } => !!profile?.email);
 
       if (recipients.length === 0) {
         toast({ title: 'No Recipients', description: 'No outstanding residents with an email on file for this due.' });
@@ -437,20 +439,20 @@ const DuesPaymentsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Dues & Payments</h1>
-          <p className="text-cyan-200">Manage estate dues and track payments</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Dues & Payments</h1>
+          <p className="text-gray-500">Manage estate dues and track payments</p>
         </div>
         <div className="flex gap-2">
           <Button
             variant="outline"
-            className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20"
+            className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50"
             onClick={handleExportReport}
             disabled={recentPayments.length === 0}
           >
             <Download className="h-4 w-4 mr-2" />
             Export Report
           </Button>
-          <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={() => setCreateDueOpen(true)} disabled={creatingDue}>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setCreateDueOpen(true)} disabled={creatingDue}>
             <Plus className="h-4 w-4 mr-2" />
             {creatingDue ? 'Creating...' : 'Create Due'}
           </Button>
@@ -458,23 +460,23 @@ const DuesPaymentsPage = () => {
       </div>
 
       <Dialog open={createDueOpen} onOpenChange={setCreateDueOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Create Due</DialogTitle>
-            <DialogDescription className="text-cyan-200">
+            <DialogTitle className="text-gray-900">Create Due</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Create an estate due and assign it to all active residents.
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleCreateDue}>
             <div className="space-y-2">
-              <Label htmlFor="due-title" className="text-cyan-100">Title</Label>
+              <Label htmlFor="due-title" className="text-gray-700">Title</Label>
               <Input
                 id="due-title"
                 value={dueForm.title}
                 onChange={(event) => setDueForm((form) => ({ ...form, title: event.target.value }))}
                 placeholder="Monthly service charge"
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                 disabled={creatingDue}
                 required
               />
@@ -482,7 +484,7 @@ const DuesPaymentsPage = () => {
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="due-amount" className="text-cyan-100">Amount</Label>
+                <Label htmlFor="due-amount" className="text-gray-700">Amount</Label>
                 <Input
                   id="due-amount"
                   type="number"
@@ -491,20 +493,20 @@ const DuesPaymentsPage = () => {
                   value={dueForm.amount}
                   onChange={(event) => setDueForm((form) => ({ ...form, amount: event.target.value }))}
                   placeholder="50000"
-                  className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                  className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                   disabled={creatingDue}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="due-date" className="text-cyan-100">Due Date</Label>
+                <Label htmlFor="due-date" className="text-gray-700">Due Date</Label>
                 <Input
                   id="due-date"
                   type="date"
                   value={dueForm.dueDate}
                   onChange={(event) => setDueForm((form) => ({ ...form, dueDate: event.target.value }))}
-                  className="bg-slate-900/70 border-cyan-400/30 text-cyan-50"
+                  className="bg-gray-50 border-gray-100 text-gray-900"
                   disabled={creatingDue}
                   required
                 />
@@ -512,12 +514,12 @@ const DuesPaymentsPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="due-frequency" className="text-cyan-100">Frequency</Label>
+              <Label htmlFor="due-frequency" className="text-gray-700">Frequency</Label>
               <select
                 id="due-frequency"
                 value={dueForm.frequency}
                 onChange={(event) => setDueForm((form) => ({ ...form, frequency: event.target.value as DueFrequency }))}
-                className="flex h-10 w-full rounded-md border border-cyan-400/30 bg-slate-900/70 px-3 py-2 text-sm text-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex h-10 w-full rounded-md border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={creatingDue}
               >
                 <option value="one_time">One time</option>
@@ -528,13 +530,13 @@ const DuesPaymentsPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="due-description" className="text-cyan-100">Description</Label>
+              <Label htmlFor="due-description" className="text-gray-700">Description</Label>
               <Textarea
                 id="due-description"
                 value={dueForm.description}
                 onChange={(event) => setDueForm((form) => ({ ...form, description: event.target.value }))}
                 placeholder="Optional details for residents"
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                 disabled={creatingDue}
               />
             </div>
@@ -543,13 +545,13 @@ const DuesPaymentsPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20"
+                className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50"
                 onClick={() => setCreateDueOpen(false)}
                 disabled={creatingDue}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white" disabled={creatingDue}>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={creatingDue}>
                 {creatingDue ? 'Creating...' : 'Create Due'}
               </Button>
             </DialogFooter>
@@ -558,56 +560,56 @@ const DuesPaymentsPage = () => {
       </Dialog>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Total Outstanding</p>
+                <p className="text-xs text-gray-400">Total Outstanding</p>
                 <p className="text-2xl font-semibold text-orange-400">{formatCurrency(stats.outstanding)}</p>
               </div>
-              <div className="h-10 w-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
                 <Clock className="h-5 w-5 text-orange-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Collected</p>
+                <p className="text-xs text-gray-400">Collected</p>
                 <p className="text-2xl font-semibold text-green-400">{formatCurrency(stats.collected)}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Pending Confirmation</p>
+                <p className="text-xs text-gray-400">Pending Confirmation</p>
                 <p className="text-2xl font-semibold text-blue-400">{stats.pendingConfirmations}</p>
               </div>
-              <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <AlertTriangle className="h-5 w-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Collection Rate</p>
+                <p className="text-xs text-gray-400">Collection Rate</p>
                 <p className="text-2xl font-semibold text-purple-400">{stats.collectionRate}%</p>
               </div>
-              <div className="h-10 w-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <DollarSign className="h-5 w-5 text-purple-400" />
               </div>
             </div>
@@ -616,14 +618,14 @@ const DuesPaymentsPage = () => {
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-cyan-50">Active Dues</CardTitle>
+              <CardTitle className="text-gray-900">Active Dues</CardTitle>
               <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-cyan-300" />
+                <Filter className="h-4 w-4 text-gray-400" />
                 <select
-                  className="glass border-cyan-400/30 rounded px-2 py-1 text-sm text-cyan-100 bg-slate-800/50"
+                  className="bg-gray-50 border-gray-100 rounded px-2 py-1 text-sm text-gray-700 bg-gray-50"
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
                 >
@@ -633,39 +635,39 @@ const DuesPaymentsPage = () => {
                 </select>
               </div>
             </div>
-            <CardDescription className="text-cyan-200">Currently active dues for residents</CardDescription>
+            <CardDescription className="text-gray-500">Currently active dues for residents</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading dues...</p>
+              <p className="text-gray-400 text-sm">Loading dues...</p>
             ) : filteredDues.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No dues found.</p>
+              <p className="text-gray-400 text-sm">No dues found.</p>
             ) : (
               filteredDues.map((due) => {
                 const percentCollected = due.assignedTo > 0 ? Math.round((due.paidBy / due.assignedTo) * 100) : 0;
                 return (
-                  <div key={due.id} className="flex items-center justify-between p-4 glass rounded-lg border-cyan-400/20">
+                  <div key={due.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-gray-100">
                     <div>
-                      <h4 className="font-medium text-cyan-50">{due.title}</h4>
-                      <p className="text-sm text-cyan-200">Due: {new Date(due.dueDate).toLocaleDateString()}</p>
-                      <p className="text-xs text-cyan-300">{due.paidBy}/{due.assignedTo} paid</p>
+                      <h4 className="font-medium text-gray-900">{due.title}</h4>
+                      <p className="text-sm text-gray-500">Due: {new Date(due.dueDate).toLocaleDateString()}</p>
+                      <p className="text-xs text-gray-400">{due.paidBy}/{due.assignedTo} paid</p>
                       {due.pendingConfirmation > 0 && (
-                        <p className="text-xs text-blue-300">{due.pendingConfirmation} pending confirmation</p>
+                        <p className="text-xs text-blue-600">{due.pendingConfirmation} pending confirmation</p>
                       )}
                     </div>
                     <div className="text-right space-y-2">
-                      <p className="font-semibold text-cyan-100">{formatCurrency(due.amount)}</p>
-                      <Badge variant="outline" className="text-xs bg-cyan-500/20 text-cyan-300">
+                      <p className="font-semibold text-gray-700">{formatCurrency(due.amount)}</p>
+                      <Badge variant="outline" className="text-xs bg-blue-50 text-blue-600">
                         {percentCollected}% collected
                       </Badge>
-                      <div className="w-16 bg-slate-700 rounded-full h-2 mt-1">
-                        <div className="bg-cyan-400 h-2 rounded-full" style={{ width: `${percentCollected}%` }} />
+                      <div className="w-16 bg-gray-100 rounded-full h-2 mt-1">
+                        <div className="bg-blue-500 h-2 rounded-full" style={{ width: `${percentCollected}%` }} />
                       </div>
                       {due.paidBy < due.assignedTo && (
                         <Button
                           size="sm"
                           variant="outline"
-                          className="glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20 text-[10px] h-7 px-2"
+                          className="bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50 text-[10px] h-7 px-2"
                           onClick={() => handleSendReminder(due)}
                         >
                           Send Reminder
@@ -679,41 +681,41 @@ const DuesPaymentsPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="text-cyan-50">Recent Payments</CardTitle>
-            <CardDescription className="text-cyan-200">Latest payment activities requiring confirmation</CardDescription>
+            <CardTitle className="text-gray-900">Recent Payments</CardTitle>
+            <CardDescription className="text-gray-500">Latest payment activities requiring confirmation</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading payments...</p>
+              <p className="text-gray-400 text-sm">Loading payments...</p>
             ) : recentPayments.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No payments recorded yet.</p>
+              <p className="text-gray-400 text-sm">No payments recorded yet.</p>
             ) : (
               recentPayments.map((payment) => (
-                <div key={payment.id} className="p-4 glass rounded-lg border-cyan-400/20">
+                <div key={payment.id} className="p-4 bg-gray-50 rounded-lg border-gray-100">
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 grid place-content-center text-sm font-medium text-white">
                         {payment.resident.charAt(0)}
                       </div>
                       <div>
-                        <h4 className="font-medium text-sm text-cyan-50">{payment.resident}</h4>
-                        <p className="text-xs text-cyan-200">
+                        <h4 className="font-medium text-sm text-gray-900">{payment.resident}</h4>
+                        <p className="text-xs text-gray-500">
                           {payment.unit} • {payment.paidAt ? getTimeAgo(new Date(payment.paidAt)) : 'Not paid'}
                         </p>
-                        <p className="text-xs text-cyan-300">{payment.dueTitle}</p>
-                        <p className="text-xs text-cyan-300">Ref: {payment.reference || '-'}</p>
+                        <p className="text-xs text-gray-400">{payment.dueTitle}</p>
+                        <p className="text-xs text-gray-400">Ref: {payment.reference || '-'}</p>
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-cyan-100">{formatCurrency(payment.amount)}</p>
+                      <p className="font-semibold text-gray-700">{formatCurrency(payment.amount)}</p>
                       <Badge
                         variant={payment.status === 'paid' ? 'default' : payment.status === 'pending_confirmation' ? 'secondary' : 'destructive'}
                         className={`text-xs ${
-                          payment.status === 'paid' ? 'bg-green-500/20 text-green-300' :
-                          payment.status === 'pending_confirmation' ? 'bg-yellow-500/20 text-yellow-300' :
-                          'bg-red-500/20 text-red-300'
+                          payment.status === 'paid' ? 'bg-emerald-50 text-emerald-600' :
+                          payment.status === 'pending_confirmation' ? 'bg-amber-50 text-amber-600' :
+                          'bg-rose-50 text-rose-600'
                         }`}
                       >
                         {payment.status.replace('_', ' ')}
@@ -733,7 +735,7 @@ const DuesPaymentsPage = () => {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="border-red-500/30 text-red-300 hover:bg-red-500/20"
+                        className="border-red-500/30 text-rose-600 hover:bg-rose-50"
                         onClick={() => handleRejectPayment(payment.id)}
                         disabled={savingPaymentId === payment.id}
                       >

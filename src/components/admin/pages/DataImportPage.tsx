@@ -207,82 +207,82 @@ Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mik
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Data Import & Management</h1>
-          <p className="text-cyan-200">Import resident accounts and optional due records from CSV</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Data Import & Management</h1>
+          <p className="text-gray-500">Import resident accounts and optional due records from CSV</p>
         </div>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Download className="h-5 w-5" />
               Download Template
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-cyan-200 text-sm">
+            <p className="text-gray-500 text-sm">
               Use the CSV template so resident account creation and optional due assignment can run correctly.
             </p>
             <div className="space-y-3">
-              <div className="flex items-center gap-2 text-sm text-cyan-300">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
                 <CheckCircle className="h-4 w-4 text-green-400" />
                 Required: Full Name, Email, Unit Number, Temporary Password
               </div>
-              <div className="flex items-center gap-2 text-sm text-cyan-300">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
                 <CheckCircle className="h-4 w-4 text-green-400" />
                 Optional: Phone, Emergency Contact, Due Title, Due Amount, Due Date
               </div>
-              <div className="flex items-center gap-2 text-sm text-cyan-300">
+              <div className="flex items-center gap-2 text-sm text-gray-400">
                 <CheckCircle className="h-4 w-4 text-green-400" />
                 Passwords must satisfy the signup password rules
               </div>
             </div>
-            <Button onClick={downloadTemplate} className="w-full bg-cyan-600 hover:bg-cyan-700">
+            <Button onClick={downloadTemplate} className="w-full bg-blue-600 hover:bg-blue-700">
               <Download className="h-4 w-4 mr-2" />
               Download CSV Template
             </Button>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Upload className="h-5 w-5" />
               Import Data
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-cyan-200 text-sm">
+            <p className="text-gray-500 text-sm">
               Upload a completed CSV file. Each valid row creates a resident auth account for this estate.
             </p>
-            <div className="border-2 border-dashed border-cyan-400/30 rounded-lg p-6 text-center">
-              <FileSpreadsheet className="h-12 w-12 text-cyan-400 mx-auto mb-3" />
+            <div className="border-2 border-dashed border-gray-100 rounded-lg p-6 text-center">
+              <FileSpreadsheet className="h-12 w-12 text-blue-500 mx-auto mb-3" />
               <Input type="file" accept=".csv,text/csv" onChange={handleFileUpload} className="hidden" id="file-upload" disabled={importStatus === 'processing'} />
               <label htmlFor="file-upload" className="cursor-pointer">
                 <Button asChild className="bg-blue-600 hover:bg-blue-700" disabled={importStatus === 'processing'}>
                   <span>{importStatus === 'processing' ? 'Processing...' : 'Choose CSV File'}</span>
                 </Button>
               </label>
-              <p className="text-xs text-cyan-300 mt-2">CSV only for real imports</p>
+              <p className="text-xs text-gray-400 mt-2">CSV only for real imports</p>
             </div>
 
             {currentFileName && (
               <div className="grid grid-cols-3 gap-3">
-                <div className="bg-cyan-500/10 p-3 rounded-lg">
-                  <p className="text-xs text-cyan-300">File</p>
-                  <p className="text-sm text-cyan-100 truncate">{currentFileName}</p>
+                <div className="bg-blue-50 p-3 rounded-lg">
+                  <p className="text-xs text-gray-400">File</p>
+                  <p className="text-sm text-gray-700 truncate">{currentFileName}</p>
                 </div>
                 <div className="bg-green-500/10 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <Users className="h-4 w-4 text-green-400" />
-                    <span className="text-sm text-green-300">{successful} imported</span>
+                    <span className="text-sm text-emerald-600">{successful} imported</span>
                   </div>
                 </div>
                 <div className="bg-red-500/10 p-3 rounded-lg">
                   <div className="flex items-center gap-2">
                     <AlertCircle className="h-4 w-4 text-red-400" />
-                    <span className="text-sm text-red-300">{failed} failed</span>
+                    <span className="text-sm text-rose-600">{failed} failed</span>
                   </div>
                 </div>
               </div>
@@ -291,34 +291,34 @@ Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mik
         </Card>
       </div>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50">Import Results</CardTitle>
+          <CardTitle className="text-gray-900">Import Results</CardTitle>
         </CardHeader>
         <CardContent>
           {results.length === 0 ? (
-            <p className="text-cyan-300 text-sm">No import has been run yet.</p>
+            <p className="text-gray-400 text-sm">No import has been run yet.</p>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-cyan-400/20">
-                  <TableHead className="text-cyan-200">Row</TableHead>
-                  <TableHead className="text-cyan-200">Email</TableHead>
-                  <TableHead className="text-cyan-200">Status</TableHead>
-                  <TableHead className="text-cyan-200">Message</TableHead>
+                <TableRow className="border-gray-100">
+                  <TableHead className="text-gray-500">Row</TableHead>
+                  <TableHead className="text-gray-500">Email</TableHead>
+                  <TableHead className="text-gray-500">Status</TableHead>
+                  <TableHead className="text-gray-500">Message</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {results.map((result) => (
-                  <TableRow key={`${result.row}-${result.email}`} className="border-cyan-400/20">
-                    <TableCell className="text-cyan-100">{result.row}</TableCell>
-                    <TableCell className="text-cyan-100">{result.email}</TableCell>
+                  <TableRow key={`${result.row}-${result.email}`} className="border-gray-100">
+                    <TableCell className="text-gray-700">{result.row}</TableCell>
+                    <TableCell className="text-gray-700">{result.email}</TableCell>
                     <TableCell>
-                      <Badge className={result.status === 'success' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}>
+                      <Badge className={result.status === 'success' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}>
                         {result.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-cyan-200">{result.message}</TableCell>
+                    <TableCell className="text-gray-500">{result.message}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>
@@ -327,15 +327,15 @@ Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mik
         </CardContent>
       </Card>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50">Import Guidelines</CardTitle>
+          <CardTitle className="text-gray-900">Import Guidelines</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-cyan-100 mb-3">Required Fields</h4>
-              <ul className="space-y-2 text-sm text-cyan-300">
+              <h4 className="font-medium text-gray-700 mb-3">Required Fields</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
                 <li>Full Name</li>
                 <li>Email Address</li>
                 <li>Unit Number</li>
@@ -343,8 +343,8 @@ Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mik
               </ul>
             </div>
             <div>
-              <h4 className="font-medium text-cyan-100 mb-3">Optional Due Fields</h4>
-              <ul className="space-y-2 text-sm text-cyan-300">
+              <h4 className="font-medium text-gray-700 mb-3">Optional Due Fields</h4>
+              <ul className="space-y-2 text-sm text-gray-400">
                 <li>Due Title</li>
                 <li>Due Amount</li>
                 <li>Due Date</li>
@@ -352,7 +352,7 @@ Sarah Johnson,sarah@example.com,+2348034567890,B-205,TempPass123!,2026-06-01,Mik
               </ul>
             </div>
           </div>
-          <div className="flex items-center gap-2 text-sm text-blue-300 mt-5">
+          <div className="flex items-center gap-2 text-sm text-blue-600 mt-5">
             <DollarSign className="h-4 w-4" />
             Due rows are assigned only to the resident created on that same row.
           </div>

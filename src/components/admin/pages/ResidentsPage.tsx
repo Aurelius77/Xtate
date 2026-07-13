@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
 import { useToast } from '@/hooks/use-toast';
 import { useTenant } from '@/contexts/TenantContext';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 import type { Database } from '@/integrations/supabase/types';
 
 type DueStatus = Database['public']['Enums']['due_status'];
@@ -34,11 +35,6 @@ interface ResidentQueryRow {
   house_unit_number: string | null;
   is_active: boolean;
   created_at: string;
-  profile: {
-    full_name: string | null;
-    email: string | null;
-    phone: string | null;
-  } | null;
   resident_dues: {
     amount: number | string;
     status: DueStatus;
@@ -95,7 +91,6 @@ const ResidentsPage = () => {
       .from('residents')
       .select(`
         id, user_id, house_unit_number, is_active, created_at,
-        profile:profiles!residents_user_id_fkey(full_name, email, phone),
         resident_dues(amount, status)
       `)
       .eq('estate_id', estateId)
@@ -107,18 +102,27 @@ const ResidentsPage = () => {
       return;
     }
 
-    setResidents(((data || []) as ResidentQueryRow[]).map((resident) => {
+    const rows = (data || []) as ResidentQueryRow[];
+    let profileMap: Record<string, { full_name: string | null; email: string | null; phone: string | null }> = {};
+    try {
+      profileMap = await fetchProfilesByUserIds(rows.map((r) => r.user_id));
+    } catch (profileError) {
+      toast({ title: 'Error', description: profileError instanceof Error ? profileError.message : 'Could not load resident profiles.', variant: 'destructive' });
+    }
+
+    setResidents(rows.map((resident) => {
       const outstandingDues = (resident.resident_dues || [])
         .filter((due) => due.status !== 'paid')
         .reduce((sum, due) => sum + Number(due.amount), 0);
+      const profile = profileMap[resident.user_id];
 
       return {
         id: resident.id,
         userId: resident.user_id,
-        name: resident.profile?.full_name || 'Unknown',
+        name: profile?.full_name || 'Unknown',
         unit: resident.house_unit_number || '-',
-        phone: resident.profile?.phone || '-',
-        email: resident.profile?.email || '-',
+        phone: profile?.phone || '-',
+        email: profile?.email || '-',
         status: resident.is_active ? 'active' : 'inactive',
         dues: formatCurrency(outstandingDues),
         outstandingDues,
@@ -261,99 +265,99 @@ const ResidentsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Residents</h1>
-          <p className="text-cyan-200">Manage estate residents and their information</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Residents</h1>
+          <p className="text-gray-500">Manage estate residents and their information</p>
         </div>
-        <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={() => setAddOpen(true)}>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Resident
         </Button>
       </div>
 
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Add Resident</DialogTitle>
-            <DialogDescription className="text-cyan-200">
+            <DialogTitle className="text-gray-900">Add Resident</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Create a resident account for this estate.
             </DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleAddResident}>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="resident-name" className="text-cyan-100">Full Name</Label>
-                <Input id="resident-name" value={addForm.fullName} onChange={(event) => setAddForm((form) => ({ ...form, fullName: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+                <Label htmlFor="resident-name" className="text-gray-700">Full Name</Label>
+                <Input id="resident-name" value={addForm.fullName} onChange={(event) => setAddForm((form) => ({ ...form, fullName: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="resident-unit" className="text-cyan-100">House/Unit</Label>
-                <Input id="resident-unit" value={addForm.houseUnit} onChange={(event) => setAddForm((form) => ({ ...form, houseUnit: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+                <Label htmlFor="resident-unit" className="text-gray-700">House/Unit</Label>
+                <Input id="resident-unit" value={addForm.houseUnit} onChange={(event) => setAddForm((form) => ({ ...form, houseUnit: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="resident-email" className="text-cyan-100">Email</Label>
-                <Input id="resident-email" type="email" value={addForm.email} onChange={(event) => setAddForm((form) => ({ ...form, email: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+                <Label htmlFor="resident-email" className="text-gray-700">Email</Label>
+                <Input id="resident-email" type="email" value={addForm.email} onChange={(event) => setAddForm((form) => ({ ...form, email: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="resident-phone" className="text-cyan-100">Phone</Label>
-                <Input id="resident-phone" value={addForm.phone} onChange={(event) => setAddForm((form) => ({ ...form, phone: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} />
+                <Label htmlFor="resident-phone" className="text-gray-700">Phone</Label>
+                <Input id="resident-phone" value={addForm.phone} onChange={(event) => setAddForm((form) => ({ ...form, phone: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="resident-password" className="text-cyan-100">Temporary Password</Label>
-              <Input id="resident-password" type="password" value={addForm.password} onChange={(event) => setAddForm((form) => ({ ...form, password: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+              <Label htmlFor="resident-password" className="text-gray-700">Temporary Password</Label>
+              <Input id="resident-password" type="password" value={addForm.password} onChange={(event) => setAddForm((form) => ({ ...form, password: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white" disabled={saving}>{saving ? 'Creating...' : 'Create Resident'}</Button>
+              <Button type="button" variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={() => setAddOpen(false)} disabled={saving}>Cancel</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={saving}>{saving ? 'Creating...' : 'Create Resident'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!editingResident} onOpenChange={(open) => !open && setEditId(null)}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-            <DialogDescription className="text-cyan-200">Update resident profile and unit details.</DialogDescription>
+            <DialogTitle className="text-gray-900">Edit Resident</DialogTitle>
+            <DialogDescription className="text-gray-500">Update resident profile and unit details.</DialogDescription>
           </DialogHeader>
           <form className="space-y-4" onSubmit={handleSaveResident}>
             <div className="space-y-2">
-              <Label htmlFor="edit-resident-name" className="text-cyan-100">Full Name</Label>
-              <Input id="edit-resident-name" value={editForm.fullName} onChange={(event) => setEditForm((form) => ({ ...form, fullName: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+              <Label htmlFor="edit-resident-name" className="text-gray-700">Full Name</Label>
+              <Input id="edit-resident-name" value={editForm.fullName} onChange={(event) => setEditForm((form) => ({ ...form, fullName: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
             </div>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-resident-phone" className="text-cyan-100">Phone</Label>
-                <Input id="edit-resident-phone" value={editForm.phone} onChange={(event) => setEditForm((form) => ({ ...form, phone: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} />
+                <Label htmlFor="edit-resident-phone" className="text-gray-700">Phone</Label>
+                <Input id="edit-resident-phone" value={editForm.phone} onChange={(event) => setEditForm((form) => ({ ...form, phone: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-resident-unit" className="text-cyan-100">House/Unit</Label>
-                <Input id="edit-resident-unit" value={editForm.houseUnit} onChange={(event) => setEditForm((form) => ({ ...form, houseUnit: event.target.value }))} className="glass border-cyan-400/30 text-cyan-100" disabled={saving} required />
+                <Label htmlFor="edit-resident-unit" className="text-gray-700">House/Unit</Label>
+                <Input id="edit-resident-unit" value={editForm.houseUnit} onChange={(event) => setEditForm((form) => ({ ...form, houseUnit: event.target.value }))} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving} required />
               </div>
             </div>
             <DialogFooter>
-              <Button type="button" variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => setEditId(null)} disabled={saving}>Cancel</Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white" disabled={saving}>{saving ? 'Saving...' : 'Save Resident'}</Button>
+              <Button type="button" variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={() => setEditId(null)} disabled={saving}>Cancel</Button>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={saving}>{saving ? 'Saving...' : 'Save Resident'}</Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
       <Dialog open={!!selectedResident} onOpenChange={(open) => !open && setViewId(null)}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-lg">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle>{selectedResident?.name || 'Resident'}</DialogTitle>
-            <DialogDescription className="text-cyan-200">Resident account summary</DialogDescription>
+            <DialogTitle className="text-gray-900">{selectedResident?.name || 'Resident'}</DialogTitle>
+            <DialogDescription className="text-gray-500">Resident account summary</DialogDescription>
           </DialogHeader>
           {selectedResident && (
             <div className="grid grid-cols-2 gap-4 text-sm">
-              <div><p className="text-cyan-300">Email</p><p className="text-cyan-100">{selectedResident.email}</p></div>
-              <div><p className="text-cyan-300">Phone</p><p className="text-cyan-100">{selectedResident.phone}</p></div>
-              <div><p className="text-cyan-300">Unit</p><p className="text-cyan-100">{selectedResident.unit}</p></div>
-              <div><p className="text-cyan-300">Status</p><p className="text-cyan-100">{selectedResident.status}</p></div>
-              <div><p className="text-cyan-300">Outstanding Dues</p><p className="text-cyan-100">{selectedResident.dues}</p></div>
-              <div><p className="text-cyan-300">Joined</p><p className="text-cyan-100">{new Date(selectedResident.createdAt).toLocaleDateString()}</p></div>
+              <div><p className="text-gray-400">Email</p><p className="text-gray-700">{selectedResident.email}</p></div>
+              <div><p className="text-gray-400">Phone</p><p className="text-gray-700">{selectedResident.phone}</p></div>
+              <div><p className="text-gray-400">Unit</p><p className="text-gray-700">{selectedResident.unit}</p></div>
+              <div><p className="text-gray-400">Status</p><p className="text-gray-700">{selectedResident.status}</p></div>
+              <div><p className="text-gray-400">Outstanding Dues</p><p className="text-gray-700">{selectedResident.dues}</p></div>
+              <div><p className="text-gray-400">Joined</p><p className="text-gray-700">{new Date(selectedResident.createdAt).toLocaleDateString()}</p></div>
             </div>
           )}
         </DialogContent>
@@ -369,7 +373,7 @@ const ResidentsPage = () => {
       <ResidentStats residents={residents} />
 
       {loading ? (
-        <p className="text-cyan-300 text-sm">Loading residents...</p>
+        <p className="text-gray-400 text-sm">Loading residents...</p>
       ) : (
         <ResidentTable
           residents={filteredResidents}

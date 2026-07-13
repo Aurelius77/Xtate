@@ -4,7 +4,8 @@ import {
   Car, UserPlus, Wallet, Receipt, Calculator, Wrench, Trash2,
   Megaphone, MessageSquare, Bell, Calendar, ScrollText,
   FileBarChart, PieChart, Settings, UserCog, Lock, Puzzle,
-  LogOut, HelpCircle, ChevronRight, MessageCircle, ShoppingBag
+  LogOut, HelpCircle, ChevronRight, MessageCircle, ShoppingBag,
+  KeyRound, Upload, AlertCircle
 } from 'lucide-react';
 import { useTenant } from '@/contexts/TenantContext';
 
@@ -28,7 +29,8 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
         { icon: UserRound, label: 'Tenants', page: 'tenants' },
         { icon: Home, label: 'Properties', page: 'properties' },
         { icon: BookOpen, label: 'Directory', page: 'directory' },
-        { icon: ShieldCheck, label: 'Access & Security', page: 'access', hasSubmenu: true },
+        { icon: KeyRound, label: 'Access Codes', page: 'access-codes' },
+        { icon: ShieldCheck, label: 'Security Management', page: 'security-management' },
         { icon: Car, label: 'Vehicles', page: 'vehicles' },
         { icon: UserPlus, label: 'Visitors', page: 'visitors' },
       ]
@@ -36,7 +38,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
     {
       title: 'OPERATIONS',
       items: [
-        { icon: Wallet, label: 'Finance', page: 'finance', hasSubmenu: true },
+        { icon: Wallet, label: 'Finance', page: 'finance' },
         { icon: Wallet, label: 'Wallets', page: 'wallets' },
         { icon: Receipt, label: 'Invoices & Dues', page: 'dues' },
         { icon: Calculator, label: 'Expenses', page: 'expenses' },
@@ -57,6 +59,8 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       title: 'COMMUNICATION',
       items: [
         { icon: MessageSquare, label: 'Messages', page: 'messages', badge: 12 },
+        { icon: AlertCircle, label: 'Complaints', page: 'complaints' },
+        { icon: Megaphone, label: 'Broadcast', page: 'broadcast' },
         { icon: Bell, label: 'Notifications', page: 'notifications' },
         { icon: Calendar, label: 'Meetings & Polls', page: 'meetings' },
         { icon: ScrollText, label: 'Document Center', page: 'documents' },
@@ -74,6 +78,7 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       items: [
         { icon: Settings, label: 'Estate Settings', page: 'estate-settings' },
         { icon: UserCog, label: 'User Management', page: 'settings' },
+        { icon: Upload, label: 'Data Import', page: 'data-import' },
         { icon: Lock, label: 'Roles & Permissions', page: 'permissions' },
         { icon: Puzzle, label: 'Integrations', page: 'integrations' },
       ]
@@ -132,7 +137,6 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
                           {item.badge}
                         </span>
                       )}
-                      {item.hasSubmenu && <ChevronRight className="h-3 w-3 opacity-30" />}
                     </div>
                   </button>
                 );
@@ -143,13 +147,20 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       </div>
 
       {/* Footer */}
-      <div className="p-4 border-t border-gray-50 bg-gray-50/30">
+      <div className="p-4 border-t border-gray-50 bg-gray-50/30 space-y-2">
         <button
           className="flex items-center gap-3 w-full px-4 py-3 bg-white border border-gray-100 rounded-xl text-gray-500 hover:text-blue-600 hover:shadow-md transition-all shadow-sm text-xs font-bold"
         >
           <HelpCircle className="h-4 w-4" />
           <span>Need Help?</span>
           <ChevronRight className="h-3 w-3 ml-auto opacity-30" />
+        </button>
+        <button
+          onClick={onLogout}
+          className="flex items-center gap-3 w-full px-4 py-3 text-rose-500 hover:bg-rose-50 rounded-xl transition-all font-bold text-xs group"
+        >
+          <LogOut className="h-4 w-4 text-rose-400 group-hover:text-rose-500" />
+          <span>Sign Out</span>
         </button>
       </div>
     </aside>

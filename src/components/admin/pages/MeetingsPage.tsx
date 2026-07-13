@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEstateId } from '@/hooks/useEstateId';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 import type { Tables } from '@/integrations/supabase/types';
 
 type MeetingRow = Tables<'meetings'>;
@@ -176,14 +177,16 @@ const MeetingsPage = () => {
     try {
       const { data: residents, error } = await supabase
         .from('residents')
-        .select('profile:profiles!residents_user_id_fkey(full_name, email)')
+        .select('user_id')
         .eq('estate_id', estateId)
         .eq('is_active', true);
 
       if (error) throw error;
 
-      const recipients = ((residents ?? []) as Array<{ profile: { email: string | null } | null }>)
-        .map((row) => row.profile?.email)
+      const userIds = ((residents ?? []) as Array<{ user_id: string }>).map((row) => row.user_id);
+      const profileMap = await fetchProfilesByUserIds(userIds);
+      const recipients = Object.values(profileMap)
+        .map((profile) => profile.email)
         .filter((email): email is string => !!email);
 
       if (recipients.length === 0) return;
@@ -251,46 +254,46 @@ const MeetingsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Meetings</h1>
-          <p className="text-cyan-200">Schedule and manage community meetings</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Meetings</h1>
+          <p className="text-gray-500">Schedule and manage community meetings</p>
         </div>
-        <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={openCreateDialog}>
+        <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={openCreateDialog}>
           <Plus className="h-4 w-4 mr-2" />
           Schedule Meeting
         </Button>
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>{editingMeetingId ? 'Edit Meeting' : 'Schedule Meeting'}</DialogTitle>
-            <DialogDescription className="text-cyan-200">
+            <DialogTitle className="text-gray-900">{editingMeetingId ? 'Edit Meeting' : 'Schedule Meeting'}</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Set the meeting time and the window residents can use to mark attendance.
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleSaveMeeting}>
             <div className="space-y-2">
-              <Label htmlFor="meeting-title" className="text-cyan-100">Title</Label>
+              <Label htmlFor="meeting-title" className="text-gray-700">Title</Label>
               <Input
                 id="meeting-title"
                 value={form.title}
                 onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                 placeholder="Monthly community meeting"
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                 disabled={saving}
                 required
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="meeting-date" className="text-cyan-100">Meeting Date</Label>
+              <Label htmlFor="meeting-date" className="text-gray-700">Meeting Date</Label>
               <Input
                 id="meeting-date"
                 type="datetime-local"
                 value={form.meetingDate}
                 onChange={(event) => setForm((current) => ({ ...current, meetingDate: event.target.value }))}
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50"
+                className="bg-gray-50 border-gray-100 text-gray-900"
                 disabled={saving}
                 required
               />
@@ -298,26 +301,26 @@ const MeetingsPage = () => {
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="attendance-start" className="text-cyan-100">Attendance Opens</Label>
+                <Label htmlFor="attendance-start" className="text-gray-700">Attendance Opens</Label>
                 <Input
                   id="attendance-start"
                   type="datetime-local"
                   value={form.attendanceWindowStart}
                   onChange={(event) => setForm((current) => ({ ...current, attendanceWindowStart: event.target.value }))}
-                  className="bg-slate-900/70 border-cyan-400/30 text-cyan-50"
+                  className="bg-gray-50 border-gray-100 text-gray-900"
                   disabled={saving}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="attendance-end" className="text-cyan-100">Attendance Closes</Label>
+                <Label htmlFor="attendance-end" className="text-gray-700">Attendance Closes</Label>
                 <Input
                   id="attendance-end"
                   type="datetime-local"
                   value={form.attendanceWindowEnd}
                   onChange={(event) => setForm((current) => ({ ...current, attendanceWindowEnd: event.target.value }))}
-                  className="bg-slate-900/70 border-cyan-400/30 text-cyan-50"
+                  className="bg-gray-50 border-gray-100 text-gray-900"
                   disabled={saving}
                   required
                 />
@@ -325,13 +328,13 @@ const MeetingsPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="meeting-description" className="text-cyan-100">Description</Label>
+              <Label htmlFor="meeting-description" className="text-gray-700">Description</Label>
               <Textarea
                 id="meeting-description"
                 value={form.description}
                 onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))}
                 placeholder="Agenda, venue, or meeting details"
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                 disabled={saving}
               />
             </div>
@@ -340,13 +343,13 @@ const MeetingsPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20"
+                className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50"
                 onClick={() => setDialogOpen(false)}
                 disabled={saving}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white" disabled={saving}>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={saving}>
                 {saving ? 'Saving...' : editingMeetingId ? 'Save Changes' : 'Schedule Meeting'}
               </Button>
             </DialogFooter>
@@ -355,56 +358,56 @@ const MeetingsPage = () => {
       </Dialog>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Upcoming Meetings</p>
+                <p className="text-xs text-gray-400">Upcoming Meetings</p>
                 <p className="text-2xl font-semibold text-blue-400">{loading ? '...' : stats.upcoming}</p>
               </div>
-              <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Average Attendance</p>
+                <p className="text-xs text-gray-400">Average Attendance</p>
                 <p className="text-2xl font-semibold text-green-400">{loading ? '...' : `${stats.averageAttendance}%`}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">This Month</p>
+                <p className="text-xs text-gray-400">This Month</p>
                 <p className="text-2xl font-semibold text-purple-400">{loading ? '...' : stats.thisMonth}</p>
               </div>
-              <div className="h-10 w-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <Clock className="h-5 w-5 text-purple-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Total Attendees</p>
+                <p className="text-xs text-gray-400">Total Attendees</p>
                 <p className="text-2xl font-semibold text-orange-400">{loading ? '...' : stats.totalAttendees}</p>
               </div>
-              <div className="h-10 w-10 bg-orange-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-orange-50 rounded-lg flex items-center justify-center">
                 <UserCheck className="h-5 w-5 text-orange-400" />
               </div>
             </div>
@@ -412,36 +415,36 @@ const MeetingsPage = () => {
         </Card>
       </div>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50">All Meetings</CardTitle>
-          <CardDescription className="text-cyan-200">Scheduled and past meetings</CardDescription>
+          <CardTitle className="text-gray-900">All Meetings</CardTitle>
+          <CardDescription className="text-gray-500">Scheduled and past meetings</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading meetings...</p>
+              <p className="text-gray-400 text-sm">Loading meetings...</p>
             ) : meetings.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No meetings scheduled yet.</p>
+              <p className="text-gray-400 text-sm">No meetings scheduled yet.</p>
             ) : (
               meetings.map((meeting) => {
                 const status = getMeetingStatus(meeting);
                 const attendees = (meeting.attendance || []).filter((row) => row.status === 'present').length;
 
                 return (
-                  <div key={meeting.id} className="flex items-center justify-between p-4 glass rounded-lg border-cyan-400/20">
+                  <div key={meeting.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border-gray-100">
                     <div className="flex items-center gap-4">
-                      <div className="h-12 w-12 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                      <div className="h-12 w-12 bg-blue-50 rounded-lg flex items-center justify-center">
                         <Calendar className="h-6 w-6 text-blue-400" />
                       </div>
                       <div>
-                        <h3 className="font-medium text-cyan-50">{meeting.title}</h3>
-                        <p className="text-sm text-cyan-200">{formatDateTime(meeting.meeting_date)}</p>
-                        {meeting.description && <p className="text-xs text-cyan-300">{meeting.description}</p>}
-                        <p className="text-xs text-cyan-300">
+                        <h3 className="font-medium text-gray-900">{meeting.title}</h3>
+                        <p className="text-sm text-gray-500">{formatDateTime(meeting.meeting_date)}</p>
+                        {meeting.description && <p className="text-xs text-gray-400">{meeting.description}</p>}
+                        <p className="text-xs text-gray-400">
                           Attendance: {attendees} marked present
                         </p>
-                        <p className="text-xs text-cyan-400">
+                        <p className="text-xs text-blue-500">
                           Window: {formatDateTime(meeting.attendance_window_start)} - {formatDateTime(meeting.attendance_window_end)}
                         </p>
                       </div>
@@ -449,21 +452,21 @@ const MeetingsPage = () => {
                     <div className="flex items-center gap-3">
                       <Badge
                         variant={status === 'upcoming' ? 'default' : 'secondary'}
-                        className={status === 'upcoming' ? 'bg-blue-500/20 text-blue-300' : 'bg-green-500/20 text-green-300'}
+                        className={status === 'upcoming' ? 'bg-blue-50 text-blue-600' : 'bg-emerald-50 text-emerald-600'}
                       >
                         {status}
                       </Badge>
                       <div className="flex gap-1">
-                        <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20" onClick={() => openEditDialog(meeting)}>
+                        <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50" onClick={() => openEditDialog(meeting)}>
                           <Edit className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20" onClick={() => showAttendanceReport(meeting)}>
+                        <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50" onClick={() => showAttendanceReport(meeting)}>
                           <UserCheck className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
-                          className="glass border-red-400/30 text-red-300 hover:bg-red-500/20"
+                          className="bg-gray-50 border-rose-200 text-rose-600 hover:bg-rose-50"
                           onClick={() => handleDeleteMeeting(meeting.id)}
                         >
                           <Trash2 className="h-3 w-3" />

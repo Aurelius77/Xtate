@@ -24,9 +24,9 @@ interface ResidentTableProps {
 
 const ResidentTable = ({ residents, onStatusToggle, onDeactivate, onEdit, onView }: ResidentTableProps) => {
   return (
-    <Card className="glass-card border-cyan-400/20">
+    <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-cyan-50">
+        <CardTitle className="flex items-center gap-2 text-gray-900">
           <Users className="h-5 w-5" />
           All Residents ({residents.length})
         </CardTitle>
@@ -34,7 +34,7 @@ const ResidentTable = ({ residents, onStatusToggle, onDeactivate, onEdit, onView
       <CardContent>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="text-left text-cyan-300 border-b border-cyan-400/20">
+            <thead className="text-left text-gray-400 border-b border-gray-100">
               <tr>
                 <th className="py-3 px-3">Name</th>
                 <th className="py-3 px-3">Unit</th>

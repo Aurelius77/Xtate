@@ -1,6 +1,7 @@
 
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useInactivityTimeout } from '@/hooks/useInactivityTimeout';
+import { useAuth } from '@/contexts/SecureAuthContext';
 import PasscodeModal from './PasscodeModal';
 
 interface InactivityContextType {
@@ -24,11 +25,19 @@ interface InactivityProviderProps {
 
 export const InactivityProvider = ({ children }: InactivityProviderProps) => {
   const [isLocked, setIsLocked] = useState(false);
+  const { isAuthenticated } = useAuth();
 
   const { resetTimer } = useInactivityTimeout({
     timeout: 5 * 60 * 1000, // 5 minutes
     onTimeout: () => setIsLocked(true)
   });
+
+  // Logging out (including from inside the lock modal itself) must dismiss the
+  // modal — otherwise it stays mounted over the landing page after redirect,
+  // since isLocked is local state with nothing else to clear it.
+  useEffect(() => {
+    if (!isAuthenticated) setIsLocked(false);
+  }, [isAuthenticated]);
 
   const handleUnlock = () => {
     setIsLocked(false);

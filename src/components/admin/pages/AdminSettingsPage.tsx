@@ -179,116 +179,116 @@ const AdminSettingsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Admin Settings</h1>
-          <p className="text-cyan-200">Manage your account and estate preferences</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Admin Settings</h1>
+          <p className="text-gray-500">Manage your account and estate preferences</p>
         </div>
-        <Button onClick={handleSave} className="bg-cyan-600 hover:bg-cyan-700" disabled={loading || saving}>
+        <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700" disabled={loading || saving}>
           {saving ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <User className="h-5 w-5" />
               Profile Settings
             </CardTitle>
-            <CardDescription className="text-cyan-200">Your admin profile information</CardDescription>
+            <CardDescription className="text-gray-500">Your admin profile information</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-cyan-200">Full Name</Label>
+              <Label htmlFor="fullName" className="text-gray-500">Full Name</Label>
               <Input
                 id="fullName"
                 value={settings.fullName}
                 onChange={(event) => handleSettingChange('fullName', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email" className="text-cyan-200">Email Address</Label>
+              <Label htmlFor="email" className="text-gray-500">Email Address</Label>
               <Input
                 id="email"
                 type="email"
                 value={settings.email}
-                className="glass border-cyan-400/30 text-cyan-100 opacity-70"
+                className="bg-gray-50 border-gray-100 text-gray-700 opacity-70"
                 disabled
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-cyan-200">Phone Number</Label>
+              <Label htmlFor="phone" className="text-gray-500">Phone Number</Label>
               <Input
                 id="phone"
                 value={settings.phone}
                 onChange={(event) => handleSettingChange('phone', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Globe className="h-5 w-5" />
               Estate Settings
             </CardTitle>
-            <CardDescription className="text-cyan-200">Estate identity and support contact</CardDescription>
+            <CardDescription className="text-gray-500">Estate identity and support contact</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="estateName" className="text-cyan-200">Estate Name</Label>
+              <Label htmlFor="estateName" className="text-gray-500">Estate Name</Label>
               <Input
                 id="estateName"
                 value={settings.estateName}
                 onChange={(event) => handleSettingChange('estateName', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="brandName" className="text-cyan-200">Brand Display Name</Label>
+              <Label htmlFor="brandName" className="text-gray-500">Brand Display Name</Label>
               <Input
                 id="brandName"
                 value={settings.brandName}
                 onChange={(event) => handleSettingChange('brandName', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="supportContact" className="text-cyan-200">Support Contact</Label>
+              <Label htmlFor="supportContact" className="text-gray-500">Support Contact</Label>
               <Input
                 id="supportContact"
                 value={settings.supportContact}
                 onChange={(event) => handleSettingChange('supportContact', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Palette className="h-5 w-5" />
               Branding
             </CardTitle>
-            <CardDescription className="text-cyan-200">Colors used by the estate experience</CardDescription>
+            <CardDescription className="text-gray-500">Colors used by the estate experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
               <div className="space-y-2">
-                <Label htmlFor="primaryColor" className="text-cyan-200">Primary Color</Label>
+                <Label htmlFor="primaryColor" className="text-gray-500">Primary Color</Label>
                 <Input
                   id="primaryColor"
                   value={settings.primaryColor}
                   onChange={(event) => handleSettingChange('primaryColor', event.target.value)}
-                  className="glass border-cyan-400/30 text-cyan-100"
+                  className="bg-gray-50 border-gray-100 text-gray-700"
                   disabled={loading || saving}
                 />
               </div>
@@ -296,19 +296,19 @@ const AdminSettingsPage = () => {
                 type="color"
                 value={settings.primaryColor}
                 onChange={(event) => handleSettingChange('primaryColor', event.target.value)}
-                className="h-10 w-12 p-1 glass border-cyan-400/30"
+                className="h-10 w-12 p-1 bg-gray-50 border-gray-100"
                 disabled={loading || saving}
                 aria-label="Primary color picker"
               />
             </div>
             <div className="grid grid-cols-[1fr_auto] gap-3 items-end">
               <div className="space-y-2">
-                <Label htmlFor="secondaryColor" className="text-cyan-200">Secondary Color</Label>
+                <Label htmlFor="secondaryColor" className="text-gray-500">Secondary Color</Label>
                 <Input
                   id="secondaryColor"
                   value={settings.secondaryColor}
                   onChange={(event) => handleSettingChange('secondaryColor', event.target.value)}
-                  className="glass border-cyan-400/30 text-cyan-100"
+                  className="bg-gray-50 border-gray-100 text-gray-700"
                   disabled={loading || saving}
                 />
               </div>
@@ -316,7 +316,7 @@ const AdminSettingsPage = () => {
                 type="color"
                 value={settings.secondaryColor}
                 onChange={(event) => handleSettingChange('secondaryColor', event.target.value)}
-                className="h-10 w-12 p-1 glass border-cyan-400/30"
+                className="h-10 w-12 p-1 bg-gray-50 border-gray-100"
                 disabled={loading || saving}
                 aria-label="Secondary color picker"
               />
@@ -324,33 +324,33 @@ const AdminSettingsPage = () => {
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-cyan-50">
+            <CardTitle className="flex items-center gap-2 text-gray-900">
               <Mail className="h-5 w-5" />
               Communication
             </CardTitle>
-            <CardDescription className="text-cyan-200">Email sender and domain metadata</CardDescription>
+            <CardDescription className="text-gray-500">Email sender and domain metadata</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="emailSenderName" className="text-cyan-200">Email Sender Name</Label>
+              <Label htmlFor="emailSenderName" className="text-gray-500">Email Sender Name</Label>
               <Input
                 id="emailSenderName"
                 value={settings.emailSenderName}
                 onChange={(event) => handleSettingChange('emailSenderName', event.target.value)}
-                className="glass border-cyan-400/30 text-cyan-100"
+                className="bg-gray-50 border-gray-100 text-gray-700"
                 disabled={loading || saving}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="customDomain" className="text-cyan-200">Custom Domain</Label>
+              <Label htmlFor="customDomain" className="text-gray-500">Custom Domain</Label>
               <Input
                 id="customDomain"
                 value={settings.customDomain}
                 onChange={(event) => handleSettingChange('customDomain', event.target.value)}
                 placeholder="estate.example.com"
-                className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300"
+                className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400"
                 disabled={loading || saving}
               />
             </div>
@@ -358,26 +358,26 @@ const AdminSettingsPage = () => {
         </Card>
       </div>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-cyan-50">
+          <CardTitle className="flex items-center gap-2 text-gray-900">
             <Shield className="h-5 w-5" />
             Security
           </CardTitle>
-          <CardDescription className="text-cyan-200">Account security actions</CardDescription>
+          <CardDescription className="text-gray-500">Account security actions</CardDescription>
         </CardHeader>
         <CardContent className="grid sm:grid-cols-3 gap-3">
-          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={handlePasswordReset}>
+          <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={handlePasswordReset}>
             Change Password
           </Button>
-          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('Two-factor authentication')}>
+          <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={() => showUnavailable('Two-factor authentication')}>
             Two-Factor Auth
           </Button>
-          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('System backup settings')}>
+          <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={() => showUnavailable('System backup settings')}>
             <Settings className="h-4 w-4 mr-2" />
             System Options
           </Button>
-          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20" onClick={() => showUnavailable('SMS notification settings')}>
+          <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50" onClick={() => showUnavailable('SMS notification settings')}>
             <Phone className="h-4 w-4 mr-2" />
             SMS Settings
           </Button>

@@ -85,10 +85,10 @@ const formatCurrency = (amount: number) => `₦${amount.toLocaleString()}`;
 
 const getStatusColor = (status: ExpenseStatus) => {
   switch (status) {
-    case 'approved': return 'bg-green-500/20 text-green-300';
-    case 'pending': return 'bg-yellow-500/20 text-yellow-300';
-    case 'rejected': return 'bg-red-500/20 text-red-300';
-    default: return 'bg-gray-500/20 text-gray-300';
+    case 'approved': return 'bg-emerald-50 text-emerald-600';
+    case 'pending': return 'bg-amber-50 text-amber-600';
+    case 'rejected': return 'bg-rose-50 text-rose-600';
+    default: return 'bg-gray-100 text-gray-500';
   }
 };
 
@@ -227,14 +227,14 @@ const ExpensesPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Expense Management</h1>
-          <p className="text-cyan-200">Record and manage estate expenses</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Expense Management</h1>
+          <p className="text-gray-500">Record and manage estate expenses</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={handleExport} disabled={expenses.length === 0}>
+          <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={handleExport} disabled={expenses.length === 0}>
             Export
           </Button>
-          <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={() => setShowNewExpense(true)}>
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={() => setShowNewExpense(true)}>
             <Plus className="h-4 w-4 mr-2" />
             Record Expense
           </Button>
@@ -242,56 +242,56 @@ const ExpensesPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Total Expenses</p>
-                <p className="text-2xl font-semibold text-cyan-50">{loading ? '...' : formatCurrency(stats.total)}</p>
+                <p className="text-xs text-gray-400">Total Expenses</p>
+                <p className="text-2xl font-semibold text-gray-900">{loading ? '...' : formatCurrency(stats.total)}</p>
               </div>
-              <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <DollarSign className="h-5 w-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Approved</p>
+                <p className="text-xs text-gray-400">Approved</p>
                 <p className="text-2xl font-semibold text-green-400">{loading ? '...' : formatCurrency(stats.approved)}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Pending Approval</p>
+                <p className="text-xs text-gray-400">Pending Approval</p>
                 <p className="text-2xl font-semibold text-yellow-400">{loading ? '...' : formatCurrency(stats.pending)}</p>
               </div>
-              <div className="h-10 w-10 bg-yellow-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-amber-50 rounded-lg flex items-center justify-center">
                 <Clock className="h-5 w-5 text-yellow-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">This Month</p>
+                <p className="text-xs text-gray-400">This Month</p>
                 <p className="text-2xl font-semibold text-purple-400">{loading ? '...' : stats.thisMonth}</p>
               </div>
-              <div className="h-10 w-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-purple-400" />
               </div>
             </div>
@@ -300,26 +300,26 @@ const ExpensesPage = () => {
       </div>
 
       {showNewExpense && (
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="text-cyan-50">Record New Expense</CardTitle>
+            <CardTitle className="text-gray-900">Record New Expense</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="expense-title" className="text-cyan-200">Expense Title</Label>
-                <Input id="expense-title" className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300" value={newExpense.title} onChange={(event) => setNewExpense((prev) => ({ ...prev, title: event.target.value }))} disabled={saving} />
+                <Label htmlFor="expense-title" className="text-gray-500">Expense Title</Label>
+                <Input id="expense-title" className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400" value={newExpense.title} onChange={(event) => setNewExpense((prev) => ({ ...prev, title: event.target.value }))} disabled={saving} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="expense-amount" className="text-cyan-200">Amount</Label>
-                <Input id="expense-amount" type="number" className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300" value={newExpense.amount} onChange={(event) => setNewExpense((prev) => ({ ...prev, amount: event.target.value }))} disabled={saving} />
+                <Label htmlFor="expense-amount" className="text-gray-500">Amount</Label>
+                <Input id="expense-amount" type="number" className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400" value={newExpense.amount} onChange={(event) => setNewExpense((prev) => ({ ...prev, amount: event.target.value }))} disabled={saving} />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="expense-category" className="text-cyan-200">Category</Label>
-                <select id="expense-category" className="w-full glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50" value={newExpense.category} onChange={(event) => setNewExpense((prev) => ({ ...prev, category: event.target.value }))} disabled={saving}>
+                <Label htmlFor="expense-category" className="text-gray-500">Category</Label>
+                <select id="expense-category" className="w-full bg-gray-50 border-gray-100 rounded-md px-3 py-2 text-gray-700 bg-gray-50" value={newExpense.category} onChange={(event) => setNewExpense((prev) => ({ ...prev, category: event.target.value }))} disabled={saving}>
                   <option value="">Select category</option>
                   {categories.map((category) => (
                     <option key={category} value={category}>{category}</option>
@@ -327,21 +327,21 @@ const ExpensesPage = () => {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="expense-date" className="text-cyan-200">Date</Label>
-                <Input id="expense-date" type="date" className="glass border-cyan-400/30 text-cyan-100" value={newExpense.date} onChange={(event) => setNewExpense((prev) => ({ ...prev, date: event.target.value }))} disabled={saving} />
+                <Label htmlFor="expense-date" className="text-gray-500">Date</Label>
+                <Input id="expense-date" type="date" className="bg-gray-50 border-gray-100 text-gray-700" value={newExpense.date} onChange={(event) => setNewExpense((prev) => ({ ...prev, date: event.target.value }))} disabled={saving} />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="expense-description" className="text-cyan-200">Description</Label>
-              <Textarea id="expense-description" className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300 bg-slate-800/50" value={newExpense.description} onChange={(event) => setNewExpense((prev) => ({ ...prev, description: event.target.value }))} disabled={saving} />
+              <Label htmlFor="expense-description" className="text-gray-500">Description</Label>
+              <Textarea id="expense-description" className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400 bg-gray-50" value={newExpense.description} onChange={(event) => setNewExpense((prev) => ({ ...prev, description: event.target.value }))} disabled={saving} />
             </div>
 
             <div className="flex gap-2">
-              <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={handleSubmitExpense} disabled={saving}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSubmitExpense} disabled={saving}>
                 {saving ? 'Recording...' : 'Record Expense'}
               </Button>
-              <Button variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => setShowNewExpense(false)} disabled={saving}>
+              <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setShowNewExpense(false)} disabled={saving}>
                 Cancel
               </Button>
             </div>
@@ -349,33 +349,33 @@ const ExpensesPage = () => {
         </Card>
       )}
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50">All Expenses</CardTitle>
-          <CardDescription className="text-cyan-200">Manage and approve expense records</CardDescription>
+          <CardTitle className="text-gray-900">All Expenses</CardTitle>
+          <CardDescription className="text-gray-500">Manage and approve expense records</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading expenses...</p>
+              <p className="text-gray-400 text-sm">Loading expenses...</p>
             ) : expenses.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No expenses recorded yet.</p>
+              <p className="text-gray-400 text-sm">No expenses recorded yet.</p>
             ) : (
               expenses.map((expense) => (
-                <div key={expense.id} className="flex items-center justify-between p-4 glass rounded-lg">
+                <div key={expense.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start gap-4 flex-1">
-                    <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                    <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                       <DollarSign className="h-5 w-5 text-blue-400" />
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-cyan-50">{expense.title}</h3>
+                        <h3 className="font-medium text-gray-900">{expense.title}</h3>
                         <Badge className={`text-xs ${getStatusColor(expense.status)}`}>
                           {expense.status}
                         </Badge>
                       </div>
-                      <p className="text-lg font-semibold text-cyan-100">{formatCurrency(Number(expense.amount))}</p>
-                      <div className="flex items-center gap-4 text-xs text-cyan-300 mt-1">
+                      <p className="text-lg font-semibold text-gray-700">{formatCurrency(Number(expense.amount))}</p>
+                      <div className="flex items-center gap-4 text-xs text-gray-400 mt-1">
                         <span>{expense.category}</span>
                         <span>{new Date(expense.expense_date).toLocaleDateString()}</span>
                       </div>
@@ -387,12 +387,12 @@ const ExpensesPage = () => {
                         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleStatusUpdate(expense.id, 'approved')}>
                           Approve
                         </Button>
-                        <Button size="sm" variant="outline" className="glass border-red-400/30 text-red-300 hover:bg-red-500/20" onClick={() => handleStatusUpdate(expense.id, 'rejected')}>
+                        <Button size="sm" variant="outline" className="bg-gray-50 border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleStatusUpdate(expense.id, 'rejected')}>
                           Reject
                         </Button>
                       </>
                     )}
-                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => setSelectedExpenseId(expense.id)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setSelectedExpenseId(expense.id)}>
                       <Eye className="h-4 w-4" />
                     </Button>
                   </div>
@@ -404,28 +404,28 @@ const ExpensesPage = () => {
       </Card>
 
       <Dialog open={!!selectedExpense} onOpenChange={(open) => !open && setSelectedExpenseId(null)}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900">
           <DialogHeader>
-            <DialogTitle>Expense Details</DialogTitle>
-            <DialogDescription className="text-cyan-200">Review expense record details.</DialogDescription>
+            <DialogTitle className="text-gray-900">Expense Details</DialogTitle>
+            <DialogDescription className="text-gray-500">Review expense record details.</DialogDescription>
           </DialogHeader>
           {selectedExpense && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
-                <div><span className="text-cyan-300 text-sm">Title:</span><p className="text-cyan-100">{selectedExpense.title}</p></div>
-                <div><span className="text-cyan-300 text-sm">Amount:</span><p className="text-cyan-100">{formatCurrency(Number(selectedExpense.amount))}</p></div>
-                <div><span className="text-cyan-300 text-sm">Category:</span><p className="text-cyan-100">{selectedExpense.category}</p></div>
-                <div><span className="text-cyan-300 text-sm">Date:</span><p className="text-cyan-100">{new Date(selectedExpense.expense_date).toLocaleDateString()}</p></div>
+                <div><span className="text-gray-400 text-sm">Title:</span><p className="text-gray-700">{selectedExpense.title}</p></div>
+                <div><span className="text-gray-400 text-sm">Amount:</span><p className="text-gray-700">{formatCurrency(Number(selectedExpense.amount))}</p></div>
+                <div><span className="text-gray-400 text-sm">Category:</span><p className="text-gray-700">{selectedExpense.category}</p></div>
+                <div><span className="text-gray-400 text-sm">Date:</span><p className="text-gray-700">{new Date(selectedExpense.expense_date).toLocaleDateString()}</p></div>
               </div>
-              <div><span className="text-cyan-300 text-sm">Description:</span><p className="text-cyan-100 mt-1">{selectedExpense.description || '-'}</p></div>
+              <div><span className="text-gray-400 text-sm">Description:</span><p className="text-gray-700 mt-1">{selectedExpense.description || '-'}</p></div>
               <div>
-                <span className="text-cyan-300 text-sm">Status:</span>
+                <span className="text-gray-400 text-sm">Status:</span>
                 <Badge className={`ml-2 ${getStatusColor(selectedExpense.status)}`}>{selectedExpense.status}</Badge>
               </div>
               {selectedExpense.status === 'pending' && (
                 <DialogFooter>
                   <Button className="bg-green-600 hover:bg-green-700 text-white" onClick={() => handleStatusUpdate(selectedExpense.id, 'approved')}>Approve</Button>
-                  <Button variant="outline" className="glass border-red-400/30 text-red-300 hover:bg-red-500/20" onClick={() => handleStatusUpdate(selectedExpense.id, 'rejected')}>Reject</Button>
+                  <Button variant="outline" className="bg-gray-50 border-rose-200 text-rose-600 hover:bg-rose-50" onClick={() => handleStatusUpdate(selectedExpense.id, 'rejected')}>Reject</Button>
                 </DialogFooter>
               )}
             </div>

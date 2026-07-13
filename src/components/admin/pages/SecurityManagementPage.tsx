@@ -252,81 +252,81 @@ const SecurityManagementPage = () => {
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <Label htmlFor={isEdit ? 'edit_full_name' : 'full_name'} className="text-cyan-200">Full Name *</Label>
+          <Label htmlFor={isEdit ? 'edit_full_name' : 'full_name'} className="text-gray-500">Full Name *</Label>
           <Input
             id={isEdit ? 'edit_full_name' : 'full_name'}
             value={formData.full_name}
             onChange={(event) => setFormData({ ...formData, full_name: event.target.value })}
-            className="glass border-cyan-400/30 text-cyan-100"
+            className="bg-gray-50 border-gray-100 text-gray-700"
             disabled={saving}
           />
         </div>
         <div>
-          <Label htmlFor={isEdit ? 'edit_employee_id' : 'employee_id'} className="text-cyan-200">Employee ID *</Label>
+          <Label htmlFor={isEdit ? 'edit_employee_id' : 'employee_id'} className="text-gray-500">Employee ID *</Label>
           <Input
             id={isEdit ? 'edit_employee_id' : 'employee_id'}
             value={formData.employee_id}
             onChange={(event) => setFormData({ ...formData, employee_id: event.target.value })}
-            className="glass border-cyan-400/30 text-cyan-100"
+            className="bg-gray-50 border-gray-100 text-gray-700"
             disabled={saving}
           />
         </div>
       </div>
 
       <div>
-        <Label htmlFor={isEdit ? 'edit_email' : 'email'} className="text-cyan-200">Email *</Label>
+        <Label htmlFor={isEdit ? 'edit_email' : 'email'} className="text-gray-500">Email *</Label>
         <Input
           id={isEdit ? 'edit_email' : 'email'}
           type="email"
           value={formData.email}
           onChange={(event) => setFormData({ ...formData, email: event.target.value })}
-          className="glass border-cyan-400/30 text-cyan-100"
+          className="bg-gray-50 border-gray-100 text-gray-700"
           disabled={saving || isEdit}
         />
       </div>
 
       <div>
-        <Label htmlFor={isEdit ? 'edit_phone' : 'phone'} className="text-cyan-200">Phone</Label>
+        <Label htmlFor={isEdit ? 'edit_phone' : 'phone'} className="text-gray-500">Phone</Label>
         <Input
           id={isEdit ? 'edit_phone' : 'phone'}
           value={formData.phone}
           onChange={(event) => setFormData({ ...formData, phone: event.target.value })}
-          className="glass border-cyan-400/30 text-cyan-100"
+          className="bg-gray-50 border-gray-100 text-gray-700"
           disabled={saving}
         />
       </div>
 
       <div>
-        <Label htmlFor={isEdit ? 'edit_shift' : 'shift'} className="text-cyan-200">Shift</Label>
+        <Label htmlFor={isEdit ? 'edit_shift' : 'shift'} className="text-gray-500">Shift</Label>
         <select
           id={isEdit ? 'edit_shift' : 'shift'}
           value={formData.shift}
           onChange={(event) => setFormData({ ...formData, shift: event.target.value as Shift })}
-          className="w-full glass border-cyan-400/30 text-cyan-100 bg-transparent p-2 rounded-md"
+          className="w-full bg-gray-50 border-gray-100 text-gray-700 bg-transparent p-2 rounded-md"
           disabled={saving}
         >
-          <option value="day" className="bg-slate-800">Day Shift</option>
-          <option value="night" className="bg-slate-800">Night Shift</option>
-          <option value="rotational" className="bg-slate-800">Rotational</option>
+          <option value="day" className="bg-gray-50">Day Shift</option>
+          <option value="night" className="bg-gray-50">Night Shift</option>
+          <option value="rotational" className="bg-gray-50">Rotational</option>
         </select>
       </div>
 
       {!isEdit && (
         <div>
-          <Label htmlFor="password" className="text-cyan-200">Temporary Password *</Label>
+          <Label htmlFor="password" className="text-gray-500">Temporary Password *</Label>
           <div className="relative">
             <Input
               id="password"
               type={showPassword ? 'text' : 'password'}
               value={formData.password}
               onChange={(event) => setFormData({ ...formData, password: event.target.value })}
-              className="glass border-cyan-400/30 text-cyan-100 pr-10"
+              className="bg-gray-50 border-gray-100 text-gray-700 pr-10"
               disabled={saving}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-cyan-400"
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 text-blue-500"
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
@@ -340,88 +340,88 @@ const SecurityManagementPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-cyan-50 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             <Shield className="h-6 w-6" />
             Security Management
           </h2>
-          <p className="text-cyan-200">Manage security personnel accounts and access</p>
+          <p className="text-gray-500">Manage security personnel accounts and access</p>
         </div>
 
-        <Button className="glass bg-blue-600/20 hover:bg-blue-600/30 text-cyan-100" onClick={() => setIsCreateDialogOpen(true)}>
+        <Button className="bg-gray-50 bg-blue-50 hover:bg-blue-600/30 text-gray-700" onClick={() => setIsCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Security Personnel
         </Button>
       </div>
 
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900">
           <DialogHeader>
-            <DialogTitle>Create Security Personnel</DialogTitle>
-            <DialogDescription className="text-cyan-200">Create a security dashboard account for this estate.</DialogDescription>
+            <DialogTitle className="text-gray-900">Create Security Personnel</DialogTitle>
+            <DialogDescription className="text-gray-500">Create a security dashboard account for this estate.</DialogDescription>
           </DialogHeader>
           {renderFormFields(false)}
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setIsCreateDialogOpen(false); resetForm(); }} className="glass border-cyan-400/30 text-cyan-100" disabled={saving}>
+            <Button variant="outline" onClick={() => { setIsCreateDialogOpen(false); resetForm(); }} className="bg-gray-50 border-gray-100 text-gray-700" disabled={saving}>
               Cancel
             </Button>
-            <Button onClick={handleCreatePersonnel} className="glass bg-blue-600/20 hover:bg-blue-600/30 text-cyan-100" disabled={saving}>
+            <Button onClick={handleCreatePersonnel} className="bg-gray-50 bg-blue-50 hover:bg-blue-600/30 text-gray-700" disabled={saving}>
               {saving ? 'Creating...' : 'Create Personnel'}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50 flex items-center gap-2">
+          <CardTitle className="text-gray-900 flex items-center gap-2">
             <User className="h-5 w-5" />
             Security Personnel ({loading ? '...' : securityPersonnel.length})
           </CardTitle>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-cyan-300 text-sm">Loading security personnel...</p>
+            <p className="text-gray-400 text-sm">Loading security personnel...</p>
           ) : securityPersonnel.length === 0 ? (
-            <p className="text-cyan-300 text-sm">No security personnel created yet.</p>
+            <p className="text-gray-400 text-sm">No security personnel created yet.</p>
           ) : (
             <Table>
               <TableHeader>
-                <TableRow className="border-cyan-400/20">
-                  <TableHead className="text-cyan-200">Name</TableHead>
-                  <TableHead className="text-cyan-200">Employee ID</TableHead>
-                  <TableHead className="text-cyan-200">Email</TableHead>
-                  <TableHead className="text-cyan-200">Shift</TableHead>
-                  <TableHead className="text-cyan-200">Status</TableHead>
-                  <TableHead className="text-cyan-200">Last Login</TableHead>
-                  <TableHead className="text-cyan-200">Actions</TableHead>
+                <TableRow className="border-gray-100">
+                  <TableHead className="text-gray-500">Name</TableHead>
+                  <TableHead className="text-gray-500">Employee ID</TableHead>
+                  <TableHead className="text-gray-500">Email</TableHead>
+                  <TableHead className="text-gray-500">Shift</TableHead>
+                  <TableHead className="text-gray-500">Status</TableHead>
+                  <TableHead className="text-gray-500">Last Login</TableHead>
+                  <TableHead className="text-gray-500">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {securityPersonnel.map((personnel) => (
-                  <TableRow key={personnel.user_id} className="border-cyan-400/20">
-                    <TableCell className="text-cyan-100 font-medium">{personnel.full_name}</TableCell>
-                    <TableCell className="text-cyan-100 font-mono">{personnel.employee_id}</TableCell>
-                    <TableCell className="text-cyan-100">{personnel.email}</TableCell>
-                    <TableCell className="text-cyan-100 capitalize">{personnel.shift}</TableCell>
+                  <TableRow key={personnel.user_id} className="border-gray-100">
+                    <TableCell className="text-gray-700 font-medium">{personnel.full_name}</TableCell>
+                    <TableCell className="text-gray-700 font-mono">{personnel.employee_id}</TableCell>
+                    <TableCell className="text-gray-700">{personnel.email}</TableCell>
+                    <TableCell className="text-gray-700 capitalize">{personnel.shift}</TableCell>
                     <TableCell>
-                      <Badge className={personnel.is_active ? 'bg-green-500/20 text-green-400 border-green-400/30' : 'bg-red-500/20 text-red-400 border-red-400/30'}>
+                      <Badge className={personnel.is_active ? 'bg-green-500/20 text-green-400 border-emerald-200' : 'bg-red-500/20 text-red-400 border-rose-200'}>
                         {personnel.is_active ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-cyan-100 text-sm">{personnel.last_login ? formatDateTime(personnel.last_login) : 'Never'}</TableCell>
+                    <TableCell className="text-gray-700 text-sm">{personnel.last_login ? formatDateTime(personnel.last_login) : 'Never'}</TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Button size="sm" variant="outline" onClick={() => openEditDialog(personnel)} className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-600/20">
+                        <Button size="sm" variant="outline" onClick={() => openEditDialog(personnel)} className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50">
                           <Edit2 className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline" onClick={() => sendPasswordReset(personnel)} className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-600/20">
+                        <Button size="sm" variant="outline" onClick={() => sendPasswordReset(personnel)} className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50">
                           <Mail className="h-3 w-3" />
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleTogglePersonnel(personnel)}
-                          className={`glass border-cyan-400/30 ${personnel.is_active ? 'text-red-400 hover:bg-red-600/20' : 'text-green-400 hover:bg-green-600/20'}`}
+                          className={`bg-gray-50 border-gray-100 ${personnel.is_active ? 'text-red-400 hover:bg-rose-50' : 'text-green-400 hover:bg-emerald-50'}`}
                         >
                           {personnel.is_active ? <Trash2 className="h-3 w-3" /> : <Shield className="h-3 w-3" />}
                         </Button>
@@ -436,10 +436,10 @@ const SecurityManagementPage = () => {
       </Card>
 
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900">
           <DialogHeader>
-            <DialogTitle>Edit Security Personnel</DialogTitle>
-            <DialogDescription className="text-cyan-200">Update personnel details and shift assignment.</DialogDescription>
+            <DialogTitle className="text-gray-900">Edit Security Personnel</DialogTitle>
+            <DialogDescription className="text-gray-500">Update personnel details and shift assignment.</DialogDescription>
           </DialogHeader>
           {renderFormFields(true)}
           <DialogFooter>
@@ -450,12 +450,12 @@ const SecurityManagementPage = () => {
                 resetForm();
                 setSelectedPersonnel(null);
               }}
-              className="glass border-cyan-400/30 text-cyan-100"
+              className="bg-gray-50 border-gray-100 text-gray-700"
               disabled={saving}
             >
               Cancel
             </Button>
-            <Button onClick={handleEditPersonnel} className="glass bg-blue-600/20 hover:bg-blue-600/30 text-cyan-100" disabled={saving}>
+            <Button onClick={handleEditPersonnel} className="bg-gray-50 bg-blue-50 hover:bg-blue-600/30 text-gray-700" disabled={saving}>
               {saving ? 'Updating...' : 'Update Personnel'}
             </Button>
           </DialogFooter>

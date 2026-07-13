@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 
 interface ThreadRow {
   id: string;
@@ -47,29 +48,33 @@ const ForumPage = () => {
     setLoading(true);
     const { data, error } = await supabase
       .from('forum_threads')
-      .select('id, title, body, is_locked, created_at, resident_id, resident:residents(profile:profiles!residents_user_id_fkey(full_name)), forum_replies(id)')
+      .select('id, title, body, is_locked, created_at, resident_id, resident:residents(user_id), forum_replies(id)')
       .eq('estate_id', estateId)
       .order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      type Row = {
-        id: string; title: string; body: string; is_locked: boolean; created_at: string; resident_id: string;
-        resident: { profile: { full_name: string | null } | null } | null;
-        forum_replies: { id: string }[] | null;
-      };
-      setThreads(((data ?? []) as Row[]).map((row) => ({
-        id: row.id,
-        title: row.title,
-        body: row.body,
-        is_locked: row.is_locked,
-        created_at: row.created_at,
-        resident_id: row.resident_id,
-        author: row.resident?.profile?.full_name || 'Resident',
-        replyCount: row.forum_replies?.length || 0,
-      })));
+      setLoading(false);
+      return;
     }
+
+    type Row = {
+      id: string; title: string; body: string; is_locked: boolean; created_at: string; resident_id: string;
+      resident: { user_id: string } | null;
+      forum_replies: { id: string }[] | null;
+    };
+    const rows = (data ?? []) as Row[];
+    const profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
+    setThreads(rows.map((row) => ({
+      id: row.id,
+      title: row.title,
+      body: row.body,
+      is_locked: row.is_locked,
+      created_at: row.created_at,
+      resident_id: row.resident_id,
+      author: (row.resident && profileMap[row.resident.user_id]?.full_name) || 'Resident',
+      replyCount: row.forum_replies?.length || 0,
+    })));
     setLoading(false);
   }, [toast]);
 
@@ -97,7 +102,7 @@ const ForumPage = () => {
   const fetchReplies = useCallback(async (threadId: string) => {
     const { data, error } = await supabase
       .from('forum_replies')
-      .select('id, body, created_at, resident:residents(profile:profiles!residents_user_id_fkey(full_name))')
+      .select('id, body, created_at, resident:residents(user_id)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true });
 
@@ -105,12 +110,14 @@ const ForumPage = () => {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
       return;
     }
-    type Row = { id: string; body: string; created_at: string; resident: { profile: { full_name: string | null } | null } | null };
-    setReplies(((data ?? []) as Row[]).map((row) => ({
+    type Row = { id: string; body: string; created_at: string; resident: { user_id: string } | null };
+    const rows = (data ?? []) as Row[];
+    const profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
+    setReplies(rows.map((row) => ({
       id: row.id,
       body: row.body,
       created_at: row.created_at,
-      author: row.resident?.profile?.full_name || 'Resident',
+      author: (row.resident && profileMap[row.resident.user_id]?.full_name) || 'Resident',
     })));
   }, [toast]);
 

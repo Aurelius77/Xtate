@@ -39,12 +39,12 @@ const getTypeIcon = (type: NotificationType) => {
 
 const getTypeColor = (type: NotificationType) => {
   switch (type) {
-    case 'announcement': return 'bg-blue-500/20 text-blue-300';
-    case 'meeting': return 'bg-purple-500/20 text-purple-300';
-    case 'dues': return 'bg-yellow-500/20 text-yellow-300';
-    case 'payment': return 'bg-green-500/20 text-green-300';
-    case 'complaint': return 'bg-red-500/20 text-red-300';
-    default: return 'bg-gray-500/20 text-gray-300';
+    case 'announcement': return 'bg-blue-50 text-blue-600';
+    case 'meeting': return 'bg-violet-50 text-violet-600';
+    case 'dues': return 'bg-amber-50 text-amber-600';
+    case 'payment': return 'bg-emerald-50 text-emerald-600';
+    case 'complaint': return 'bg-rose-50 text-rose-600';
+    default: return 'bg-gray-100 text-gray-500';
   }
 };
 
@@ -181,11 +181,11 @@ const BroadcastPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Broadcast Messages</h1>
-          <p className="text-cyan-200">Send messages to all active residents</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Broadcast Messages</h1>
+          <p className="text-gray-500">Send messages to all active residents</p>
         </div>
         <Button
-          className="bg-cyan-600 hover:bg-cyan-700 text-white"
+          className="bg-blue-600 hover:bg-blue-700 text-white"
           onClick={() => setIsComposing(true)}
         >
           <Send className="h-4 w-4 mr-2" />
@@ -194,56 +194,56 @@ const BroadcastPage = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Total Broadcasts</p>
-                <p className="text-2xl font-semibold text-cyan-50">{loading ? '...' : stats.total}</p>
+                <p className="text-xs text-gray-400">Total Broadcasts</p>
+                <p className="text-2xl font-semibold text-gray-900">{loading ? '...' : stats.total}</p>
               </div>
-              <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <MessageSquare className="h-5 w-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">This Month</p>
+                <p className="text-xs text-gray-400">This Month</p>
                 <p className="text-2xl font-semibold text-green-400">{loading ? '...' : stats.thisMonth}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <Calendar className="h-5 w-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Urgent Messages</p>
+                <p className="text-xs text-gray-400">Urgent Messages</p>
                 <p className="text-2xl font-semibold text-red-400">{loading ? '...' : stats.urgent}</p>
               </div>
-              <div className="h-10 w-10 bg-red-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-rose-50 rounded-lg flex items-center justify-center">
                 <Bell className="h-5 w-5 text-red-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-cyan-300">Total Recipients</p>
+                <p className="text-xs text-gray-400">Total Recipients</p>
                 <p className="text-2xl font-semibold text-purple-400">{loading ? '...' : stats.recipients}</p>
               </div>
-              <div className="h-10 w-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <Users className="h-5 w-5 text-purple-400" />
               </div>
             </div>
@@ -252,17 +252,17 @@ const BroadcastPage = () => {
       </div>
 
       {isComposing && (
-        <Card className="glass-card border-cyan-400/20">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
           <CardHeader>
-            <CardTitle className="text-cyan-50">Compose Broadcast Message</CardTitle>
-            <CardDescription className="text-cyan-200">Send a message to all active residents</CardDescription>
+            <CardTitle className="text-gray-900">Compose Broadcast Message</CardTitle>
+            <CardDescription className="text-gray-500">Send a message to all active residents</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="broadcast-title" className="text-cyan-200">Message Title</Label>
+              <Label htmlFor="broadcast-title" className="text-gray-500">Message Title</Label>
               <Input
                 id="broadcast-title"
-                className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300"
+                className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400"
                 placeholder="Enter message title"
                 value={newBroadcast.title}
                 onChange={(event) => setNewBroadcast((prev) => ({ ...prev, title: event.target.value }))}
@@ -271,10 +271,10 @@ const BroadcastPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="broadcast-message" className="text-cyan-200">Message Content</Label>
+              <Label htmlFor="broadcast-message" className="text-gray-500">Message Content</Label>
               <Textarea
                 id="broadcast-message"
-                className="glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300 bg-slate-800/50"
+                className="bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400 bg-gray-50"
                 rows={5}
                 placeholder="Enter your broadcast message"
                 value={newBroadcast.message}
@@ -285,10 +285,10 @@ const BroadcastPage = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="broadcast-type" className="text-cyan-200">Message Type</Label>
+                <Label htmlFor="broadcast-type" className="text-gray-500">Message Type</Label>
                 <select
                   id="broadcast-type"
-                  className="w-full glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50"
+                  className="w-full bg-gray-50 border-gray-100 rounded-md px-3 py-2 text-gray-700 bg-gray-50"
                   value={newBroadcast.type}
                   onChange={(event) => setNewBroadcast((prev) => ({ ...prev, type: event.target.value as NotificationType }))}
                   disabled={sending}
@@ -302,14 +302,14 @@ const BroadcastPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-cyan-200">Recipients</Label>
-                <div className="glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50">
+                <Label className="text-gray-500">Recipients</Label>
+                <div className="bg-gray-50 border-gray-100 rounded-md px-3 py-2 text-gray-700 bg-gray-50">
                   All active residents
                 </div>
               </div>
 
               <div className="flex items-end">
-                <label className="flex items-center gap-2 text-cyan-200">
+                <label className="flex items-center gap-2 text-gray-500">
                   <input
                     type="checkbox"
                     checked={newBroadcast.isUrgent}
@@ -323,11 +323,11 @@ const BroadcastPage = () => {
             </div>
 
             <div className="flex gap-2">
-              <Button className="bg-cyan-600 hover:bg-cyan-700 text-white" onClick={handleSendBroadcast} disabled={sending}>
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white" onClick={handleSendBroadcast} disabled={sending}>
                 <Send className="h-4 w-4 mr-2" />
                 {sending ? 'Sending...' : 'Send Broadcast'}
               </Button>
-              <Button variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => setIsComposing(false)} disabled={sending}>
+              <Button variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setIsComposing(false)} disabled={sending}>
                 Cancel
               </Button>
             </div>
@@ -335,45 +335,45 @@ const BroadcastPage = () => {
         </Card>
       )}
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="text-cyan-50">Broadcast History</CardTitle>
-          <CardDescription className="text-cyan-200">Previously sent messages</CardDescription>
+          <CardTitle className="text-gray-900">Broadcast History</CardTitle>
+          <CardDescription className="text-gray-500">Previously sent messages</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading broadcasts...</p>
+              <p className="text-gray-400 text-sm">Loading broadcasts...</p>
             ) : broadcasts.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No broadcasts sent yet.</p>
+              <p className="text-gray-400 text-sm">No broadcasts sent yet.</p>
             ) : (
               broadcasts.map((broadcast) => (
-                <div key={broadcast.id} className="p-4 glass rounded-lg">
+                <div key={broadcast.id} className="p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-start gap-4 flex-1">
-                      <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                      <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                         {getTypeIcon('announcement')}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-cyan-50">{broadcast.title}</h3>
+                          <h3 className="font-medium text-gray-900">{broadcast.title}</h3>
                           <Badge className={getTypeColor('announcement')}>
                             announcement
                           </Badge>
                           {broadcast.is_urgent && (
-                            <Badge className="bg-red-500/20 text-red-300">
+                            <Badge className="bg-rose-50 text-rose-600">
                               Urgent
                             </Badge>
                           )}
                         </div>
-                        <p className="text-sm text-cyan-200 mb-2">{broadcast.content}</p>
-                        <div className="flex items-center gap-4 text-xs text-cyan-300">
+                        <p className="text-sm text-gray-500 mb-2">{broadcast.content}</p>
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
                           <span>To: All active residents</span>
                           <span>{new Date(broadcast.created_at).toLocaleString()}</span>
                         </div>
                       </div>
                     </div>
-                    <Badge className="bg-green-500/20 text-green-300">
+                    <Badge className="bg-emerald-50 text-emerald-600">
                       sent
                     </Badge>
                   </div>

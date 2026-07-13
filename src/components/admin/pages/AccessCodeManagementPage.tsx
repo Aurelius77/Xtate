@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { supabase } from '@/integrations/supabase/client';
 import { useEstateId } from '@/hooks/useEstateId';
 import { useTenant } from '@/contexts/TenantContext';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 
 const FREE_RETENTION_DAYS = 7;
 
@@ -34,7 +35,7 @@ interface AccessCodeQueryRow {
   access_code: string;
   resident: {
     house_unit_number: string | null;
-    profile: { full_name: string | null } | null;
+    user_id: string;
   } | null;
   visitor_name: string;
   visitor_phone: string | null;
@@ -65,7 +66,7 @@ const AccessCodeManagementPage = () => {
       setLoading(true);
       let query = supabase
         .from('access_codes')
-        .select('*, resident:residents(house_unit_number, profile:profiles!residents_user_id_fkey(full_name))')
+        .select('*, resident:residents(house_unit_number, user_id)')
         .eq('estate_id', estateId);
 
       if (isFreePlan) {
@@ -75,10 +76,14 @@ const AccessCodeManagementPage = () => {
 
       const { data, error } = await query.order('created_at', { ascending: false }).limit(100);
       if (error) { console.error(error); setLoading(false); return; }
-      setAccessCodes(((data || []) as AccessCodeQueryRow[]).map((c) => ({
+
+      const rows = (data || []) as AccessCodeQueryRow[];
+      const profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
+
+      setAccessCodes(rows.map((c) => ({
         id: c.id,
         code: c.access_code,
-        resident: c.resident?.profile?.full_name || 'Unknown',
+        resident: (c.resident && profileMap[c.resident.user_id]?.full_name) || 'Unknown',
         unit: c.resident?.house_unit_number || '-',
         visitorName: c.visitor_name,
         visitorPhone: c.visitor_phone || '-',
@@ -117,10 +122,10 @@ const AccessCodeManagementPage = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-500/20 text-green-300';
-      case 'used': return 'bg-blue-500/20 text-blue-300';
-      case 'expired': return 'bg-red-500/20 text-red-300';
-      default: return 'bg-gray-500/20 text-gray-300';
+      case 'active': return 'bg-emerald-50 text-emerald-600';
+      case 'used': return 'bg-blue-50 text-blue-600';
+      case 'expired': return 'bg-rose-50 text-rose-600';
+      default: return 'bg-gray-100 text-gray-500';
     }
   };
 
@@ -130,22 +135,22 @@ const AccessCodeManagementPage = () => {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-cyan-50">Access Code Management</h1>
-        <p className="text-cyan-200">Monitor and manage visitor access codes</p>
+        <h1 className="text-2xl font-semibold text-gray-900">Access Code Management</h1>
+        <p className="text-gray-500">Monitor and manage visitor access codes</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Codes', value: accessCodes.length, icon: Shield, color: 'text-blue-400', bg: 'bg-blue-600/20' },
-          { label: 'Active', value: counts.active, icon: Clock, color: 'text-green-400', bg: 'bg-green-600/20' },
-          { label: 'Used', value: counts.used, icon: CheckCircle, color: 'text-blue-400', bg: 'bg-blue-600/20' },
-          { label: 'Expired', value: counts.expired, icon: XCircle, color: 'text-red-400', bg: 'bg-red-600/20' },
+          { label: 'Total Codes', value: accessCodes.length, icon: Shield, color: 'text-blue-400', bg: 'bg-blue-50' },
+          { label: 'Active', value: counts.active, icon: Clock, color: 'text-green-400', bg: 'bg-emerald-50' },
+          { label: 'Used', value: counts.used, icon: CheckCircle, color: 'text-blue-400', bg: 'bg-blue-50' },
+          { label: 'Expired', value: counts.expired, icon: XCircle, color: 'text-red-400', bg: 'bg-rose-50' },
         ].map(s => (
-          <Card key={s.label} className="glass-card border-cyan-400/20">
+          <Card key={s.label} className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-cyan-300">{s.label}</p>
+                  <p className="text-xs text-gray-400">{s.label}</p>
                   <p className={`text-2xl font-semibold ${s.color}`}>{loading ? '...' : s.value}</p>
                 </div>
                 <div className={`h-10 w-10 ${s.bg} rounded-lg flex items-center justify-center`}>
@@ -159,10 +164,10 @@ const AccessCodeManagementPage = () => {
 
       <div className="flex gap-4 flex-wrap">
         <div className="relative flex-1 min-w-64">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-cyan-300" />
-          <Input className="pl-10 glass border-cyan-400/30 text-cyan-100 placeholder:text-cyan-300" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <Input className="pl-10 bg-gray-50 border-gray-100 text-gray-700 placeholder:text-gray-400" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
         </div>
-        <select className="glass border-cyan-400/30 rounded-md px-3 py-2 text-cyan-100 bg-slate-800/50" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
+        <select className="bg-gray-50 border-gray-100 rounded-md px-3 py-2 text-gray-700 bg-gray-50" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
           <option value="all">All Status</option>
           <option value="active">Active</option>
           <option value="used">Used</option>
@@ -170,16 +175,16 @@ const AccessCodeManagementPage = () => {
         </select>
       </div>
 
-      <Card className="glass-card border-cyan-400/20">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-cyan-50"><Shield className="h-5 w-5" /> All Access Codes ({filteredCodes.length})</CardTitle>
-          <CardDescription className="text-cyan-200">View and monitor all visitor access codes</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-gray-900"><Shield className="h-5 w-5" /> All Access Codes ({filteredCodes.length})</CardTitle>
+          <CardDescription className="text-gray-500">View and monitor all visitor access codes</CardDescription>
         </CardHeader>
         <CardContent>
-          {loading ? <p className="text-cyan-300 text-sm">Loading...</p> : (
+          {loading ? <p className="text-gray-400 text-sm">Loading...</p> : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="text-left text-cyan-300 border-b border-cyan-400/20">
+                <thead className="text-left text-gray-400 border-b border-gray-100">
                   <tr>
                     <th className="py-3 px-3">Code</th>
                     <th className="py-3 px-3">Resident</th>
@@ -192,38 +197,38 @@ const AccessCodeManagementPage = () => {
                 </thead>
                 <tbody>
                   {filteredCodes.map((code) => (
-                    <tr key={code.id} className="hover:bg-cyan-500/10 transition border-b border-cyan-400/10">
-                      <td className="py-3 px-3 font-mono text-cyan-50 font-semibold">{code.code}</td>
-                      <td className="py-3 px-3"><span className="font-medium text-cyan-50">{code.resident}</span><p className="text-xs text-cyan-300">{code.unit}</p></td>
-                      <td className="py-3 px-3 text-cyan-100">{code.visitorName}</td>
-                      <td className="py-3 px-3 hidden md:table-cell text-cyan-200">{code.purpose}</td>
+                    <tr key={code.id} className="hover:bg-gray-50 transition border-b border-gray-50">
+                      <td className="py-3 px-3 font-mono text-gray-900 font-semibold">{code.code}</td>
+                      <td className="py-3 px-3"><span className="font-medium text-gray-900">{code.resident}</span><p className="text-xs text-gray-400">{code.unit}</p></td>
+                      <td className="py-3 px-3 text-gray-700">{code.visitorName}</td>
+                      <td className="py-3 px-3 hidden md:table-cell text-gray-500">{code.purpose}</td>
                       <td className="py-3 px-3"><div className="flex items-center gap-2">{getStatusIcon(code.status)}<Badge className={getStatusColor(code.status)}>{code.status}</Badge></div></td>
                       <td className="py-3 px-3 hidden md:table-cell">
                         {code.exitLogged ? (
-                          <Badge className="bg-orange-500/20 text-orange-300">{code.exitedAt ? new Date(code.exitedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Exited'}</Badge>
+                          <Badge className="bg-orange-50 text-orange-600">{code.exitedAt ? new Date(code.exitedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Exited'}</Badge>
                         ) : code.isUsed ? (
-                          <Badge className="bg-blue-500/20 text-blue-300">On site</Badge>
+                          <Badge className="bg-blue-50 text-blue-600">On site</Badge>
                         ) : (
-                          <span className="text-cyan-400/40">-</span>
+                          <span className="text-gray-400">-</span>
                         )}
                       </td>
                       <td className="py-3 px-3">
                         <Dialog>
-                          <DialogTrigger asChild><Button size="sm" variant="ghost" className="hover:bg-cyan-500/20 text-cyan-200"><Eye className="h-3 w-3" /></Button></DialogTrigger>
-                          <DialogContent className="glass-card border-cyan-400/20 max-w-2xl">
-                            <DialogHeader><DialogTitle className="text-cyan-50">Access Code Details</DialogTitle></DialogHeader>
+                          <DialogTrigger asChild><Button size="sm" variant="ghost" className="hover:bg-blue-50 text-gray-500"><Eye className="h-3 w-3" /></Button></DialogTrigger>
+                          <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 max-w-2xl">
+                            <DialogHeader><DialogTitle className="text-gray-900">Access Code Details</DialogTitle></DialogHeader>
                             <div className="space-y-4 text-sm">
                               <div className="grid grid-cols-2 gap-4">
-                                <div><span className="text-cyan-300">Code:</span><p className="text-cyan-100 font-mono text-lg font-bold">{code.code}</p></div>
-                                <div><span className="text-cyan-300">Status:</span><Badge className={`ml-2 ${getStatusColor(code.status)}`}>{code.status}</Badge></div>
+                                <div><span className="text-gray-400">Code:</span><p className="text-gray-700 font-mono text-lg font-bold">{code.code}</p></div>
+                                <div><span className="text-gray-400">Status:</span><Badge className={`ml-2 ${getStatusColor(code.status)}`}>{code.status}</Badge></div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                <div><span className="text-cyan-300">Resident:</span><p className="text-cyan-100">{code.resident} ({code.unit})</p></div>
-                                <div><span className="text-cyan-300">Visitor:</span><p className="text-cyan-100">{code.visitorName}</p></div>
+                                <div><span className="text-gray-400">Resident:</span><p className="text-gray-700">{code.resident} ({code.unit})</p></div>
+                                <div><span className="text-gray-400">Visitor:</span><p className="text-gray-700">{code.visitorName}</p></div>
                               </div>
                               <div className="grid grid-cols-2 gap-4">
-                                <div><span className="text-cyan-300">Valid From:</span><p className="text-cyan-100">{new Date(code.validFrom).toLocaleString()}</p></div>
-                                <div><span className="text-cyan-300">Valid Until:</span><p className="text-cyan-100">{new Date(code.validUntil).toLocaleString()}</p></div>
+                                <div><span className="text-gray-400">Valid From:</span><p className="text-gray-700">{new Date(code.validFrom).toLocaleString()}</p></div>
+                                <div><span className="text-gray-400">Valid Until:</span><p className="text-gray-700">{new Date(code.validUntil).toLocaleString()}</p></div>
                               </div>
                             </div>
                           </DialogContent>

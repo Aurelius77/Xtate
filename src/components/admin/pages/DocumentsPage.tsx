@@ -42,11 +42,11 @@ const getFileExtension = (fileName: string) => {
 
 const getCategoryColor = (category: string | null) => {
   switch (category) {
-    case 'Governance': return 'bg-blue-500/20 text-blue-300';
-    case 'Security': return 'bg-green-500/20 text-green-300';
-    case 'Safety': return 'bg-red-500/20 text-red-300';
-    case 'Finance': return 'bg-yellow-500/20 text-yellow-300';
-    default: return 'bg-gray-500/20 text-gray-300';
+    case 'Governance': return 'bg-blue-50 text-blue-600';
+    case 'Security': return 'bg-emerald-50 text-emerald-600';
+    case 'Safety': return 'bg-rose-50 text-rose-600';
+    case 'Finance': return 'bg-amber-50 text-amber-600';
+    default: return 'bg-gray-100 text-gray-500';
   }
 };
 
@@ -198,7 +198,7 @@ const DocumentsPage = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-semibold">Documents</h1>
-          <p className="text-white/60">Manage estate documents and files</p>
+          <p className="text-gray-400">Manage estate documents and files</p>
         </div>
         <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => setDialogOpen(true)}>
           <Upload className="h-4 w-4 mr-2" />
@@ -207,23 +207,23 @@ const DocumentsPage = () => {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 sm:max-w-xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle>Upload Document</DialogTitle>
-            <DialogDescription className="text-cyan-200">
+            <DialogTitle className="text-gray-900">Upload Document</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Upload a document and choose whether residents can see it.
             </DialogDescription>
           </DialogHeader>
 
           <form className="space-y-4" onSubmit={handleUploadDocument}>
             <div className="space-y-2">
-              <Label htmlFor="document-title" className="text-cyan-100">Title</Label>
+              <Label htmlFor="document-title" className="text-gray-700">Title</Label>
               <Input
                 id="document-title"
                 value={form.title}
                 onChange={(event) => setForm((current) => ({ ...current, title: event.target.value }))}
                 placeholder="Estate bylaws"
-                className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 placeholder:text-cyan-400/60"
+                className="bg-gray-50 border-gray-100 text-gray-900 placeholder:text-gray-400"
                 disabled={uploading}
                 required
               />
@@ -231,12 +231,12 @@ const DocumentsPage = () => {
 
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="document-category" className="text-cyan-100">Category</Label>
+                <Label htmlFor="document-category" className="text-gray-700">Category</Label>
                 <select
                   id="document-category"
                   value={form.category}
                   onChange={(event) => setForm((current) => ({ ...current, category: event.target.value }))}
-                  className="flex h-10 w-full rounded-md border border-cyan-400/30 bg-slate-900/70 px-3 py-2 text-sm text-cyan-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="flex h-10 w-full rounded-md border border-gray-100 bg-gray-50 px-3 py-2 text-sm text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
                   disabled={uploading}
                 >
                   <option value="General">General</option>
@@ -248,20 +248,20 @@ const DocumentsPage = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="document-file" className="text-cyan-100">File</Label>
+                <Label htmlFor="document-file" className="text-gray-700">File</Label>
                 <Input
                   ref={fileInputRef}
                   id="document-file"
                   type="file"
                   onChange={(event) => setForm((current) => ({ ...current, file: event.target.files?.[0] || null }))}
-                  className="bg-slate-900/70 border-cyan-400/30 text-cyan-50 file:text-cyan-100"
+                  className="bg-gray-50 border-gray-100 text-gray-900 file:text-gray-700"
                   disabled={uploading}
                   required
                 />
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-cyan-100">
+            <label className="flex items-center gap-2 text-gray-700">
               <input
                 type="checkbox"
                 checked={form.isPublic}
@@ -276,13 +276,13 @@ const DocumentsPage = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="glass border-cyan-400/30 text-cyan-100 hover:bg-cyan-500/20"
+                className="bg-gray-50 border-gray-100 text-gray-700 hover:bg-blue-50"
                 onClick={() => setDialogOpen(false)}
                 disabled={uploading}
               >
                 Cancel
               </Button>
-              <Button type="submit" className="bg-cyan-600 hover:bg-cyan-700 text-white" disabled={uploading}>
+              <Button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white" disabled={uploading}>
                 {uploading ? 'Uploading...' : 'Upload Document'}
               </Button>
             </DialogFooter>
@@ -291,42 +291,42 @@ const DocumentsPage = () => {
       </Dialog>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">Total Documents</p>
+                <p className="text-xs text-gray-400">Total Documents</p>
                 <p className="text-2xl font-semibold text-blue-400">{loading ? '...' : stats.total}</p>
               </div>
-              <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                 <FileText className="h-5 w-5 text-blue-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">Public Documents</p>
+                <p className="text-xs text-gray-400">Public Documents</p>
                 <p className="text-2xl font-semibold text-green-400">{loading ? '...' : stats.publicDocs}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <Eye className="h-5 w-5 text-green-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">Storage Used</p>
+                <p className="text-xs text-gray-400">Storage Used</p>
                 <p className="text-2xl font-semibold text-purple-400">{loading ? '...' : stats.storageUsed}</p>
               </div>
-              <div className="h-10 w-10 bg-purple-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-violet-50 rounded-lg flex items-center justify-center">
                 <Upload className="h-5 w-5 text-purple-400" />
               </div>
             </div>
@@ -334,27 +334,27 @@ const DocumentsPage = () => {
         </Card>
       </div>
 
-      <Card className="glass-card border-white/10">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
         <CardHeader>
-          <CardTitle>All Documents</CardTitle>
-          <CardDescription className="text-white/60">Estate documents and files</CardDescription>
+          <CardTitle className="text-gray-900">All Documents</CardTitle>
+          <CardDescription className="text-gray-400">Estate documents and files</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <p className="text-white/60">Loading documents...</p>
+            <p className="text-gray-400">Loading documents...</p>
           ) : documents.length === 0 ? (
-            <p className="text-white/60">No documents uploaded yet.</p>
+            <p className="text-gray-400">No documents uploaded yet.</p>
           ) : (
             <div className="space-y-4">
               {documents.map((document) => (
-                <div key={document.id} className="flex items-center justify-between p-4 glass rounded-lg">
+                <div key={document.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                    <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                       <FileText className="h-5 w-5 text-blue-400" />
                     </div>
                     <div>
-                      <h3 className="font-medium">{document.title}</h3>
-                      <div className="flex items-center gap-4 text-sm text-white/60">
+                      <h3 className="font-medium text-gray-900">{document.title}</h3>
+                      <div className="flex items-center gap-4 text-sm text-gray-400">
                         <span>{document.file_type || 'File'}{document.file_size ? ` - ${document.file_size}` : ''}</span>
                         <span>{new Date(document.created_at).toLocaleDateString()}</span>
                       </div>
@@ -367,11 +367,11 @@ const DocumentsPage = () => {
                     <Badge variant={document.is_public ? 'default' : 'secondary'}>
                       {document.is_public ? 'Public' : 'Private'}
                     </Badge>
-                    <Button size="sm" variant="outline" className="glass border-white/20" onClick={() => openDocument(document, true)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-700" onClick={() => openDocument(document, true)}>
                       <Download className="h-4 w-4 mr-1" />
                       Download
                     </Button>
-                    <Button size="sm" variant="outline" className="glass border-white/20" onClick={() => openDocument(document)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-700" onClick={() => openDocument(document)}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>

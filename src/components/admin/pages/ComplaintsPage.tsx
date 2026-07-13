@@ -8,6 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/SecureAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEstateId } from '@/hooks/useEstateId';
+import { fetchProfilesByUserIds } from '@/lib/residentProfiles';
 import type { Database } from '@/integrations/supabase/types';
 
 type ComplaintStatus = Database['public']['Enums']['complaint_status'];
@@ -27,6 +28,18 @@ interface ComplaintRow {
   } | null;
 }
 
+interface ComplaintQueryRow {
+  id: string;
+  title: string;
+  description: string;
+  status: ComplaintStatus;
+  created_at: string;
+  updated_at: string;
+  photo_url: string | null;
+  assigned_to: string | null;
+  resident: { house_unit_number: string | null; user_id: string } | null;
+}
+
 const getStatusIcon = (status: ComplaintStatus) => {
   switch (status) {
     case 'open': return <AlertCircle className="h-4 w-4 text-red-400" />;
@@ -38,10 +51,10 @@ const getStatusIcon = (status: ComplaintStatus) => {
 
 const getStatusClass = (status: ComplaintStatus) => {
   switch (status) {
-    case 'open': return 'bg-red-500/20 text-red-300';
-    case 'in_progress': return 'bg-yellow-500/20 text-yellow-300';
-    case 'resolved': return 'bg-green-500/20 text-green-300';
-    default: return 'bg-cyan-500/20 text-cyan-300';
+    case 'open': return 'bg-rose-50 text-rose-600';
+    case 'in_progress': return 'bg-amber-50 text-amber-600';
+    case 'resolved': return 'bg-emerald-50 text-emerald-600';
+    default: return 'bg-blue-50 text-blue-600';
   }
 };
 
@@ -80,19 +93,32 @@ const ComplaintsPage = () => {
       .from('complaints')
       .select(`
         id, title, description, status, created_at, updated_at, photo_url, assigned_to,
-        resident:residents(
-          house_unit_number,
-          profile:profiles!residents_user_id_fkey(full_name, email)
-        )
+        resident:residents(house_unit_number, user_id)
       `)
       .eq('estate_id', estateId)
       .order('created_at', { ascending: false });
 
     if (error) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
-    } else {
-      setComplaints((data || []) as ComplaintRow[]);
+      setLoading(false);
+      return;
     }
+
+    const rows = (data || []) as ComplaintQueryRow[];
+    let profileMap: Record<string, { full_name: string | null; email: string | null }> = {};
+    try {
+      profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
+    } catch (profileError) {
+      toast({ title: 'Error', description: profileError instanceof Error ? profileError.message : 'Could not load resident profiles.', variant: 'destructive' });
+    }
+
+    setComplaints(rows.map((row) => ({
+      ...row,
+      resident: row.resident ? {
+        house_unit_number: row.resident.house_unit_number,
+        profile: profileMap[row.resident.user_id] || null,
+      } : null,
+    })));
 
     setLoading(false);
   }, [estateId, toast]);
@@ -169,48 +195,48 @@ const ComplaintsPage = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Complaints Management</h1>
-          <p className="text-cyan-200">Manage and resolve resident complaints</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Complaints Management</h1>
+          <p className="text-gray-500">Manage and resolve resident complaints</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">Open Complaints</p>
+                <p className="text-xs text-gray-400">Open Complaints</p>
                 <p className="text-2xl font-semibold text-red-400">{loading ? '...' : stats.open}</p>
               </div>
-              <div className="h-10 w-10 bg-red-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-rose-50 rounded-lg flex items-center justify-center">
                 <AlertCircle className="h-5 w-5 text-red-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">In Progress</p>
+                <p className="text-xs text-gray-400">In Progress</p>
                 <p className="text-2xl font-semibold text-yellow-400">{loading ? '...' : stats.inProgress}</p>
               </div>
-              <div className="h-10 w-10 bg-yellow-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-amber-50 rounded-lg flex items-center justify-center">
                 <Clock className="h-5 w-5 text-yellow-400" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card className="glass-card border-white/10">
+        <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-white/60">Resolved This Month</p>
+                <p className="text-xs text-gray-400">Resolved This Month</p>
                 <p className="text-2xl font-semibold text-green-400">{loading ? '...' : stats.resolvedThisMonth}</p>
               </div>
-              <div className="h-10 w-10 bg-green-600/20 rounded-lg flex items-center justify-center">
+              <div className="h-10 w-10 bg-emerald-50 rounded-lg flex items-center justify-center">
                 <CheckCircle className="h-5 w-5 text-green-400" />
               </div>
             </div>
@@ -218,30 +244,30 @@ const ComplaintsPage = () => {
         </Card>
       </div>
 
-      <Card className="glass-card border-white/10">
+      <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-cyan-50">All Complaints</CardTitle>
-          <CardDescription className="text-cyan-200">Recent complaints from residents</CardDescription>
+          <CardTitle className="text-gray-900">All Complaints</CardTitle>
+          <CardDescription className="text-gray-500">Recent complaints from residents</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {loading ? (
-              <p className="text-cyan-300 text-sm">Loading complaints...</p>
+              <p className="text-gray-400 text-sm">Loading complaints...</p>
             ) : complaints.length === 0 ? (
-              <p className="text-cyan-300 text-sm">No complaints submitted yet.</p>
+              <p className="text-gray-400 text-sm">No complaints submitted yet.</p>
             ) : (
               complaints.map((complaint) => (
-                <div key={complaint.id} className="flex items-start justify-between p-4 glass rounded-lg">
+                <div key={complaint.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start gap-4">
-                    <div className="h-10 w-10 bg-blue-600/20 rounded-lg flex items-center justify-center">
+                    <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
                       {getStatusIcon(complaint.status)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-cyan-50">{complaint.title}</h3>
+                        <h3 className="font-medium text-gray-900">{complaint.title}</h3>
                       </div>
-                      <p className="text-sm text-cyan-200 mb-2">{complaint.description}</p>
-                      <div className="flex items-center gap-4 text-xs text-cyan-300">
+                      <p className="text-sm text-gray-500 mb-2">{complaint.description}</p>
+                      <div className="flex items-center gap-4 text-xs text-gray-400">
                         <span>{complaint.resident?.profile?.full_name || 'Unknown resident'} • {complaint.resident?.house_unit_number || '-'}</span>
                         <span>{getTimeAgo(new Date(complaint.created_at))}</span>
                       </div>
@@ -255,7 +281,7 @@ const ComplaintsPage = () => {
                       {complaint.status.replace('_', ' ')}
                     </Badge>
 
-                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => setSelectedComplaintId(complaint.id)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setSelectedComplaintId(complaint.id)}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
@@ -268,10 +294,10 @@ const ComplaintsPage = () => {
       </Card>
 
       <Dialog open={!!selectedComplaint} onOpenChange={(open) => !open && setSelectedComplaintId(null)}>
-        <DialogContent className="glass-card border-cyan-400/20 bg-slate-950 text-cyan-50 max-w-2xl">
+        <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 max-w-2xl">
           <DialogHeader>
-            <DialogTitle>{selectedComplaint?.title || 'Complaint'}</DialogTitle>
-            <DialogDescription className="text-cyan-200">
+            <DialogTitle className="text-gray-900">{selectedComplaint?.title || 'Complaint'}</DialogTitle>
+            <DialogDescription className="text-gray-500">
               Review the resident complaint and update its status.
             </DialogDescription>
           </DialogHeader>
@@ -280,33 +306,33 @@ const ComplaintsPage = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-cyan-300">Resident:</span>
-                  <p className="text-cyan-100">{selectedComplaint.resident?.profile?.full_name || 'Unknown resident'}</p>
+                  <span className="text-gray-400">Resident:</span>
+                  <p className="text-gray-700">{selectedComplaint.resident?.profile?.full_name || 'Unknown resident'}</p>
                 </div>
                 <div>
-                  <span className="text-cyan-300">Unit:</span>
-                  <p className="text-cyan-100">{selectedComplaint.resident?.house_unit_number || '-'}</p>
+                  <span className="text-gray-400">Unit:</span>
+                  <p className="text-gray-700">{selectedComplaint.resident?.house_unit_number || '-'}</p>
                 </div>
                 <div>
-                  <span className="text-cyan-300">Status:</span>
-                  <p className="text-cyan-100">{selectedComplaint.status.replace('_', ' ')}</p>
+                  <span className="text-gray-400">Status:</span>
+                  <p className="text-gray-700">{selectedComplaint.status.replace('_', ' ')}</p>
                 </div>
                 <div>
-                  <span className="text-cyan-300">Submitted:</span>
-                  <p className="text-cyan-100">{new Date(selectedComplaint.created_at).toLocaleString()}</p>
+                  <span className="text-gray-400">Submitted:</span>
+                  <p className="text-gray-700">{new Date(selectedComplaint.created_at).toLocaleString()}</p>
                 </div>
               </div>
 
               <div>
-                <span className="text-cyan-300 text-sm">Description:</span>
-                <p className="text-cyan-100 mt-1">{selectedComplaint.description}</p>
+                <span className="text-gray-400 text-sm">Description:</span>
+                <p className="text-gray-700 mt-1">{selectedComplaint.description}</p>
               </div>
 
               {selectedComplaint.photo_url && (
                 <div>
-                  <span className="text-cyan-300 text-sm">Attachment:</span>
+                  <span className="text-gray-400 text-sm">Attachment:</span>
                   <div className="mt-2">
-                    <Button size="sm" variant="outline" className="glass border-cyan-400/30 text-cyan-200" onClick={() => openAttachment(selectedComplaint.photo_url)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => openAttachment(selectedComplaint.photo_url)}>
                       Open Attachment
                     </Button>
                   </div>
@@ -314,14 +340,14 @@ const ComplaintsPage = () => {
               )}
 
               <div>
-                <span className="text-cyan-300 text-sm">Update Status:</span>
+                <span className="text-gray-400 text-sm">Update Status:</span>
                 <div className="flex flex-wrap gap-2 mt-2">
                   {(['open', 'in_progress', 'resolved'] as ComplaintStatus[]).map((status) => (
                     <Button
                       key={status}
                       size="sm"
                       variant={selectedComplaint.status === status ? 'default' : 'outline'}
-                      className={selectedComplaint.status === status ? 'bg-cyan-600 hover:bg-cyan-700' : 'glass border-cyan-400/30 text-cyan-200 hover:bg-cyan-500/20'}
+                      className={selectedComplaint.status === status ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50'}
                       onClick={() => handleStatusUpdate(selectedComplaint.id, status)}
                       disabled={savingComplaintId === selectedComplaint.id || selectedComplaint.status === status}
                     >

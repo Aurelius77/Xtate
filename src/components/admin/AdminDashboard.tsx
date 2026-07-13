@@ -36,6 +36,7 @@ import ForumModerationPage from './pages/ForumModerationPage';
 import MarketplaceModerationPage from './pages/MarketplaceModerationPage';
 import TechnicianManagementPage from './pages/TechnicianManagementPage';
 import FeatureGate from '@/components/features/FeatureGate';
+import ComingSoonPage from '../resident/pages/ComingSoonPage';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
@@ -58,6 +59,28 @@ const AdminDashboard = () => {
       case 'forum-moderation': return <FeatureGate feature="forum"><ForumModerationPage /></FeatureGate>;
       case 'marketplace-moderation': return <FeatureGate feature="marketplace"><MarketplaceModerationPage /></FeatureGate>;
       case 'technicians': return <FeatureGate feature="technicians"><TechnicianManagementPage /></FeatureGate>;
+
+      // Sidebar items with no built page yet — show a proper "Coming Soon" state
+      // instead of silently falling back to the dashboard home underneath an
+      // "active" nav highlight.
+      case 'tenants': return <ComingSoonPage title="Tenants" onBack={() => setCurrentPage('dashboard')} />;
+      case 'properties': return <ComingSoonPage title="Properties" onBack={() => setCurrentPage('dashboard')} />;
+      case 'directory': return <ComingSoonPage title="Directory" onBack={() => setCurrentPage('dashboard')} />;
+      case 'vehicles': return <ComingSoonPage title="Vehicles" onBack={() => setCurrentPage('dashboard')} />;
+      case 'visitors': return <ComingSoonPage title="Visitors" onBack={() => setCurrentPage('dashboard')} />;
+      case 'finance': return <ComingSoonPage title="Finance" onBack={() => setCurrentPage('dashboard')} />;
+      case 'wallets': return <ComingSoonPage title="Wallets" onBack={() => setCurrentPage('dashboard')} />;
+      case 'maintenance': return <ComingSoonPage title="Maintenance" onBack={() => setCurrentPage('dashboard')} />;
+      case 'waste': return <ComingSoonPage title="Waste Management" onBack={() => setCurrentPage('dashboard')} />;
+      case 'announcements': return <ComingSoonPage title="Announcements" onBack={() => setCurrentPage('dashboard')} />;
+      case 'messages': return <ComingSoonPage title="Messages" onBack={() => setCurrentPage('dashboard')} />;
+      case 'notifications': return <ComingSoonPage title="Notifications" onBack={() => setCurrentPage('dashboard')} />;
+      case 'reports': return <ComingSoonPage title="Reports" onBack={() => setCurrentPage('dashboard')} />;
+      case 'analytics': return <ComingSoonPage title="Analytics" onBack={() => setCurrentPage('dashboard')} />;
+      case 'estate-settings': return <ComingSoonPage title="Estate Settings" onBack={() => setCurrentPage('dashboard')} />;
+      case 'permissions': return <ComingSoonPage title="Roles & Permissions" onBack={() => setCurrentPage('dashboard')} />;
+      case 'integrations': return <ComingSoonPage title="Integrations" onBack={() => setCurrentPage('dashboard')} />;
+
       default: return renderDashboard();
     }
   };
