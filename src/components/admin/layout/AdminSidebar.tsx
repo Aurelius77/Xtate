@@ -1,9 +1,9 @@
 import React from 'react';
 import {
-  LayoutDashboard, Users, Home, BookOpen, ShieldCheck,
-  Car, UserPlus, Wallet, Receipt, Calculator, Wrench, Trash2,
-  Megaphone, MessageSquare, Bell, Calendar, ScrollText,
-  FileBarChart, PieChart, Settings, UserCog, Lock,
+  LayoutDashboard, Users, Home, ShieldCheck,
+  Car, Wallet, Receipt, Calculator, Wrench, Trash2,
+  Megaphone, Bell, Calendar, ScrollText,
+  FileBarChart, PieChart, Settings, UserCog,
   LogOut, HelpCircle, ChevronRight, MessageCircle, ShoppingBag,
   KeyRound, Upload, AlertCircle
 } from 'lucide-react';
@@ -26,18 +26,14 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       title: 'MANAGEMENT',
       items: [
         { icon: Users, label: 'Residents', page: 'residents' },
-        { icon: Home, label: 'Properties', page: 'properties' },
-        { icon: BookOpen, label: 'Directory', page: 'directory' },
         { icon: KeyRound, label: 'Access Codes', page: 'access-codes' },
         { icon: ShieldCheck, label: 'Security Management', page: 'security-management' },
         { icon: Car, label: 'Vehicles', page: 'vehicles' },
-        { icon: UserPlus, label: 'Visitors', page: 'visitors' },
       ]
     },
     {
       title: 'OPERATIONS',
       items: [
-        { icon: Wallet, label: 'Finance', page: 'finance' },
         { icon: Wallet, label: 'Wallets', page: 'wallets' },
         { icon: Receipt, label: 'Invoices & Dues', page: 'dues' },
         { icon: Calculator, label: 'Expenses', page: 'expenses' },
@@ -57,7 +53,6 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
     {
       title: 'COMMUNICATION',
       items: [
-        { icon: MessageSquare, label: 'Messages', page: 'messages', badge: 12 },
         { icon: AlertCircle, label: 'Complaints', page: 'complaints' },
         { icon: Megaphone, label: 'Broadcast', page: 'broadcast' },
         { icon: Bell, label: 'Notifications', page: 'notifications' },
@@ -76,9 +71,8 @@ const AdminSidebar = ({ sidebarOpen, setSidebarOpen, currentPage, setCurrentPage
       title: 'SETTINGS',
       items: [
         { icon: Settings, label: 'Estate Settings', page: 'estate-settings' },
-        { icon: UserCog, label: 'User Management', page: 'settings' },
+        { icon: UserCog, label: 'My Profile', page: 'settings' },
         { icon: Upload, label: 'Data Import', page: 'data-import' },
-        { icon: Lock, label: 'Roles & Permissions', page: 'permissions' },
       ]
     }
   ];

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { MessageSquare, AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
+import { Wrench, AlertCircle, CheckCircle, Clock, Eye } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,7 @@ import type { Database } from '@/integrations/supabase/types';
 
 type ComplaintStatus = Database['public']['Enums']['complaint_status'];
 
-interface ComplaintRow {
+interface TicketRow {
   id: string;
   title: string;
   description: string;
@@ -28,7 +28,7 @@ interface ComplaintRow {
   } | null;
 }
 
-interface ComplaintQueryRow {
+interface TicketQueryRow {
   id: string;
   title: string;
   description: string;
@@ -45,7 +45,7 @@ const getStatusIcon = (status: ComplaintStatus) => {
     case 'open': return <AlertCircle className="h-4 w-4 text-red-400" />;
     case 'in_progress': return <Clock className="h-4 w-4 text-yellow-400" />;
     case 'resolved': return <CheckCircle className="h-4 w-4 text-green-400" />;
-    default: return <MessageSquare className="h-4 w-4" />;
+    default: return <Wrench className="h-4 w-4" />;
   }
 };
 
@@ -68,21 +68,21 @@ const getTimeAgo = (date: Date) => {
   return date.toLocaleDateString();
 };
 
-const ComplaintsPage = () => {
+const MaintenancePage = () => {
   const estateId = useEstateId();
   const { user } = useAuth();
   const { toast } = useToast();
-  const [complaints, setComplaints] = useState<ComplaintRow[]>([]);
-  const [selectedComplaintId, setSelectedComplaintId] = useState<string | null>(null);
+  const [tickets, setTickets] = useState<TicketRow[]>([]);
+  const [selectedTicketId, setSelectedTicketId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const [savingComplaintId, setSavingComplaintId] = useState<string | null>(null);
+  const [savingTicketId, setSavingTicketId] = useState<string | null>(null);
 
-  const selectedComplaint = useMemo(
-    () => complaints.find((complaint) => complaint.id === selectedComplaintId) || null,
-    [complaints, selectedComplaintId],
+  const selectedTicket = useMemo(
+    () => tickets.find((ticket) => ticket.id === selectedTicketId) || null,
+    [tickets, selectedTicketId],
   );
 
-  const loadComplaints = useCallback(async () => {
+  const loadTickets = useCallback(async () => {
     if (!estateId) {
       setLoading(false);
       return;
@@ -96,7 +96,7 @@ const ComplaintsPage = () => {
         resident:residents(house_unit_number, user_id)
       `)
       .eq('estate_id', estateId)
-      .eq('category', 'general')
+      .eq('category', 'maintenance')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -105,7 +105,7 @@ const ComplaintsPage = () => {
       return;
     }
 
-    const rows = (data || []) as ComplaintQueryRow[];
+    const rows = (data || []) as TicketQueryRow[];
     let profileMap: Record<string, { full_name: string | null; email: string | null }> = {};
     try {
       profileMap = await fetchProfilesByUserIds(rows.map((r) => r.resident?.user_id).filter((id): id is string => !!id));
@@ -113,7 +113,7 @@ const ComplaintsPage = () => {
       toast({ title: 'Error', description: profileError instanceof Error ? profileError.message : 'Could not load resident profiles.', variant: 'destructive' });
     }
 
-    setComplaints(rows.map((row) => ({
+    setTickets(rows.map((row) => ({
       ...row,
       resident: row.resident ? {
         house_unit_number: row.resident.house_unit_number,
@@ -125,13 +125,13 @@ const ComplaintsPage = () => {
   }, [estateId, toast]);
 
   useEffect(() => {
-    void loadComplaints();
-  }, [loadComplaints]);
+    void loadTickets();
+  }, [loadTickets]);
 
-  const handleStatusUpdate = async (complaintId: string, status: ComplaintStatus) => {
-    const complaint = complaints.find((c) => c.id === complaintId);
+  const handleStatusUpdate = async (ticketId: string, status: ComplaintStatus) => {
+    const ticket = tickets.find((t) => t.id === ticketId);
 
-    setSavingComplaintId(complaintId);
+    setSavingTicketId(ticketId);
     const { error } = await supabase
       .from('complaints')
       .update({
@@ -139,26 +139,26 @@ const ComplaintsPage = () => {
         assigned_to: status === 'open' ? null : user?.id || null,
         updated_at: new Date().toISOString(),
       })
-      .eq('id', complaintId);
+      .eq('id', ticketId);
 
-    setSavingComplaintId(null);
+    setSavingTicketId(null);
     if (error) {
       toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
       return;
     }
 
-    toast({ title: 'Complaint Updated', description: `Status changed to ${status.replace('_', ' ')}.` });
-    await loadComplaints();
+    toast({ title: 'Ticket Updated', description: `Status changed to ${status.replace('_', ' ')}.` });
+    await loadTickets();
 
-    if (status === 'resolved' && complaint?.resident?.profile?.email) {
+    if (status === 'resolved' && ticket?.resident?.profile?.email) {
       supabase.functions.invoke('send-notification-email', {
         body: {
           type: 'complaint_resolved',
-          to: complaint.resident.profile.email,
+          to: ticket.resident.profile.email,
           estateId,
           data: {
-            residentName: complaint.resident.profile.full_name || 'Resident',
-            complaintTitle: complaint.title,
+            residentName: ticket.resident.profile.full_name || 'Resident',
+            complaintTitle: ticket.title,
           },
         },
       }).catch((emailError) => console.error('send-notification-email failed', emailError));
@@ -181,23 +181,23 @@ const ComplaintsPage = () => {
   const stats = useMemo(() => {
     const now = new Date();
     return {
-      open: complaints.filter((complaint) => complaint.status === 'open').length,
-      inProgress: complaints.filter((complaint) => complaint.status === 'in_progress').length,
-      resolvedThisMonth: complaints.filter((complaint) => {
-        const updatedAt = new Date(complaint.updated_at);
-        return complaint.status === 'resolved'
+      open: tickets.filter((ticket) => ticket.status === 'open').length,
+      inProgress: tickets.filter((ticket) => ticket.status === 'in_progress').length,
+      resolvedThisMonth: tickets.filter((ticket) => {
+        const updatedAt = new Date(ticket.updated_at);
+        return ticket.status === 'resolved'
           && updatedAt.getMonth() === now.getMonth()
           && updatedAt.getFullYear() === now.getFullYear();
       }).length,
     };
-  }, [complaints]);
+  }, [tickets]);
 
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-gray-900">Complaints Management</h1>
-          <p className="text-gray-500">Manage and resolve resident complaints</p>
+          <h1 className="text-2xl font-semibold text-gray-900">Maintenance Requests</h1>
+          <p className="text-gray-500">Repair and upkeep tickets submitted by residents</p>
         </div>
       </div>
 
@@ -206,7 +206,7 @@ const ComplaintsPage = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-gray-400">Open Complaints</p>
+                <p className="text-xs text-gray-400">Open Tickets</p>
                 <p className="text-2xl font-semibold text-red-400">{loading ? '...' : stats.open}</p>
               </div>
               <div className="h-10 w-10 bg-rose-50 rounded-lg flex items-center justify-center">
@@ -247,42 +247,42 @@ const ComplaintsPage = () => {
 
       <Card className="bg-white rounded-3xl border border-gray-100 shadow-sm">
         <CardHeader>
-          <CardTitle className="text-gray-900">All Complaints</CardTitle>
-          <CardDescription className="text-gray-500">Recent complaints from residents</CardDescription>
+          <CardTitle className="text-gray-900">All Maintenance Tickets</CardTitle>
+          <CardDescription className="text-gray-500">Repair requests from residents</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {loading ? (
-              <p className="text-gray-400 text-sm">Loading complaints...</p>
-            ) : complaints.length === 0 ? (
-              <p className="text-gray-400 text-sm">No complaints submitted yet.</p>
+              <p className="text-gray-400 text-sm">Loading tickets...</p>
+            ) : tickets.length === 0 ? (
+              <p className="text-gray-400 text-sm">No maintenance tickets submitted yet.</p>
             ) : (
-              complaints.map((complaint) => (
-                <div key={complaint.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
+              tickets.map((ticket) => (
+                <div key={ticket.id} className="flex items-start justify-between p-4 bg-gray-50 rounded-lg">
                   <div className="flex items-start gap-4">
                     <div className="h-10 w-10 bg-blue-50 rounded-lg flex items-center justify-center">
-                      {getStatusIcon(complaint.status)}
+                      {getStatusIcon(ticket.status)}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-medium text-gray-900">{complaint.title}</h3>
+                        <h3 className="font-medium text-gray-900">{ticket.title}</h3>
                       </div>
-                      <p className="text-sm text-gray-500 mb-2">{complaint.description}</p>
+                      <p className="text-sm text-gray-500 mb-2">{ticket.description}</p>
                       <div className="flex items-center gap-4 text-xs text-gray-400">
-                        <span>{complaint.resident?.profile?.full_name || 'Unknown resident'} • {complaint.resident?.house_unit_number || '-'}</span>
-                        <span>{getTimeAgo(new Date(complaint.created_at))}</span>
+                        <span>{ticket.resident?.profile?.full_name || 'Unknown resident'} • {ticket.resident?.house_unit_number || '-'}</span>
+                        <span>{getTimeAgo(new Date(ticket.created_at))}</span>
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
                     <Badge
-                      variant={complaint.status === 'open' ? 'destructive' : complaint.status === 'in_progress' ? 'secondary' : 'default'}
-                      className={getStatusClass(complaint.status)}
+                      variant={ticket.status === 'open' ? 'destructive' : ticket.status === 'in_progress' ? 'secondary' : 'default'}
+                      className={getStatusClass(ticket.status)}
                     >
-                      {complaint.status.replace('_', ' ')}
+                      {ticket.status.replace('_', ' ')}
                     </Badge>
 
-                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setSelectedComplaintId(complaint.id)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => setSelectedTicketId(ticket.id)}>
                       <Eye className="h-4 w-4 mr-1" />
                       View
                     </Button>
@@ -294,46 +294,46 @@ const ComplaintsPage = () => {
         </CardContent>
       </Card>
 
-      <Dialog open={!!selectedComplaint} onOpenChange={(open) => !open && setSelectedComplaintId(null)}>
+      <Dialog open={!!selectedTicket} onOpenChange={(open) => !open && setSelectedTicketId(null)}>
         <DialogContent className="bg-white rounded-3xl border border-gray-100 shadow-sm border-gray-100 bg-white text-gray-900 max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="text-gray-900">{selectedComplaint?.title || 'Complaint'}</DialogTitle>
+            <DialogTitle className="text-gray-900">{selectedTicket?.title || 'Maintenance Ticket'}</DialogTitle>
             <DialogDescription className="text-gray-500">
-              Review the resident complaint and update its status.
+              Review the maintenance request and update its status.
             </DialogDescription>
           </DialogHeader>
 
-          {selectedComplaint && (
+          {selectedTicket && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="text-gray-400">Resident:</span>
-                  <p className="text-gray-700">{selectedComplaint.resident?.profile?.full_name || 'Unknown resident'}</p>
+                  <p className="text-gray-700">{selectedTicket.resident?.profile?.full_name || 'Unknown resident'}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">Unit:</span>
-                  <p className="text-gray-700">{selectedComplaint.resident?.house_unit_number || '-'}</p>
+                  <p className="text-gray-700">{selectedTicket.resident?.house_unit_number || '-'}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">Status:</span>
-                  <p className="text-gray-700">{selectedComplaint.status.replace('_', ' ')}</p>
+                  <p className="text-gray-700">{selectedTicket.status.replace('_', ' ')}</p>
                 </div>
                 <div>
                   <span className="text-gray-400">Submitted:</span>
-                  <p className="text-gray-700">{new Date(selectedComplaint.created_at).toLocaleString()}</p>
+                  <p className="text-gray-700">{new Date(selectedTicket.created_at).toLocaleString()}</p>
                 </div>
               </div>
 
               <div>
                 <span className="text-gray-400 text-sm">Description:</span>
-                <p className="text-gray-700 mt-1">{selectedComplaint.description}</p>
+                <p className="text-gray-700 mt-1">{selectedTicket.description}</p>
               </div>
 
-              {selectedComplaint.photo_url && (
+              {selectedTicket.photo_url && (
                 <div>
                   <span className="text-gray-400 text-sm">Attachment:</span>
                   <div className="mt-2">
-                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => openAttachment(selectedComplaint.photo_url)}>
+                    <Button size="sm" variant="outline" className="bg-gray-50 border-gray-100 text-gray-500" onClick={() => openAttachment(selectedTicket.photo_url)}>
                       Open Attachment
                     </Button>
                   </div>
@@ -347,10 +347,10 @@ const ComplaintsPage = () => {
                     <Button
                       key={status}
                       size="sm"
-                      variant={selectedComplaint.status === status ? 'default' : 'outline'}
-                      className={selectedComplaint.status === status ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50'}
-                      onClick={() => handleStatusUpdate(selectedComplaint.id, status)}
-                      disabled={savingComplaintId === selectedComplaint.id || selectedComplaint.status === status}
+                      variant={selectedTicket.status === status ? 'default' : 'outline'}
+                      className={selectedTicket.status === status ? 'bg-blue-600 hover:bg-blue-700' : 'bg-gray-50 border-gray-100 text-gray-500 hover:bg-blue-50'}
+                      onClick={() => handleStatusUpdate(selectedTicket.id, status)}
+                      disabled={savingTicketId === selectedTicket.id || selectedTicket.status === status}
                     >
                       {status.replace('_', ' ')}
                     </Button>
@@ -365,4 +365,4 @@ const ComplaintsPage = () => {
   );
 };
 
-export default ComplaintsPage;
+export default MaintenancePage;

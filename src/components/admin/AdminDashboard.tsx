@@ -39,6 +39,8 @@ import NotificationsPage from './pages/NotificationsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import ReportsPage from './pages/ReportsPage';
 import AnalyticsPage from './pages/AnalyticsPage';
+import MaintenancePage from './pages/MaintenancePage';
+import EstateSettingsPage from './pages/EstateSettingsPage';
 import FeatureGate from '@/components/features/FeatureGate';
 import ComingSoonPage from '../resident/pages/ComingSoonPage';
 
@@ -67,21 +69,15 @@ const AdminDashboard = () => {
       case 'notifications': return <NotificationsPage onNavigate={setCurrentPage} />;
       case 'reports': return <ReportsPage />;
       case 'analytics': return <AnalyticsPage />;
+      case 'maintenance': return <MaintenancePage />;
+      case 'estate-settings': return <EstateSettingsPage />;
 
       // Sidebar items with no built page yet — show a proper "Coming Soon" state
       // instead of silently falling back to the dashboard home underneath an
       // "active" nav highlight.
-      case 'properties': return <ComingSoonPage title="Properties" onBack={() => setCurrentPage('dashboard')} />;
-      case 'directory': return <ComingSoonPage title="Directory" onBack={() => setCurrentPage('dashboard')} />;
       case 'vehicles': return <ComingSoonPage title="Vehicles" onBack={() => setCurrentPage('dashboard')} />;
-      case 'visitors': return <ComingSoonPage title="Visitors" onBack={() => setCurrentPage('dashboard')} />;
-      case 'finance': return <ComingSoonPage title="Finance" onBack={() => setCurrentPage('dashboard')} />;
       case 'wallets': return <ComingSoonPage title="Wallets" onBack={() => setCurrentPage('dashboard')} />;
-      case 'maintenance': return <ComingSoonPage title="Maintenance" onBack={() => setCurrentPage('dashboard')} />;
       case 'waste': return <ComingSoonPage title="Waste Management" onBack={() => setCurrentPage('dashboard')} />;
-      case 'messages': return <ComingSoonPage title="Messages" onBack={() => setCurrentPage('dashboard')} />;
-      case 'estate-settings': return <ComingSoonPage title="Estate Settings" onBack={() => setCurrentPage('dashboard')} />;
-      case 'permissions': return <ComingSoonPage title="Roles & Permissions" onBack={() => setCurrentPage('dashboard')} />;
 
       default: return renderDashboard();
     }

@@ -217,6 +217,7 @@ export type Database = {
       complaints: {
         Row: {
           assigned_to: string | null
+          category: string
           created_at: string
           description: string
           estate_id: string | null
@@ -229,6 +230,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          category?: string
           created_at?: string
           description?: string
           estate_id?: string | null
@@ -241,6 +243,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          category?: string
           created_at?: string
           description?: string
           estate_id?: string | null

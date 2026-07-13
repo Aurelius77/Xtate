@@ -9,9 +9,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import type { Tables } from '@/integrations/supabase/types';
 
+type ComplaintCategory = 'general' | 'maintenance';
+
 type NewComplaint = {
   title: string;
   description: string;
+  category: ComplaintCategory;
   media: File | null;
 };
 
@@ -25,6 +28,7 @@ const ComplaintsPage = () => {
   const [newComplaint, setNewComplaint] = useState<NewComplaint>({
     title: '',
     description: '',
+    category: 'general',
     media: null
   });
 
@@ -101,6 +105,7 @@ const ComplaintsPage = () => {
           estate_id: resident.estate_id,
           title: newComplaint.title.trim(),
           description: newComplaint.description.trim(),
+          category: newComplaint.category,
           photo_url: null,
           status: 'open',
         })
@@ -131,7 +136,7 @@ const ComplaintsPage = () => {
       }
 
       toast({ title: 'Complaint Submitted', description: 'Estate management can now review your complaint.' });
-      setNewComplaint({ title: '', description: '', media: null });
+      setNewComplaint({ title: '', description: '', category: 'general', media: null });
       setShowNewComplaint(false);
       await fetchComplaints(resident.id);
     } catch (error) {
@@ -208,6 +213,27 @@ const ComplaintsPage = () => {
           <CardContent className="p-8 space-y-6">
             <div className="grid md:grid-cols-2 gap-6">
               <div className="space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Ticket Type</label>
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      variant={newComplaint.category === 'general' ? 'default' : 'outline'}
+                      className={newComplaint.category === 'general' ? 'bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex-1' : 'border-gray-200 text-gray-500 rounded-xl flex-1'}
+                      onClick={() => setNewComplaint((prev) => ({ ...prev, category: 'general' }))}
+                    >
+                      General Complaint
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={newComplaint.category === 'maintenance' ? 'default' : 'outline'}
+                      className={newComplaint.category === 'maintenance' ? 'bg-blue-600 hover:bg-blue-700 text-white rounded-xl flex-1' : 'border-gray-200 text-gray-500 rounded-xl flex-1'}
+                      onClick={() => setNewComplaint((prev) => ({ ...prev, category: 'maintenance' }))}
+                    >
+                      Maintenance Request
+                    </Button>
+                  </div>
+                </div>
                 <div>
                   <label className="block text-[11px] font-bold text-gray-400 uppercase tracking-wider mb-2">Subject</label>
                   <Input
